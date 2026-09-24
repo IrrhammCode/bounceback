@@ -1,0 +1,535 @@
+=== PR #10: Entry: Porcelain Tide (FlyingBisonSG) ===
+## Entry
+
+- Play link: https://flyingbisonsg.github.io/porcelain-tide/game/?v=a7692af
+- Source repo: https://github.com/FlyingBisonSG/porcelain-tide
+- Commit the verdict names: `a7692af38eaa57557f2868dc934abe0a35728bb4` ([source at this commit](https://github.com/FlyingBisonSG/porcelain-tide/tree/a7692af38eaa57557f2868dc934abe0a35728bb4))
+- Team (GitHub handles): @FlyingBisonSG
+
+Porcelain Tide is a complete five-voyage arcade campaign for keyboard and simultaneous touch steering/action. Space or the winch button launches and recalls; only the returning harpoon head breaks porcelain. There is no stage timer, and failure retries the current voyage.
+
+## Verdict block
+
+```text
+=== 404 JAM VERDICT ===
+url             https://flyingbisonsg.github.io/porcelain-tide/game/?v=a7692af
+utc             2026-09-23T12:55:59.274Z
+commit          a7692af38eaa57557f2868dc934abe0a35728bb4
+viewport        390x844 @3x phone, real touch, Android Chrome UA
+network         4G: 4 Mbps down, 1 Mbps up, 60 ms latency, CPU 2x slower
+ready           13.7 s   budget 20 s   PASS
+weight          7.5 MB   budget 10 MB   PASS
+started         yes (tap on #startb)
+moved           12.2 m   needs 1 m   PASS
+peak draws      350   budget 900   PASS
+peak tris       257,833   budget 1,500,000   PASS
+median fps      59.99612928198215 (ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version))
+errors          0   PASS
+404s            0   PASS
+external deps   none
+outside folder  none, every file came from the game folder
+RESULT: PASS
+=== END ===
+```
+
+## What I found
+
+Your strongest shot is the one coming home: cast harmlessly past porcelain creatures, steer your salvage boat, then recall to reshape the returning harpoon's path through the shoal. Missed creatures circle back with their remaining health, so each of five voyages ends only when you resolve its encounters. Moving the boat becomes a way to aim, inside a drowned ceramic garden with reflected cobalt paintings and original chapter music.
+
+## Declarations
+
+- [x] Every 3D object is Three.js code written through the recipe; nothing is a mesh or a vertex array smuggled in as data.
+- [x] Images and sound are from Atlas on jam credits, or my own, listed in the entry file.
+- [x] The source repo is public and its first commit is on or after 11 Sep 2026 00:00 UTC.
+- [x] Nothing here copies a 404 reference game's assets or code.
+- [x] I have read the rules in README.md and I am eligible.
+
+## How it was made and checked
+
+- Fourteen original 3D assets were selected from forty-two independently constructed candidates using the 404 reference → code → verifier → visual-selection process. Atlas supplied original references, surface paintings and music; Codex authored the Three.js geometry. [Full provenance](https://github.com/FlyingBisonSG/porcelain-tide/blob/a7692af38eaa57557f2868dc934abe0a35728bb4/docs/PROVENANCE.md).
+- The source history starts on 22 September 2026 and records the playable prototype, art passes, campaign expansion and subsequent fixes. The released runtime folder, including all five voyages and four music tracks, is 9,989,575 bytes; the verdict's opening-load figure is not the complete-campaign size.
+- Twenty-six simulation/progression contracts pass. Real-input keyboard play earned all five victories; simultaneous-touch play verified III through V, including boss phases, loss/retry, pause and mute. [Campaign verification and limits](https://github.com/FlyingBisonSG/porcelain-tide/blob/a7692af38eaa57557f2868dc934abe0a35728bb4/docs/FIVE-VOYAGE-REVIEW.md).
+- The final scenery-only patch passed separate desktop/phone visual checks across all five chapters and the fresh deployed gate above. Failed visual rounds are documented alongside the corrections. [Background review](https://github.com/FlyingBisonSG/porcelain-tide/blob/a7692af38eaa57557f2868dc934abe0a35728bb4/docs/BACKGROUND-REVIEW.md). Earlier campaign results are not claimed as a full rerun of this scenery patch.
+- Browser checks use Chromium with real keyboard/touch events and phone/4G emulation. They are not physical-phone tests or a human difficulty study. This standalone game has no Atlas Kind deployment.
+
+## Screenshots
+
+![Glazed shallows](https://raw.githubusercontent.com/FlyingBisonSG/porcelain-tide/a7692af38eaa57557f2868dc934abe0a35728bb4/docs/screenshots/background-desktop.webp)
+
+![Lantern shoals](https://raw.githubusercontent.com/FlyingBisonSG/porcelain-tide/a7692af38eaa57557f2868dc934abe0a35728bb4/docs/screenshots/five-lanterns.webp)
+
+![Touch controls and porcelain garden](https://raw.githubusercontent.com/FlyingBisonSG/porcelain-tide/a7692af38eaa57557f2868dc934abe0a35728bb4/docs/screenshots/background-phone.webp)
+
+<!-- CURSOR_SUMMARY -->
+---
+
+> [!NOTE]
+> **Low Risk**
+> Metadata-only new JSON entry; no runtime, auth, or infrastructure changes.
+> 
+> **Overview**
+> **Adds a 404 Jam catalog entry** for **Porcelain Tide** via new `entries/porcelain-tide.json`.
+> 
+> The file registers the team (`FlyingBisonSG`), pinned play and source URLs with commit `a7692af…`, genre **shooter**, and tooling credits (Codex, Atlas MCP, listed image/music models). It declares original art (Web Audio, inline SVG, procedural effects), includes the **what_i_found** pitch text, sets `wallet` to **later**, and adds a judging contact email.
+> 
+> <sup>Reviewed by [Cursor Bugbot](https://cursor.com/bugbot) for commit 7f341a6f113a63af31bfc13efb35ca555816fec3. Bugbot is set up for automated code reviews on this repo. Configure [here](https://www.cursor.com/dashboard/bugbot).</sup>
+<!-- /CURSOR_SUMMARY -->
+
+=== PR #9: Signal Loss entry submission (Anoi-xyz) ===
+```
+=== 404 JAM VERDICT ===
+url             https://signal-loss-drab.vercel.app
+utc             2026-09-23T12:20:51.307Z
+commit          09f57f4
+viewport        390x844 @3x phone, real touch, Android Chrome UA
+network         4G: 4 Mbps down, 1 Mbps up, 60 ms latency, CPU 2x slower
+ready           4.6 s   budget 20 s   PASS
+weight          3.7 MB   budget 10 MB   PASS
+started         yes (tap on #startb)
+moved           36.4 m   needs 1 m   PASS
+peak draws      14   budget 900   PASS
+peak tris       7,818   budget 1,500,000   PASS
+median fps      60 (ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00005917) Direct3D11 vs_5_0 ps_5_0, D3D11))
+errors          0   PASS
+404s            0   PASS
+external deps   none   cdn: unpkg.com
+outside folder  none, every file came from the game folder
+RESULT: PASS
+=== END ===
+```
+
+<!-- CURSOR_SUMMARY -->
+---
+
+> [!NOTE]
+> **Low Risk**
+> Adds static submission metadata only; no application or build logic changes.
+> 
+> **Overview**
+> Adds a new **404 Jam** catalog entry at `entries/signal-loss.json` for **Signal Loss** by team **Anoi-xyz**.
+> 
+> The record links the playable build and GitHub source (commit `09f57f4`), marks genre **other**, and documents AI tooling (Gemini 3.6 via Antigravity with Claude for direction), licensed Pixabay music credits, and the author’s **what_i_found** note about visibility-as-resource gameplay. Contact and wallet fields are set to the submitter’s details (`wallet`: `later`).
+> 
+> <sup>Reviewed by [Cursor Bugbot](https://cursor.com/bugbot) for commit 984a466a67b3ef293787493e113f48ad6997b338. Bugbot is set up for automated code reviews on this repo. Configure [here](https://www.cursor.com/dashboard/bugbot).</sup>
+<!-- /CURSOR_SUMMARY -->
+
+
+=== PR #7: The Last Light — haunted toy theatre tower defense (alexanderbladyko) ===
+## Entry
+
+- Play: https://alexanderbladyko.github.io/the-last-light/
+- Source: https://github.com/alexanderbladyko/the-last-light
+- Tested game commit: fda5539e4a83b839680f9d5c6498984e92749b8b
+- Contributors: alexanderbladyko
+
+## Official mobile verdict
+
+```text
+=== 404 JAM VERDICT ===
+url             https://alexanderbladyko.github.io/the-last-light/
+utc             2026-09-22T19:43:14.304Z
+commit          fda5539e4a83b839680f9d5c6498984e92749b8b
+viewport        390x844 @3x phone, real touch, Android Chrome UA
+network         4G: 4 Mbps down, 1 Mbps up, 60 ms latency, CPU 2x slower
+ready           4.6 s   budget 20 s   PASS
+weight          5.7 MB   budget 10 MB   PASS
+started         yes (tap on #startb)
+moved           7.8 m   needs 1 m   PASS
+peak draws      96   budget 900   PASS
+peak tris       49,064   budget 1,500,000   PASS
+median fps      60 (ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version))
+errors          0   PASS
+404s            0   PASS
+external deps   none
+outside folder  none, every file came from the game folder
+RESULT: PASS
+=== END ===
+```
+
+## What I found
+
+Your moving lantern reveals otherwise invulnerable ghosts and strengthens your defenses, but it also accelerates the enemies inside its beam. You must keep repositioning the light while your towers hold a haunted toy theatre until dawn. Nested dolls split into faster toys, while sleep, wake-up shockwaves, and ghostlight pools let six build sites support different strategies.
+
+## Declarations
+
+- [x] I confirm the 3D assets follow the recipe's code-construction requirement, without imported meshes or concealed mesh data.
+- [x] I have accurately disclosed the artwork, sound, generation tools, and provenance in the entry file.
+- [x] The public game repository preserves genuine development history beginning within the permitted date range.
+- [x] The entry does not reuse code or assets from the organizer's reference games.
+- [x] I have read the competition rules, verified eligibility, and can make its rights declarations.
+
+<!-- CURSOR_SUMMARY -->
+---
+
+> [!NOTE]
+> **Low Risk**
+> Adds a single JSON catalog entry with no runtime, auth, or infrastructure changes.
+> 
+> **Overview**
+> Registers **The Last Light**, a haunted toy-theatre tower defense, as a new competition entry in `entries/the-last-light.json`.
+> 
+> The file records play and source URLs, pinned commit `9148f18c…`, contributor **alexanderbladyko**, genre **other**, and tooling (**OpenAI Codex**, GPT-5.6 Sol, ImageGen, Stable Audio 3). It also documents custom art/audio provenance (`own_art: true` with a detailed `own_art_list`) and the reviewer-facing **what_i_found** blurb about the lantern mechanic and build-site strategies. Contact is set to email; wallet is **later**.
+> 
+> <sup>Reviewed by [Cursor Bugbot](https://cursor.com/bugbot) for commit ce9b82bb5a97ff3c3e37ee0f99bb398c57d9f02f. Bugbot is set up for automated code reviews on this repo. Configure [here](https://www.cursor.com/dashboard/bugbot).</sup>
+<!-- /CURSOR_SUMMARY -->
+
+=== PR #6: Entry: Hungry for Trouble (Rapiiidooo) ===
+## Entry
+
+- Play link: https://trouble.rapidoai.dev/
+- Source repo: https://github.com/Rapiiidooo/hungry-for-trouble
+- Commit the verdict names: `53def44f599b46edf8722b58b954896a6187b0dc`
+- Team (GitHub handles): @Rapiiidooo
+- Wallet: `5HRAPidoCoZPYsLE2q7Ge8WWAfQ3XZpSYoz7aGYJYRmMQpt1`
+
+## Verdict block
+
+```text
+=== 404 JAM VERDICT ===
+url             https://trouble.rapidoai.dev/
+utc             2026-09-21T22:55:50.013Z
+commit          53def44f599b46edf8722b58b954896a6187b0dc
+viewport        390x844 @3x phone, real touch, Android Chrome UA
+network         4G: 4 Mbps down, 1 Mbps up, 60 ms latency, CPU 2x slower
+ready           2.2 s   budget 20 s   PASS
+weight          3.5 MB   budget 10 MB   PASS
+started         yes (tap on #start)
+moved           8.7 m   needs 1 m   PASS
+peak draws      263   budget 900   PASS
+peak tris       568,178   budget 1,500,000   PASS
+median fps      60 (ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version))
+errors          0   PASS
+404s            0   PASS
+external deps   none   cdn: fonts.googleapis.com, fonts.gstatic.com
+outside folder  none, every file came from the game folder
+RESULT: PASS
+=== END ===
+```
+
+## What I found
+
+Your vacuum reloads by eating the crumbs that mark its escape route, so shooting spends what you just cleaned. A stolen surveillance visor briefly turns the same maze into a first-person firefight. Co-op partners share one ammo bag and repair each other; versus rivals spill their ammunition when defeated, feeding the next chase.
+
+## Declarations
+
+- [x] Every 3D object is Three.js code written through the recipe; nothing is a mesh or a vertex array smuggled in as data.
+- [x] Images and sound are from Atlas on jam credits, or my own, listed in the entry file.
+- [x] The source repo is public and its first commit is on or after 11 Sep 2026 00:00 UTC.
+- [x] Nothing here copies a 404 reference game's assets or code.
+- [x] I have read the rules in README.md and I am eligible.
+
+## Build receipts
+
+Hungry for Trouble includes a 25-floor campaign, Continue, Daily Rush, Daily and General leaderboards, co-op Shared Shift and versus Snackdown. Fifteen department themes now have coordinated floors, fixtures, signage and lighting. Short prompts teach crumb ammunition, protected dodges and Vac Cam through actual actions in the opening aisles. The compact phone HUD and relative touch FPS controls remain included. Simulation rules, scoring, saves, the twelve recipe-built models and the three Atlas creations are unchanged.
+
+[Public release verification](https://github.com/Rapiiidooo/hungry-for-trouble/tree/main/receipts/verification-departments-release) contains this exact public phone/4G verdict, matching served-file hashes and the trailer's provenance. [Department polish checks](https://github.com/Rapiiidooo/hungry-for-trouble/tree/main/receipts/verification-departments) retain before/after images, all fifteen themes, five repeated rebuild cycles, four coaching layouts, three real-touch FPS runs, 56 passing Node checks and the 47-module ship check. These are Chrome phone emulation checks; no physical-device or load-test result is claimed.
+
+[Phone controls](https://github.com/Rapiiidooo/hungry-for-trouble/tree/main/receipts/verification-mobile-controls), [analytics privacy](https://github.com/Rapiiidooo/hungry-for-trouble/tree/main/receipts/verification-analytics), and [initial public release checks](https://github.com/Rapiiidooo/hungry-for-trouble/tree/main/receipts/verification-release) retain the unchanged features' earlier evidence, including Continue, shared scoring, two-client room controls/reconnects and score persistence. [Atlas provenance](https://github.com/Rapiiidooo/hungry-for-trouble/tree/main/receipts/verification-atlas) identifies the shipped music and portraits, generators and processing. The source history retains construction candidates and discarded approaches. Later documentation and video-tooling commits do not change the pinned runtime.
+
+## Gameplay video
+
+[44-second gameplay trailer and MP4 download](https://github.com/Rapiiidooo/hungry-for-trouble/releases/tag/jam-polish-2026-09-22).
+
+Eight aisles, Overtime, first-person combat, a teleporter, two bosses, keys and doors, and an earned upgrade, with the existing original Atlas soundtrack generated by Google Lyria 3 Clip. Real-speed excerpts were captured from the live game in disposable practice profiles with route unlocks preloaded. This edited trailer is not a continuous campaign clear. It is a separate release asset and is never fetched by the game.
+
+
+=== PR #5: Add entry: SYZYGY ORBIT SNAP (syzygy) (Cyma-Connection) ===
+## Entry
+
+- Play link: https://cyma-connection.github.io/syzygy/
+- Source repo: https://github.com/Cyma-Connection/syzygy
+- Commit the verdict names: ae13909b8b1fc5b48b106ee8f8734fd067111366
+- Team (GitHub handles): Cyma-Connection
+
+## Verdict block
+
+Paste the block `harness/jam.mjs` printed, unedited, from `=== 404 JAM VERDICT ===` to `=== END ===`.
+
+```
+=== 404 JAM VERDICT ===
+url             https://cyma-connection.github.io/syzygy/?v=sil1
+utc             2026-09-21T16:03:56.703Z
+commit          ae13909b8b1fc5b48b106ee8f8734fd067111366
+viewport        390x844 @3x phone, real touch, Android Chrome UA
+network         4G: 4 Mbps down, 1 Mbps up, 60 ms latency, CPU 2x slower
+ready           2.7 s   budget 20 s   PASS
+weight          1.6 MB   budget 10 MB   PASS
+started         yes (tap on #startb)
+moved           104.6 m   needs 1 m   PASS
+peak draws      109   budget 900   PASS
+peak tris       29,996   budget 1,500,000   PASS
+median fps      10 (software rendering, not a verdict)
+errors          0   PASS
+404s            0   PASS
+external deps   none   cdn: cdn.jsdelivr.net
+outside folder  none, every file came from the game folder
+RESULT: PASS
+=== END ===
+```
+
+## What I found
+
+SYZYGY turns a sun→object→craft alignment into a one-thumb arcade timing read: you do not steer or shoot—you feel the syzygy arrive, then SNAP at the right instant. The auto-orbit makes each approach legible while the portal micro-bonus and brief LOCK freeze add texture without changing the core rhythm. It feels like catching a celestial beat, not driving a racer or aiming a shooter.
+
+## Declarations
+
+- [x] Every 3D object is Three.js code written through the recipe; nothing is a mesh or a vertex array smuggled in as data.
+- [x] Images and sound are from Atlas on jam credits, or my own, listed in the entry file.
+- [x] The source repo is public and its first commit is on or after 11 Sep 2026 00:00 UTC.
+- [x] Nothing here copies a 404 reference game's assets or code.
+- [x] I have read the rules in README.md and I am eligible.
+
+<!-- CURSOR_SUMMARY -->
+---
+
+> [!NOTE]
+> **Low Risk**
+> Adds one static JSON metadata file with no runtime or infrastructure impact.
+> 
+> **Overview**
+> Registers **SYZYGY ORBIT SNAP** in the jam catalog by adding `entries/syzygy.json`.
+> 
+> The entry records play and source URLs, pinned commit `ae13909b…`, team **Cyma-Connection**, genre **other**, and tooling notes (Cursor agent, procedural Web Audio, no Atlas). It declares original art/audio, includes the author’s **what_i_found** blurb, and lists Bittensor wallet and contact info for prizes.
+> 
+> <sup>Reviewed by [Cursor Bugbot](https://cursor.com/bugbot) for commit 1bb295c8788d7ddf7075c08f1e2b0c8718d6f0f4. Bugbot is set up for automated code reviews on this repo. Configure [here](https://www.cursor.com/dashboard/bugbot).</sup>
+<!-- /CURSOR_SUMMARY -->
+
+=== PR #4: Add BOLTWORKS (sidneycodes1) ===
+BOLTWORKS — Isometric arcade tank game where the tank is a kit of verified 404 code modules that automatically disassembles and rebuilds between waves.
+
+**Play:** https://sidneycodes1.github.io/boltworks/game/
+**Source:** https://github.com/sidneycodes1/boltworks
+**Wallet:** later (to be provided if selected)
+ @ aaa8fba829f714fdee6d6d09ee1a4f8ebc97b2d6
+
+
+**What I found:** The tank is not a single mesh but a kit of verified 404 modules hull, tracks, turret, barrel and armour that automatically disassembles and physically rebuilds between waves. The silhouette visibly changes over a run as heavier hulls, longer barrels and bolted armour are swapped in. Because the tank is code, the rebuild is immediate and variation costs no additional meshes.
+
+
+**Jam gate verdict (live URL, 4G phone):**
+
+url https://sidneycodes1.github.io/boltworks/game/
+utc 2026-09-20T21:15:33.783Z
+commit aaa8fba
+viewport 390x844 @3x phone, real touch, Android Chrome UA
+network 4G: 4 Mbps down, 1 Mbps up, 60 ms latency, CPU 2x slower
+ready 7.0 s budget 20 s PASS
+weight 1.5 MB budget 10 MB PASS
+started yes (tap on #startb)
+moved 20.2 m needs 1 m PASS
+peak draws 36 budget 900 PASS
+peak tris 55,022 budget 1,500,000 PASS
+errors 0 PASS
+404s 0 PASS
+external deps none cdn: cdn.jsdelivr.net
+outside folder none, every file came from the game folder
+RESULT: PASS
+
+
+
+**Declarations**
+- Every 3D object is Three.js code written through the recipe; nothing is a mesh or a vertex array smuggled in as data.
+- Sound is runtime-synthesized via the Web Audio API — no Atlas or external audio files used.
+- The source repo is public and its first commit is on or after 11 Sep 2026 00:00 UTC.
+- Nothing here copies a 404 reference game's assets or code.
+- I have read the rules in README.md and I am eligible.
+
+**Build receipts**
+Solo build across ~1 weeks, developed with OpenCode (with earlier scaffolding assistance from Devin), through iterative critic rounds against reference lighting/composition, real-device performance profiling (Core Web Vitals INP/LCP measurements), and multiple full jam-gate reruns against the live URL as the build evolved. Difficulty tiers (Easy/Medium/Hard), touch and desktop controls, and a fully runtime-synthesized sound system were tuned through direct playtesting rather than shipped as untested defaults. Full commit history is in the linked repo.
+Gameplay video: https://x.com/Sidney_codes/status/2102468472202523024?s=20
+
+
+<!-- CURSOR_SUMMARY -->
+---
+
+> [!NOTE]
+> **Low Risk**
+> Adds catalog metadata only; no application or infrastructure code changes.
+> 
+> **Overview**
+> Registers **BOLTWORKS** as a new jam entry via `entries/boltworks.json`, following the repo’s one-file-per-PR pattern.
+> 
+> The metadata points to the live game and GitHub source, tags it as a **shooter**, and records build tooling (OpenCode/Devin), runtime-synthesized audio as original art, and a short *what I found* note about the modular tank rebuild mechanic between waves.
+> 
+> <sup>Reviewed by [Cursor Bugbot](https://cursor.com/bugbot) for commit 1b3d5d06764f1efb6a83e44714e935b6a0ba02ac. Bugbot is set up for automated code reviews on this repo. Configure [here](https://www.cursor.com/dashboard/bugbot).</sup>
+<!-- /CURSOR_SUMMARY -->
+
+=== PR #3: 202 Ready for Deployment (tommyhgunz14) ===
+## Entry
+
+- Play link: https://tommyhgunz14.github.io/202/
+- Source repo: https://github.com/tommyhgunz14/202
+- Commit the verdict names: bf3cfc5
+- Team (GitHub handles): @tommyhgunz14
+
+## Verdict block
+
+```
+=== 404 JAM VERDICT ===
+url             https://tommyhgunz14.github.io/202/
+utc             2026-09-17T16:11:32.998Z
+commit          bf3cfc5
+viewport        390x844 @3x phone, real touch, Android Chrome UA
+network         4G: 4 Mbps down, 1 Mbps up, 60 ms latency, CPU 2x slower
+ready           13.0 s   budget 20 s   PASS
+weight          5.6 MB   budget 10 MB   PASS
+started         yes (tap on #startb)
+moved           197.1 m   needs 1 m   PASS
+peak draws      489   budget 900   PASS
+peak tris       1,248,269   budget 1,500,000   PASS
+median fps      56.52827181827312 (ANGLE (Intel, Intel(R) Graphics (0x00007D67) Direct3D11 vs_5_0 ps_5_0, D3D11))
+errors          0   PASS
+404s            0   PASS
+external deps   none
+outside folder  6 file(s) from https://tommyhgunz14.github.io above https://tommyhgunz14.github.io/202/   (warning, not a fail)
+RESULT: PASS
+=== END ===
+```
+
+## What I found
+
+A true story of No. 202 Squadron at Gibraltar, flown in authentic recreations of the most advanced flying boats of 1941 and the missions they flew in the battle for the Mediterranean. You take off from the water and hunt submarines on a period radar A-scope, with a plotting chart alongside; every contact must be identified by eye and reported by radio, which can bring destroyers to your contact, and firing on the wrong ship goes on your record. Depth charges are set to a firing depth before each run, a dived submarine is tracked by her shadow in the water, and you can take any gunner's or the bomb aimer's position while picture-in-picture windows follow the automated gunners and the charges' plumes with the crew's commentary.
+
+## Declarations
+
+- [x] Every 3D object is Three.js code written through the recipe; nothing is a mesh or a vertex array smuggled in as data.
+- [x] Images and sound are from Atlas on jam credits, or my own, listed in the entry file.
+- [x] The source repo is public and its first commit is on or after 11 Sep 2026 00:00 UTC.
+- [x] Nothing here copies a 404 reference game's assets or code.
+- [x] I have read the rules in README.md and I am eligible.
+
+<!-- CURSOR_SUMMARY -->
+---
+
+> [!NOTE]
+> **Low Risk**
+> Adds catalog metadata only; no runtime, auth, or infrastructure code is modified.
+> 
+> **Overview**
+> Registers **Guardians of the Rock** as a new 404 jam submission by adding `entries/guardians-of-the-rock.json`.
+> 
+> The file points at the live build (`https://tommyhgunz14.github.io/202/`), source repo, gate commit **`bf3cfc5`**, team, genre, and tooling receipts (Claude Code, Atlas models for art/audio, ElevenLabs). It also declares **own art** (intro photo and squadron badge), the **`what_i_found`** blurb for judging, and prize **wallet** / **contact** details—matching the usual one-file-per-PR entry flow from the README.
+> 
+> <sup>Reviewed by [Cursor Bugbot](https://cursor.com/bugbot) for commit d0e2c0d901842d083e6196dacc632915cad98289. Bugbot is set up for automated code reviews on this repo. Configure [here](https://www.cursor.com/dashboard/bugbot).</sup>
+<!-- /CURSOR_SUMMARY -->
+
+=== PR #2: 202 Ready for Duty (tommyhgunz14) ===
+## Entry
+
+- Play link: https://tommyhgunz14.github.io/202/
+- Source repo: https://github.com/tommyhgunz14/202
+- Commit the verdict names: 0f456b8
+- Team (GitHub handles): @tommyhgunz14
+
+## Verdict block
+
+```
+=== 404 JAM VERDICT ===
+url             https://tommyhgunz14.github.io/202/
+utc             2026-09-17T15:19:30.490Z
+commit          0f456b8
+viewport        390x844 @3x phone, real touch, Android Chrome UA
+network         4G: 4 Mbps down, 1 Mbps up, 60 ms latency, CPU 2x slower
+ready           9.1 s   budget 20 s   PASS
+weight          4.8 MB   budget 10 MB   PASS
+started         yes (tap on #startb)
+moved           191.3 m   needs 1 m   PASS
+peak draws      496   budget 900   PASS
+peak tris       1,238,589   budget 1,500,000   PASS
+median fps      58.05324119697123 (ANGLE (Intel, Intel(R) Graphics (0x00007D67) Direct3D11 vs_5_0 ps_5_0, D3D11))
+errors          0   PASS
+404s            0   PASS
+external deps   none
+outside folder  6 file(s) from https://tommyhgunz14.github.io above https://tommyhgunz14.github.io/202/   (warning, not a fail)
+RESULT: PASS
+=== END ===
+```
+
+## What I found
+
+A true story of No. 202 Squadron at Gibraltar, flown in authentic recreations of the most advanced flying boats of 1941 and the missions they flew in the battle for the Mediterranean. You take off from the water and hunt submarines on a period radar A-scope, with a plotting chart alongside; every contact must be identified by eye and reported by radio, which can bring destroyers to your contact, and firing on the wrong ship goes on your record. Depth charges are set to a firing depth before each run, a dived submarine is tracked by her shadow in the water, and you can take any gunner's or the bomb aimer's position while picture-in-picture windows follow the automated gunners and the charges' plumes with the crew's commentary.
+
+## Declarations
+
+- [x] Every 3D object is Three.js code written through the recipe; nothing is a mesh or a vertex array smuggled in as data.
+- [x] Images and sound are from Atlas on jam credits, or my own, listed in the entry file.
+- [x] The source repo is public and its first commit is on or after 11 Sep 2026 00:00 UTC.
+- [x] Nothing here copies a 404 reference game's assets or code.
+- [x] I have read the rules in README.md and I am eligible.
+
+<!-- CURSOR_SUMMARY -->
+---
+
+> [!NOTE]
+> **Low Risk**
+> Adds static JSON metadata only; no runtime code, auth, or infrastructure changes in this repository.
+> 
+> **Overview**
+> Adds a new **`entries/guardians-of-the-rock.json`** registry entry for the 404 Jam submission **Guardians of the Rock**.
+> 
+> The file pins the playable build at `https://tommyhgunz14.github.io/202/` to source commit **`0f456b8`**, lists team **`tommyhgunz14`**, genre/tools (Claude Code, Atlas media, ElevenLabs voices), declares **own art** with asset paths, and includes the **`what_i_found`** write-up, **wallet**, and **contact** fields expected for judging.
+> 
+> There are **no application or render changes in this diff**—only submission metadata. Any “edge of map” fixes live in the linked game repo at the named commit, not here.
+> 
+> <sup>Reviewed by [Cursor Bugbot](https://cursor.com/bugbot) for commit 1a6bec746da1566717877873e5fa6abc1f0c1f9c. Bugbot is set up for automated code reviews on this repo. Configure [here](https://www.cursor.com/dashboard/bugbot).</sup>
+<!-- /CURSOR_SUMMARY -->
+
+=== PR #1: LIGHTKEEPER — night lighthouse keeper (tensorflowyt-eng) ===
+## Entry
+
+- Play link: https://tensorflowyt-eng.github.io/lightkeeper/
+- Source repo: https://github.com/tensorflowyt-eng/lightkeeper
+- Commit the verdict names: 468d11c2e97122ce76aeb80387b2797217451ccc
+- Team (GitHub handles): tensorflowyt-eng
+
+## Verdict block
+
+```
+=== 404 JAM VERDICT ===
+url             https://tensorflowyt-eng.github.io/lightkeeper/
+utc             2026-09-13T10:29:28.438Z
+commit          468d11c2e97122ce76aeb80387b2797217451ccc
+viewport        390x844 @3x phone, real touch, Android Chrome UA
+network         4G: 4 Mbps down, 1 Mbps up, 60 ms latency, CPU 2x slower
+ready           4.4 s   budget 20 s   PASS
+weight          1.4 MB   budget 10 MB   PASS
+started         yes (tap on #startb)
+moved           1.2 m   needs 1 m   PASS
+peak draws      69   budget 900   PASS
+peak tris       14,420   budget 1,500,000   PASS
+median fps      9 (software rendering, not a verdict)
+errors          0   PASS
+404s            0   PASS
+external deps   none   cdn: cdn.jsdelivr.net
+outside folder  none, every file came from the game folder
+RESULT: PASS
+=== END ===
+```
+
+## What I found
+
+You are the keeper's pilot cutter: the lighthouse lamp burns oil you have to sail back and refill, and while the beam turns, crossing ships are guided through the channel — run dry and they are lost in the dark. The tension is timekeeping, not reflexes: oil, traffic, and the night all move against you. Every 3D object is recipe-built and the whole gameplay loop passed an 11-step headless functional test before shipping.
+
+## Declarations
+
+- [x] Every 3D object is Three.js code written through the recipe; nothing is a mesh or a vertex array smuggled in as data.
+- [x] Images and sound are from Atlas on jam credits, or my own, listed in the entry file.
+- [x] The source repo is public and its first commit is on or after 11 Sep 2026 00:00 UTC.
+- [x] Nothing here copies a 404 reference game's assets or code.
+- [x] I have read the rules in README.md and I am eligible.
+
+<!-- CURSOR_SUMMARY -->
+---
+
+> [!NOTE]
+> **Low Risk**
+> Adds static entry metadata only; no changes to gate harness, site logic, or executable code.
+> 
+> **Overview**
+> Registers **LIGHTKEEPER** as a new 404 jam submission by adding `entries/lightkeeper.json`.
+> 
+> The entry points at the live play URL and pinned source commit, lists team **tensorflowyt-eng**, and documents tooling (**Hermes Agent**, **qwen3.8-27b**, puppeteer gate harness). It declares **own_art** with hand-written Three.js modules and live WebAudio, includes the required **what_i_found** pitch, plus **wallet** and **contact** for prizes.
+> 
+> <sup>Reviewed by [Cursor Bugbot](https://cursor.com/bugbot) for commit 4c35fba94a5ed439d15a34d7f902b0a891d2b9b8. Bugbot is set up for automated code reviews on this repo. Configure [here](https://www.cursor.com/dashboard/bugbot).</sup>
+<!-- /CURSOR_SUMMARY -->
+

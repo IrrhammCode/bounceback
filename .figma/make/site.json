@@ -1,0 +1,10 @@
+{
+  "description": "Engage in a fun mobile game with Boi-Boian's interactive title screen, featuring clear CTAs, quick how-to guides, and a vibrant 3D backdrop.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
