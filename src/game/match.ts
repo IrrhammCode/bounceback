@@ -39,6 +39,18 @@ export class Match {
     this.overdriveFired = false;
   }
 
+  reset() {
+    this.timer = C.MATCH_DURATION;
+    this.scores = [0, 0];
+    this.phase = 1;
+    this.started = false;
+    this.over = false;
+    this.winner = -1;
+    this.combo = [0, 0];
+    this.comboTimer = [0, 0];
+    this.overdriveFired = false;
+  }
+
   getPhaseForTime(elapsed: number): number {
     if (elapsed >= C.PHASE3_TIME) return 3;
     if (elapsed >= C.PHASE2_TIME) return 2;

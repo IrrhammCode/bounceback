@@ -63,7 +63,7 @@ export default function ResultScreen({
 
         <div className="result-actions">
           <button className="btn-play" onClick={onRematch}>
-            🔄 REMATCH
+            PLAY REMATCH
           </button>
           <button className="btn-secondary" onClick={onMenu}>
             ← Back to Menu

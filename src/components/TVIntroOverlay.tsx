@@ -16,18 +16,24 @@ import { sfxTVOpener, sfxTVCountdown, sfxBoxingBell } from "../game/audio";
 interface TVIntroOverlayProps {
   onComplete: () => void;
   onSkip: () => void;
+  onPhaseChange?: (phase: IntroPhase) => void;
 }
 
-type IntroPhase = "opener" | "cyan_team" | "vs_clash" | "coral_team" | "countdown";
+export type IntroPhase = "opener" | "cyan_team" | "vs_clash" | "coral_team" | "countdown";
 
-export default function TVIntroOverlay({ onComplete, onSkip }: TVIntroOverlayProps) {
+export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TVIntroOverlayProps) {
   const [phase, setPhase] = useState<IntroPhase>("opener");
   const [countdownNum, setCountdownNum] = useState<number>(3);
 
-  // Play opening TV fanfare on mount
+  // Play opening TV fanfare on mount and notify phase
   useEffect(() => {
     sfxTVOpener();
-  }, []);
+    onPhaseChange?.("opener");
+  }, [onPhaseChange]);
+
+  useEffect(() => {
+    onPhaseChange?.(phase);
+  }, [phase, onPhaseChange]);
 
   // Keyboard shortcut for skipping
   const handleKeyDown = useCallback(

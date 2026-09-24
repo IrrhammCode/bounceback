@@ -1,13 +1,17 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { BouncebackEngine, type GameState } from "../game/engine";
 import { SkillType } from "../game/skills";
-import TVIntroOverlay from "../components/TVIntroOverlay";
+import TitleScreenOverlay from "../components/TitleScreenOverlay";
+import TVIntroOverlay, { type IntroPhase } from "../components/TVIntroOverlay";
 import DisasterVoteOverlay from "../components/DisasterVoteOverlay";
+import { sfxWhistle, sfxGoal, sfxMatchStart } from "../game/audio";
 
 interface GameScreenProps {
-  onMatchEnd: (winner: number, scores: [number, number]) => void;
-  onExit: () => void;
+  onMatchEnd?: (winner: number, scores: [number, number]) => void;
+  onExit?: () => void;
 }
+
+type AppMode = "title" | "intro" | "game" | "result";
 
 const initialState: GameState = {
   timer: "1:40",
@@ -37,34 +41,87 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<BouncebackEngine | null>(null);
   const [gameState, setGameState] = useState<GameState>(initialState);
-  const [showIntro, setShowIntro] = useState(true);
+  const [appMode, setAppMode] = useState<AppMode>("title");
+  const [result, setResult] = useState<{ winner: number; scores: [number, number] }>({
+    winner: 0,
+    scores: [0, 0],
+  });
+
+  // Signal ready to 404 test runner
+  useEffect(() => {
+    (window as any).__READY__ = true;
+  }, []);
 
   const handleStateChange = useCallback((state: GameState) => {
     setGameState(state);
   }, []);
 
-  const handleIntroDone = useCallback(() => {
-    setShowIntro(false);
-    engineRef.current?.startMatch();
-  }, []);
+  const handleEngineMatchEnd = useCallback(
+    (winner: number, scores: [number, number]) => {
+      setResult({ winner, scores });
+      setAppMode("result");
+      sfxWhistle();
+      setTimeout(() => sfxGoal(), 400);
+      onMatchEnd?.(winner, scores);
+    },
+    [onMatchEnd]
+  );
 
+  // Initialize Engine once on mount with 3D title screen drone camera active
   useEffect(() => {
     if (!canvasRef.current) return;
 
     const engine = new BouncebackEngine(
       canvasRef.current,
       handleStateChange,
-      onMatchEnd
+      handleEngineMatchEnd
     );
     engineRef.current = engine;
-
     engine.init();
 
     return () => {
       engine.destroy();
       engineRef.current = null;
     };
-  }, [handleStateChange, onMatchEnd]);
+  }, [handleStateChange, handleEngineMatchEnd]);
+
+  // Transition from Title Screen into 3v3 TV Intro Cutscene with camera dive
+  const handleStartMatchFromTitle = useCallback(() => {
+    setAppMode("intro");
+    engineRef.current?.startIntro();
+  }, []);
+
+  // Sync Three.js camera position with TV Intro phases
+  const handleIntroPhaseChange = useCallback((phase: IntroPhase) => {
+    engineRef.current?.setIntroPhase(phase);
+  }, []);
+
+  // When intro completes, seamlessly roll into gameplay
+  const handleIntroDone = useCallback(() => {
+    setAppMode("game");
+    engineRef.current?.startMatch();
+  }, []);
+
+  // Instant skip button / key
+  const handleSkipIntro = useCallback(() => {
+    setAppMode("game");
+    engineRef.current?.startMatch();
+  }, []);
+
+  // Return to Title Drone Orbit
+  const handleExitToTitle = useCallback(() => {
+    engineRef.current?.resetToTitle();
+    setAppMode("title");
+    onExit?.();
+  }, [onExit]);
+
+  // Rematch from result screen
+  const handleRematch = useCallback(() => {
+    sfxMatchStart();
+    setAppMode("intro");
+    engineRef.current?.resetToTitle();
+    engineRef.current?.startIntro();
+  }, []);
 
   const timerSecs = parseInt(gameState.timer.split(":")[1] || "0");
   const isUrgent =
@@ -82,139 +139,206 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
 
   return (
     <div className="screen" style={{ background: "#111625" }}>
-      {/* Three.js Canvas */}
+      {/* Unified 3D WebGL Canvas — always active across Title, Intro, Game, and Result */}
       <canvas ref={canvasRef} className="game-canvas" />
 
-      {/* 3v3 TV Broadcast Match Intro Cutscene Overlay */}
-      {showIntro && (
+      {/* 1. Reality TV Title Screen Overlay (Drone Orbit View) */}
+      {appMode === "title" && (
+        <TitleScreenOverlay onStartMatch={handleStartMatchFromTitle} />
+      )}
+
+      {/* 2. 3v3 TV Broadcast Match Intro Cutscene Overlay (Cinematic Camera Swoops) */}
+      {appMode === "intro" && (
         <TVIntroOverlay
           onComplete={handleIntroDone}
-          onSkip={handleIntroDone}
+          onSkip={handleSkipIntro}
+          onPhaseChange={handleIntroPhaseChange}
         />
       )}
 
-      {/* Reality TV Live Audience Disaster Vote Overlay */}
-      <DisasterVoteOverlay
-        voteState={gameState.disasterVoteState}
-        onVote={(id) => engineRef.current?.castDisasterVote(id)}
-      />
+      {/* 3. Reality TV Live Audience Disaster Vote Overlay */}
+      {appMode === "game" && (
+        <DisasterVoteOverlay
+          voteState={gameState.disasterVoteState}
+          onVote={(id) => engineRef.current?.castDisasterVote(id)}
+        />
+      )}
 
-      {/* HUD Overlay — always visible during match */}
-      <div className="hud">
-        {/* Exit button */}
-        <button className="exit-btn" onClick={onExit} title="Exit Match">
-          ✕
-        </button>
+      {/* 4. Match Over Result Overlay (Winning Team Victory Orbit) */}
+      {appMode === "result" && (
+        <div className="result-broadcast-overlay animate-modal-zoom">
+          <div className="result-broadcast-card">
+            <div className="result-badge">MATCH CONCLUDED • FINAL BROADCAST SCORE</div>
+            <h1
+              className={`result-winner-title ${
+                result.winner === 0 ? "cyan" : result.winner === 1 ? "coral" : "draw"
+              }`}
+            >
+              {result.winner === 0
+                ? "TEAM CYAN VICTORIOUS!"
+                : result.winner === 1
+                  ? "TEAM CORAL VICTORIOUS!"
+                  : "MATCH TIED • SUDDEN DRAW!"}
+            </h1>
 
-        {/* Camera mode toggle button */}
-        <button
-          className="cam-toggle-btn"
-          onClick={() => engineRef.current?.toggleCamera()}
-          title="Toggle Camera (or press C / V)"
-        >
-          {gameState.cameraMode === "first_person"
-            ? "CAM: 1ST POV"
-            : gameState.cameraMode === "third_close"
-              ? "CAM: 3RD CLOSE"
-              : "CAM: 3RD WIDE"}
-        </button>
-
-        {/* Top Bar: Scoreboard + Timer */}
-        <div className="hud-top">
-          <div className="scoreboard">
-            <div className="score-team cyan">
-              <span className="label">CYN</span>
-              {gameState.scores[0]}
+            <div className="result-score-banner">
+              <div className="team-score-box cyan">
+                <span className="team-name">TEAM CYAN</span>
+                <span className="score-val">{result.scores[0]}</span>
+              </div>
+              <div className="score-vs-divider">VS</div>
+              <div className="team-score-box coral">
+                <span className="team-name">TEAM CORAL</span>
+                <span className="score-val">{result.scores[1]}</span>
+              </div>
             </div>
-            <div className="score-divider" />
-            <div className={`timer-badge ${isUrgent ? "urgent" : ""}`}>
-              {gameState.timer}
-              <span
-                className={`phase-tag ${gameState.phase === 3 ? "overdrive" : ""}`}
-              >
-                {phaseName}
-              </span>
-            </div>
-            <div className="score-divider" />
-            <div className="score-team coral">
-              {gameState.scores[1]}
-              <span className="label">CRL</span>
+
+            <div className="result-actions-row">
+              <button className="btn-result-rematch" onClick={handleRematch}>
+                PLAY REMATCH
+              </button>
+              <button className="btn-result-menu" onClick={handleExitToTitle}>
+                RETURN TO TITLE
+              </button>
             </div>
           </div>
         </div>
+      )}
 
-        {/* Announcer */}
-        {gameState.announcement && (
-          <div className="announcer" key={gameState.announcement}>
-            {gameState.announcement}
+      {/* 5. In-Game HUD Overlay (Only visible during active match) */}
+      {appMode === "game" && (
+        <div className="hud animate-fade-in">
+          {/* Exit match button */}
+          <button
+            className="exit-btn"
+            onClick={handleExitToTitle}
+            title="Exit to Title Screen"
+          >
+            ✕
+          </button>
+
+          {/* Camera mode toggle button */}
+          <button
+            className="cam-toggle-btn"
+            onClick={() => engineRef.current?.toggleCamera()}
+            title="Toggle Camera (or press C / V)"
+          >
+            {gameState.cameraMode === "first_person"
+              ? "CAM: 1ST POV"
+              : gameState.cameraMode === "third_close"
+                ? "CAM: 3RD CLOSE"
+                : "CAM: 3RD WIDE"}
+          </button>
+
+          {/* Top Bar: Scoreboard + Timer */}
+          <div className="hud-top">
+            <div className="scoreboard">
+              <div className="score-team cyan">
+                <span className="label">CYN</span>
+                {gameState.scores[0]}
+              </div>
+              <div className="score-divider" />
+              <div className={`timer-badge ${isUrgent ? "urgent" : ""}`}>
+                {gameState.timer}
+                <span
+                  className={`phase-tag ${gameState.phase === 3 ? "overdrive" : ""}`}
+                >
+                  {phaseName}
+                </span>
+              </div>
+              <div className="score-divider" />
+              <div className="score-team coral">
+                {gameState.scores[1]}
+                <span className="label">CRL</span>
+              </div>
+            </div>
           </div>
-        )}
 
-        {/* Combo Display */}
-        {maxCombo > 1 && (
-          <div className="combo-display" key={maxCombo}>
-            COMBO x{maxCombo}!
-          </div>
-        )}
-
-        {/* Skill Card HUD Slot */}
-        <div className={`skill-slot ${hasSkill ? "has-skill" : ""}`}>
-          {hasSkill ? (
-            <>
-              <span className="skill-icon">{gameState.playerSkillIcon}</span>
-              <span className="skill-name">{gameState.playerSkillName}</span>
-              <span className="skill-hint">E / Q / RMB</span>
-            </>
-          ) : (
-            <span className="skill-empty">—</span>
+          {/* Broadcast Center Announcement */}
+          {gameState.announcement && (
+            <div className="announcer" key={gameState.announcement}>
+              {gameState.announcement}
+            </div>
           )}
-        </div>
 
-        {/* Touch Controls — always rendered so #stick is in DOM for jam.mjs */}
-        <div className="touch-controls">
+          {/* Combo Multiplier Display */}
+          {maxCombo > 1 && (
+            <div className="combo-display" key={maxCombo}>
+              COMBO x{maxCombo}!
+            </div>
+          )}
+
+          {/* Skill Card HUD Slot */}
+          <div className={`skill-slot ${hasSkill ? "has-skill" : ""}`}>
+            {hasSkill ? (
+              <>
+                <span className="skill-icon">{gameState.playerSkillIcon}</span>
+                <span className="skill-name">{gameState.playerSkillName}</span>
+                <span className="skill-hint">E / Q / RMB</span>
+              </>
+            ) : (
+              <span className="skill-empty">—</span>
+            )}
+          </div>
+
+          {/* Touch Controls — always in DOM for 404 test harness */}
+          <div className="touch-controls">
+            <div id="stick" />
+            <div id="stickbase" />
+            <div id="sticknub" />
+            <div className="action-buttons">
+              <button
+                id="btnSkill"
+                className={`action-btn skill ${hasSkill ? "ready" : ""}`}
+              >
+                <span className="icon">
+                  {hasSkill ? gameState.playerSkillIcon : "POW"}
+                </span>
+                {hasSkill ? "USE" : "SKILL"}
+              </button>
+              <button id="btnA" className="action-btn punch">
+                <span className="icon">HIT</span>
+                PUNCH
+              </button>
+              <button id="btnB" className="action-btn dash">
+                <span className="icon">RUN</span>
+                DASH
+              </button>
+            </div>
+          </div>
+
+          {/* Desktop Keyboard Hints */}
+          <div className="kb-hints">
+            <span>
+              <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Move
+            </span>
+            <span>
+              <kbd>Space</kbd> Punch
+            </span>
+            <span>
+              <kbd>Shift</kbd> Dash
+            </span>
+            <span>
+              <kbd>E</kbd> Skill
+            </span>
+            <span>
+              <kbd>C</kbd> Camera
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Hidden touch controls when not in game, ensuring DOM elements exist for automation */}
+      {appMode !== "game" && (
+        <div style={{ display: "none" }} aria-hidden="true">
           <div id="stick" />
           <div id="stickbase" />
           <div id="sticknub" />
-          <div className="action-buttons">
-            <button
-              id="btnSkill"
-              className={`action-btn skill ${hasSkill ? "ready" : ""}`}
-            >
-              <span className="icon">
-                {hasSkill ? gameState.playerSkillIcon : "POW"}
-              </span>
-              {hasSkill ? "USE" : "SKILL"}
-            </button>
-            <button id="btnA" className="action-btn punch">
-              <span className="icon">HIT</span>
-              PUNCH
-            </button>
-            <button id="btnB" className="action-btn dash">
-              <span className="icon">RUN</span>
-              DASH
-            </button>
-          </div>
+          <button id="btnSkill" />
+          <button id="btnA" />
+          <button id="btnB" />
         </div>
-
-        {/* Desktop Keyboard Hints */}
-        <div className="kb-hints">
-          <span>
-            <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Move
-          </span>
-          <span>
-            <kbd>Space</kbd> Punch
-          </span>
-          <span>
-            <kbd>Shift</kbd> Dash
-          </span>
-          <span>
-            <kbd>E</kbd> Skill
-          </span>
-          <span>
-            <kbd>C</kbd> Camera
-          </span>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

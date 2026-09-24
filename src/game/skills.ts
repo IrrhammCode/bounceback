@@ -1163,6 +1163,16 @@ export class SkillManager {
     });
   }
 
+  // ─── Title Mode Box Animation ───
+  public updateTitleBoxes() {
+    const now = performance.now() * 0.001;
+    for (const box of this.boxes) {
+      if (!box.active) continue;
+      box.mesh.rotation.y = now * BOX_SPIN_SPEED;
+      box.mesh.position.y = BOX_FLOAT_HEIGHT + Math.sin(now * 2 + box.x) * 0.3;
+    }
+  }
+
   // ─── Main Update Loop ───
   update(
     entities: Entity[],

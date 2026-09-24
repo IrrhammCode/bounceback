@@ -98,6 +98,13 @@ export class BouncebackEngine {
   private onStateChange: GameStateCallback;
   private onMatchEnd: ((winner: number, scores: [number, number]) => void) | null = null;
 
+  public appMode: "title" | "intro" | "game" | "result" = "title";
+  public introPhase: "opener" | "cyan_team" | "vs_clash" | "coral_team" | "countdown" = "opener";
+  private titleCamAngle = 0;
+  private introCamTarget = new THREE.Vector3(0, 16.0, -22.0);
+  private introLookTarget = new THREE.Vector3(0, 2.0, -4.0);
+  private winningTeam = 0;
+
   public cameraMode: "third_wide" | "third_close" | "first_person" = "third_wide";
   private boundCamKeyDown?: (e: KeyboardEvent) => void;
 
@@ -208,7 +215,8 @@ export class BouncebackEngine {
     };
     this.match.onMatchEnd = (winner, scores) => {
       sfxGameOver();
-      this.running = false;
+      this.appMode = "result";
+      this.winningTeam = winner;
       const winTeam = winner === 0 ? "TEAM CYAN" : "TEAM CORAL";
       this.showAnnouncement(`MATCH OVER — ${winTeam} WINS!`);
       if (this.onMatchEnd) this.onMatchEnd(winner, scores);
@@ -236,6 +244,11 @@ export class BouncebackEngine {
       }
     };
     window.addEventListener("keydown", this.boundCamKeyDown);
+
+    // Start 3D animation loop immediately so Title Screen has a live dynamic arena background!
+    this.running = true;
+    this.lastTime = performance.now();
+    this.animId = requestAnimationFrame(this.loop);
   }
 
   private setupLighting() {
@@ -454,17 +467,139 @@ export class BouncebackEngine {
     this.disasterManager.userVote(id);
   }
 
+  public startIntro() {
+    this.appMode = "intro";
+    this.introPhase = "opener";
+    this.setIntroPhase("opener");
+  }
+
+  public setIntroPhase(
+    phase: "opener" | "cyan_team" | "vs_clash" | "coral_team" | "countdown"
+  ) {
+    this.introPhase = phase;
+    switch (phase) {
+      case "opener":
+        // High aerial dive through stadium lights toward midfield
+        this.introCamTarget.set(0, 16.0, -22.0);
+        this.introLookTarget.set(0, 2.0, -4.0);
+        break;
+      case "cyan_team":
+        // Dynamic low-angle hero showcase in front of Team Cyan
+        this.introCamTarget.set(0, 3.4, -9.8);
+        this.introLookTarget.set(0, 1.4, -16.74);
+        break;
+      case "vs_clash":
+        // Midfield sweep over rotating sweeper arm
+        this.introCamTarget.set(0, 3.5, 0);
+        this.introLookTarget.set(0, 2.0, 14.0);
+        break;
+      case "coral_team":
+        // Dynamic rival showcase in front of Team Coral
+        this.introCamTarget.set(0, 3.4, 9.8);
+        this.introLookTarget.set(0, 1.4, 16.74);
+        break;
+      case "countdown":
+        // Sweeping up and dropping into exact 3rd-person gameplay position behind player
+        this.introCamTarget.set(0, 8.5, -31.0);
+        this.introLookTarget.set(0, 1.2, -11.0);
+        break;
+    }
+  }
+
   startMatch() {
-    if (this.running) return;
+    this.appMode = "game";
     resumeAudio();
     sfxMatchStart();
     startBGM();
     this.match.start();
     this.disasterManager.reset();
-    this.running = true;
-    this.lastTime = performance.now();
     this.showAnnouncement("3V3 ARENA MATCH START!");
-    this.loop(this.lastTime);
+
+    // Smoothly lock camera directly behind player into 3rd person follow
+    this.camTargetPos.set(0, 8.5, -31.0);
+    this.camLookTarget.set(0, 1.2, -11.0);
+    this.camera.position.copy(this.camTargetPos);
+    this.camera.lookAt(this.camLookTarget);
+  }
+
+  public resetToTitle() {
+    this.appMode = "title";
+    stopBGM();
+    this.disasterManager.reset();
+    this.resetEntitiesToSpawn();
+    this.match.reset();
+  }
+
+  private resetEntitiesToSpawn() {
+    const halfL = C.ARENA_L * 0.5;
+    const spawnPositions = [
+      { x: 0, z: -halfL * 0.62 },
+      { x: -6.5, z: -halfL * 0.44 },
+      { x: 6.5, z: -halfL * 0.44 },
+      { x: 0, z: halfL * 0.62 },
+      { x: -6.5, z: halfL * 0.44 },
+      { x: 6.5, z: halfL * 0.44 },
+    ];
+    for (let i = 0; i < this.entities.length && i < spawnPositions.length; i++) {
+      const ent = this.entities[i];
+      const sp = spawnPositions[i];
+      ent.x = sp.x;
+      ent.z = sp.z;
+      ent.vx = 0;
+      ent.vz = 0;
+      ent.launched = false;
+      ent.stunTimer = 0;
+      ent.dashTimer = 0;
+      ent.immuneTimer = 0;
+      if (ent.mesh) {
+        const u = ent.mesh.userData;
+        const footOffset = u.footOffset || 0.25;
+        ent.mesh.position.set(sp.x, getArenaHeight(sp.x, sp.z) + footOffset, sp.z);
+        ent.mesh.rotation.set(0, ent.team === 1 ? Math.PI : 0, 0);
+      }
+    }
+  }
+
+  private updateTitleEntities(now: number) {
+    for (let i = 0; i < this.entities.length; i++) {
+      const ent = this.entities[i];
+      if (!ent.mesh) continue;
+      const u = ent.mesh.userData;
+      const footOffset = u.footOffset || 0.25;
+      const baseH = getArenaHeight(ent.x, ent.z);
+      ent.mesh.position.set(
+        ent.x,
+        baseH + footOffset + Math.sin(now * 3.0 + i * 1.2) * 0.08,
+        ent.z
+      );
+      const baseRotY = ent.team === 1 ? Math.PI : 0;
+      ent.mesh.rotation.set(0, baseRotY + Math.sin(now * 1.5 + i) * 0.12, 0);
+    }
+  }
+
+  private updateIntroEntities(now: number) {
+    for (let i = 0; i < this.entities.length; i++) {
+      const ent = this.entities[i];
+      if (!ent.mesh) continue;
+      const u = ent.mesh.userData;
+      const footOffset = u.footOffset || 0.25;
+      const baseH = getArenaHeight(ent.x, ent.z);
+
+      let jumpY = 0;
+      if (this.introPhase === "cyan_team" && ent.team === 0) {
+        jumpY = Math.abs(Math.sin(now * 6.0 + i * 1.5)) * 0.35;
+      } else if (this.introPhase === "coral_team" && ent.team === 1) {
+        jumpY = Math.abs(Math.sin(now * 6.0 + i * 1.5)) * 0.35;
+      }
+
+      ent.mesh.position.set(
+        ent.x,
+        baseH + footOffset + jumpY,
+        ent.z
+      );
+      const baseRotY = ent.team === 1 ? Math.PI : 0;
+      ent.mesh.rotation.set(0, baseRotY, 0);
+    }
   }
 
   private handleResize = () => {
@@ -654,6 +789,60 @@ export class BouncebackEngine {
     const rawDt = (now - this.lastTime) / 1000;
     this.lastTime = now;
     const dt = Math.min(rawDt, 0.05) * this.juice.getTimeScale();
+
+    // ─── 1. Title Screen Live 3D Drone Camera Orbit ───
+    if (this.appMode === "title") {
+      this.titleCamAngle += dt * 0.16;
+      const radius = 38.0;
+      const h = 21.0 + Math.sin(this.titleCamAngle * 0.6) * 4.0;
+      this.camera.position.set(
+        Math.sin(this.titleCamAngle) * radius,
+        h,
+        Math.cos(this.titleCamAngle) * radius
+      );
+      this.camera.lookAt(0, 2.2, 0);
+
+      this.arenaController?.update(dt, now * 0.001);
+      for (const gong of this.gongs) gong.update(dt);
+      this.skills.updateTitleBoxes();
+      this.updateTitleEntities(now * 0.001);
+
+      this.renderer.render(this.scene, this.camera);
+      return;
+    }
+
+    // ─── 2. TV Intro Cutscene Camera Swoops ───
+    if (this.appMode === "intro") {
+      const lerpSpeed = Math.min(1.0, (this.introPhase === "vs_clash" ? 6.5 : 4.2) * dt);
+      this.camera.position.lerp(this.introCamTarget, lerpSpeed);
+      this.camLookTarget.lerp(this.introLookTarget, lerpSpeed);
+      this.camera.lookAt(this.camLookTarget);
+
+      this.arenaController?.update(dt, now * 0.001);
+      for (const gong of this.gongs) gong.update(dt);
+      this.skills.updateTitleBoxes();
+      this.updateIntroEntities(now * 0.001);
+
+      this.renderer.render(this.scene, this.camera);
+      return;
+    }
+
+    // ─── 3. Match Result Victory Orbit ───
+    if (this.appMode === "result") {
+      this.titleCamAngle += dt * 0.28;
+      const winZ = this.winningTeam === 0 ? -16.74 : 16.74;
+      this.camera.position.set(
+        Math.sin(this.titleCamAngle) * 12.0,
+        5.2,
+        winZ + Math.cos(this.titleCamAngle) * 12.0
+      );
+      this.camera.lookAt(0, 1.4, winZ);
+
+      this.arenaController?.update(dt, now * 0.001);
+      for (const gong of this.gongs) gong.update(dt);
+      this.renderer.render(this.scene, this.camera);
+      return;
+    }
 
     // Hit-stop: skip physics when frozen
     if (!this.juice.isHitStopped()) {
