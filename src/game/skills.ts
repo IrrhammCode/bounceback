@@ -24,6 +24,7 @@ export enum SkillType {
   GigaMagnet = 4,  // Pull 3 nearest enemies toward you
   BounceBomb = 5,  // Roll an explosive pinball ball
   ShrinkZap = 6,   // Shrink nearest enemy to half size
+  OnePunchMan = 7, // 💥 ONE PUNCH MAN: Saitama Serious Punch that blasts enemy straight into the goal!
 }
 
 export const SKILL_NAMES: Record<SkillType, string> = {
@@ -34,6 +35,7 @@ export const SKILL_NAMES: Record<SkillType, string> = {
   [SkillType.GigaMagnet]: "MAGNET",
   [SkillType.BounceBomb]: "BOMB",
   [SkillType.ShrinkZap]: "SHRINK",
+  [SkillType.OnePunchMan]: "ONE PUNCH",
 };
 
 export const SKILL_ICONS: Record<SkillType, string> = {
@@ -44,6 +46,7 @@ export const SKILL_ICONS: Record<SkillType, string> = {
   [SkillType.GigaMagnet]: "🧲",
   [SkillType.BounceBomb]: "💣",
   [SkillType.ShrinkZap]: "🩳",
+  [SkillType.OnePunchMan]: "💥",
 };
 
 // ─── Mystery Box Config ───
@@ -342,6 +345,7 @@ export class SkillManager {
       SkillType.GigaMagnet,
       SkillType.BounceBomb,
       SkillType.ShrinkZap,
+      SkillType.OnePunchMan,
     ];
     return skills[Math.floor(Math.random() * skills.length)];
   }
@@ -380,7 +384,8 @@ export class SkillManager {
     user: Entity,
     entities: Entity[],
     skillSlots: SkillSlot[],
-    eventFn?: SkillEventFn
+    eventFn?: SkillEventFn,
+    gates?: { x: number; z: number; team: number; active: boolean }[]
   ) {
     const slot = skillSlots[idx];
     if (slot.type === SkillType.None) return;
@@ -520,6 +525,63 @@ export class SkillManager {
           // Spawn 3D Neon Laser Beam connecting user to target!
           this.spawnShrinkLaserFX(user, bestEnt);
           if (eventFn) eventFn("shrink", { x: bestEnt.x, z: bestEnt.z });
+        }
+        break;
+      }
+
+      case SkillType.OnePunchMan: {
+        let bestDist = 26.0;
+        let bestTarget: Entity | null = null;
+        for (const e of entities) {
+          if (e === user || e.team === user.team) continue;
+          if (e.immuneTimer > 0) continue;
+          const dx = e.x - user.x;
+          const dz = e.z - user.z;
+          const d = Math.sqrt(dx * dx + dz * dz);
+          if (d < bestDist) {
+            bestDist = d;
+            bestTarget = e;
+          }
+        }
+
+        // Opponent defending gate (which is the goal for the user to score into!)
+        let targetGate = gates ? gates.find((g) => g.team !== user.team && g.active) : null;
+        if (!targetGate) {
+          const halfL = C.ARENA_L * 0.5;
+          const targetZ = user.team === 0 ? halfL - 1.2 : -halfL + 1.2;
+          targetGate = { x: 0, z: targetZ, team: 1 - user.team, active: true };
+        }
+
+        if (bestTarget) {
+          // Spawn 3D Anime One Punch Man Giant Glove & Sonic Shockwave FX
+          this.spawnOnePunchManFX(user, bestTarget, targetGate);
+
+          // Vector directly from victim into the opponent's Gate!
+          const gx = targetGate.x - bestTarget.x;
+          const gz = targetGate.z - bestTarget.z;
+          const gDist = Math.sqrt(gx * gx + gz * gz) || 0.01;
+          const ONE_PUNCH_IMPULSE = 42.0;
+
+          bestTarget.vx = (gx / gDist) * ONE_PUNCH_IMPULSE;
+          bestTarget.vz = (gz / gDist) * ONE_PUNCH_IMPULSE;
+          bestTarget.launched = true;
+          bestTarget.launchTimer = 0;
+          bestTarget.launchSpeed = ONE_PUNCH_IMPULSE;
+          bestTarget.bounceCount = 0;
+          bestTarget.stunTimer = 2.0;
+          bestTarget.lastHitBy = idx;
+
+          // User lunges forward with supersonic dash
+          const udx = bestTarget.x - user.x;
+          const udz = bestTarget.z - user.z;
+          const uDist = Math.sqrt(udx * udx + udz * udz) || 1;
+          user.vx = (udx / uDist) * 14.0;
+          user.vz = (udz / uDist) * 14.0;
+
+          if (eventFn) eventFn("onepunch", { x: bestTarget.x, z: bestTarget.z });
+        } else {
+          this.spawnOnePunchManFX(user, null, targetGate);
+          if (eventFn) eventFn("whiff");
         }
         break;
       }
@@ -949,6 +1011,154 @@ export class SkillManager {
       },
       dispose: () => {
         this.fxGroup.remove(haloGroup);
+      },
+    });
+  }
+
+  // 7. 💥 One Punch Man: 3D Giant Saitama Serious Punch Fist & Hyper Shockwaves
+  private spawnOnePunchManFX(user: Entity, target: Entity | null, targetGate: { x: number; z: number }) {
+    const punchGroup = new THREE.Group();
+    punchGroup.name = "OnePunchManFX";
+
+    const gloveMat = new THREE.MeshStandardMaterial({
+      color: 0xff002b,
+      emissive: 0xd90429,
+      emissiveIntensity: 0.65,
+      roughness: 0.15,
+      metalness: 0.4,
+    });
+    const goldAuraMat = new THREE.MeshStandardMaterial({
+      color: 0xffd700,
+      emissive: 0xf59e0b,
+      emissiveIntensity: 0.85,
+      metalness: 0.9,
+      roughness: 0.1,
+    });
+    const energyRingMat = new THREE.MeshBasicMaterial({
+      color: 0xfff066,
+      transparent: true,
+      opacity: 0.9,
+      side: THREE.DoubleSide,
+    });
+
+    // 1. Gigantic Comic Serious Boxing Glove
+    const giantGlove = new THREE.Mesh(new THREE.SphereGeometry(1.05, 20, 16), gloveMat);
+    giantGlove.scale.set(1.1, 1.25, 1.45);
+    punchGroup.add(giantGlove);
+
+    // 4 Golden Anime Knuckle studs
+    for (let k = -1.5; k <= 1.5; k += 1.0) {
+      const knuckle = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.35, 12), goldAuraMat);
+      knuckle.rotation.x = Math.PI / 2;
+      knuckle.position.set(k * 0.42, 0.22, 1.25);
+      punchGroup.add(knuckle);
+    }
+
+    // Heavy Gold Cuff
+    const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.9, 0.65, 16), goldAuraMat);
+    cuff.rotation.x = Math.PI / 2;
+    cuff.position.z = -1.1;
+    punchGroup.add(cuff);
+
+    // 3 Swirling Anime Energy Rings around the punch
+    const rings: THREE.Mesh[] = [];
+    for (let r = 0; r < 3; r++) {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(1.35 + r * 0.35, 0.08, 8, 24), energyRingMat);
+      ring.position.z = -0.5 + r * 0.8;
+      punchGroup.add(ring);
+      rings.push(ring);
+    }
+
+    // Fiery Sonic Boom Cone
+    const coneGeo = new THREE.ConeGeometry(1.6, 2.8, 16, 1, true);
+    coneGeo.rotateX(-Math.PI / 2);
+    const coneMat = new THREE.MeshBasicMaterial({
+      color: 0xff5400,
+      transparent: true,
+      opacity: 0.65,
+      side: THREE.DoubleSide,
+    });
+    const sonicCone = new THREE.Mesh(coneGeo, coneMat);
+    sonicCone.position.z = 1.2;
+    punchGroup.add(sonicCone);
+
+    punchGroup.position.set(user.x, 1.2, user.z);
+
+    // Direction to target (or user velocity/forward)
+    let dir = new THREE.Vector3(0, 0, user.team === 0 ? 1 : -1);
+    if (target) {
+      dir.set(target.x - user.x, 0, target.z - user.z).normalize();
+    } else if (user.vx !== 0 || user.vz !== 0) {
+      dir.set(user.vx, 0, user.vz).normalize();
+    }
+    punchGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir);
+    this.fxGroup.add(punchGroup);
+
+    // Blazing Comet Trail that follows target into the goal
+    let cometTrail: THREE.Mesh | null = null;
+    if (target) {
+      const cometGeo = new THREE.SphereGeometry(0.65, 10, 10);
+      const cometMat = new THREE.MeshBasicMaterial({ color: 0xff3b30, transparent: true, opacity: 0.85 });
+      cometTrail = new THREE.Mesh(cometGeo, cometMat);
+      cometTrail.scale.set(1.5, 1.5, 3.2);
+      this.fxGroup.add(cometTrail);
+    }
+
+    let age = 0;
+    const maxAge = 0.55;
+    const maxPunchDist = target ? Math.min(10.0, Math.hypot(target.x - user.x, target.z - user.z) + 1.5) : 6.0;
+
+    this.activeFX.push({
+      update: (dt: number) => {
+        age += dt;
+        const t = age / maxAge;
+        if (t >= 1.0) {
+          if (cometTrail) this.fxGroup.remove(cometTrail);
+          return true;
+        }
+
+        // Spin energy rings
+        for (let r = 0; r < rings.length; r++) {
+          rings[r].rotation.z += dt * (18.0 + r * 6.0);
+        }
+
+        // Explosive anime punch animation: Windup (0 - 0.2), Hyper Punch (0.2 - 0.6), Retract (0.6 - 1.0)
+        let punchDist = 0;
+        if (t < 0.2) {
+          // Windup pull back
+          punchDist = -(t / 0.2) * 1.2;
+          punchGroup.scale.setScalar(0.9 + (t / 0.2) * 0.4);
+        } else if (t < 0.6) {
+          // BLAM! Forward thrust
+          const pt = (t - 0.2) / 0.4;
+          punchDist = -1.2 + Math.sin(pt * Math.PI * 0.5) * (maxPunchDist + 1.2);
+          punchGroup.scale.setScalar(1.3 + Math.sin(pt * Math.PI) * 0.4);
+          sonicCone.scale.set(1.0 + pt * 1.5, 1.0 + pt * 1.5, 1.0 + pt * 2.0);
+        } else {
+          // Snappy retract & fade
+          const rt = (t - 0.6) / 0.4;
+          punchDist = maxPunchDist * (1.0 - rt);
+          punchGroup.scale.setScalar(Math.max(0.1, 1.3 * (1.0 - rt)));
+        }
+
+        punchGroup.position.set(
+          user.x + dir.x * punchDist,
+          1.2,
+          user.z + dir.z * punchDist
+        );
+
+        // Update comet trail following target as they soar into the goal
+        if (cometTrail && target) {
+          cometTrail.position.set(target.x, target.mesh ? target.mesh.position.y : 1.2, target.z);
+          const velLen = Math.hypot(target.vx, target.vz) || 1;
+          cometTrail.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), new THREE.Vector3(target.vx / velLen, 0, target.vz / velLen));
+        }
+
+        return false;
+      },
+      dispose: () => {
+        this.fxGroup.remove(punchGroup);
+        if (cometTrail) this.fxGroup.remove(cometTrail);
       },
     });
   }

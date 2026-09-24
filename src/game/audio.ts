@@ -598,3 +598,16 @@ export function sfxShrink() {
   osc.start(ctx.currentTime);
   osc.stop(ctx.currentTime + 0.35);
 }
+
+export function sfxOnePunch() {
+  if (!ctx || !sfxGain || muted) return;
+  // Deep explosive anime bass impact
+  playTone(65, 0.8, "sine", 0.85);
+  playTone(130, 0.45, "triangle", 0.7);
+  // Fiery explosion crack
+  playNoise(0.6, 0.75, 2200);
+  // High energy anime laser shimmer
+  playTone(880, 0.28, "sawtooth", 0.4);
+  // Stadium crowd roar
+  sfxCrowdCheer(1.5);
+}

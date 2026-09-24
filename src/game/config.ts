@@ -23,11 +23,11 @@ export const PLAYER_SPEED = 8.0;
 export const DASH_SPEED = 18.0;
 export const DASH_DUR = 0.18;
 export const DASH_CD = 0.8;
-export const PUNCH_IMPULSE = 14.0;
-export const CHARGE_IMPULSE = 22.0;
-export const CHARGE_TIME = 0.6;
-export const PUNCH_RANGE = 1.6;
-export const PUNCH_CD = 0.3;
+export const PUNCH_IMPULSE = 16.0;
+export const CHARGE_IMPULSE = 24.0;
+export const CHARGE_TIME = 0.55;
+export const PUNCH_RANGE = 2.4;
+export const PUNCH_CD = 0.28;
 
 // Launch/bounce physics
 export const LAUNCH_FRICTION = 0.985;

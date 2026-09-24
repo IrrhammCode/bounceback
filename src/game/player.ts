@@ -26,9 +26,13 @@ export class PlayerController {
   skillPressed = false;
 
   private keys: Record<string, boolean> = {};
+  debugGrantSkill: SkillType | null = null;
   private _boundKeyDown: (e: KeyboardEvent) => void;
   private _boundKeyUp: (e: KeyboardEvent) => void;
   private _boundBlur: () => void;
+  private _boundMouseDown?: (e: MouseEvent) => void;
+  private _boundMouseUp?: (e: MouseEvent) => void;
+  private _boundNumKeys?: (e: KeyboardEvent) => void;
 
   constructor() {
     this._boundKeyDown = (e) => {
@@ -144,57 +148,45 @@ export class PlayerController {
     stickEl.addEventListener("touchend", endStick);
     stickEl.addEventListener("touchcancel", endStick);
 
-    // Touch action buttons
-    const btnA = document.getElementById("btnA");
-    const btnB = document.getElementById("btnB");
-    if (btnA) {
-      btnA.addEventListener(
-        "touchstart",
-        (e) => {
-          e.preventDefault();
-          this.punchPressed = true;
-          btnA.classList.add("dn");
-        },
-        { passive: false }
-      );
-      btnA.addEventListener("touchend", () => {
+    // Global Mouse Click support: Left-Click = Punch, Right-Click = Skill
+    this._boundMouseDown = (e: MouseEvent) => {
+      if (e.button === 0) {
+        this.punchPressed = true;
+      } else if (e.button === 2) {
+        this.skillPressed = true;
+      }
+    };
+    this._boundMouseUp = (e: MouseEvent) => {
+      if (e.button === 0) {
         this.punchPressed = false;
-        btnA.classList.remove("dn");
-      });
-    }
-    if (btnB) {
-      btnB.addEventListener(
-        "touchstart",
-        (e) => {
-          e.preventDefault();
-          this.dashPressed = true;
-          btnB.classList.add("dn");
-        },
-        { passive: false }
-      );
-      btnB.addEventListener("touchend", () => {
-        this.dashPressed = false;
-        btnB.classList.remove("dn");
-      });
-    }
-
-    // Skill button (touch)
-    const btnSkill = document.getElementById("btnSkill");
-    if (btnSkill) {
-      btnSkill.addEventListener(
-        "touchstart",
-        (e) => {
-          e.preventDefault();
-          this.skillPressed = true;
-          btnSkill.classList.add("dn");
-        },
-        { passive: false }
-      );
-      btnSkill.addEventListener("touchend", () => {
+      } else if (e.button === 2) {
         this.skillPressed = false;
-        btnSkill.classList.remove("dn");
-      });
-    }
+      }
+    };
+    window.addEventListener("mousedown", this._boundMouseDown);
+    window.addEventListener("mouseup", this._boundMouseUp);
+
+    // Number keys 1-7 for instant skill equipping
+    this._boundNumKeys = (e: KeyboardEvent) => {
+      if (e.key >= "1" && e.key <= "7") {
+        this.debugGrantSkill = parseInt(e.key, 10) as SkillType;
+      }
+    };
+    window.addEventListener("keydown", this._boundNumKeys);
+
+    // Touch and mouse wire for action buttons
+    const wireBtn = (id: string, onDown: () => void, onUp: () => void) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener("mousedown", (e) => { e.preventDefault(); e.stopPropagation(); onDown(); el.classList.add("dn"); });
+      el.addEventListener("mouseup", () => { onUp(); el.classList.remove("dn"); });
+      el.addEventListener("touchstart", (e) => { e.preventDefault(); onDown(); el.classList.add("dn"); }, { passive: false });
+      el.addEventListener("touchend", () => { onUp(); el.classList.remove("dn"); });
+    };
+
+    wireBtn("btnA", () => { this.punchPressed = true; }, () => { this.punchPressed = false; });
+    wireBtn("btnB", () => { this.dashPressed = true; }, () => { this.dashPressed = false; });
+    wireBtn("btnSkill", () => { this.skillPressed = true; }, () => { this.skillPressed = false; });
 
     // Right-click / contextmenu for skill on desktop
     window.addEventListener("contextmenu", (e) => {
@@ -210,6 +202,9 @@ export class PlayerController {
     window.removeEventListener("keydown", this._boundKeyDown);
     window.removeEventListener("keyup", this._boundKeyUp);
     window.removeEventListener("blur", this._boundBlur);
+    if (this._boundMouseDown) window.removeEventListener("mousedown", this._boundMouseDown);
+    if (this._boundMouseUp) window.removeEventListener("mouseup", this._boundMouseUp);
+    if (this._boundNumKeys) window.removeEventListener("keydown", this._boundNumKeys);
   }
 
   getInput() {
@@ -363,6 +358,25 @@ export class PlayerController {
     // Punch attack
     if (punch && player.punchCd <= 0 && !player.launched) {
       player.punchCd = C.PUNCH_CD;
+
+      // Determine punch facing direction
+      let fnx = player.vx;
+      let fnz = player.vz;
+      if (Math.hypot(fnx, fnz) < 0.2) {
+        fnx = mx;
+        fnz = mz;
+        if (Math.hypot(fnx, fnz) < 0.2) {
+          fnz = player.team === 0 ? 1.0 : -1.0;
+        }
+      }
+      const fLen = Math.hypot(fnx, fnz) || 1;
+      fnx /= fLen;
+      fnz /= fLen;
+
+      // Forward lunge momentum on punch
+      player.vx += fnx * 4.2;
+      player.vz += fnz * 4.2;
+
       let bestDist = C.PUNCH_RANGE;
       let bestIdx = -1;
       for (let i = 0; i < entities.length; i++) {
@@ -372,7 +386,8 @@ export class PlayerController {
         const dx = t.x - player.x;
         const dz = t.z - player.z;
         const dist = Math.sqrt(dx * dx + dz * dz);
-        if (dist < bestDist) {
+        const dot = (dx * fnx + dz * fnz) / (dist || 1);
+        if (dist < bestDist && dot > -0.35) {
           bestDist = dist;
           bestIdx = i;
         }
@@ -382,7 +397,7 @@ export class PlayerController {
         entities[bestIdx].lastHitBy = entities.indexOf(player);
         if (juiceFn) juiceFn("punch", result);
       } else {
-        if (juiceFn) juiceFn("whiff");
+        if (juiceFn) juiceFn("whiff", { x: player.x + fnx * 1.5, z: player.z + fnz * 1.5 });
       }
     }
   }

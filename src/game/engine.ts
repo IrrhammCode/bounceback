@@ -45,6 +45,7 @@ import {
   sfxMagnet,
   sfxBombExplode,
   sfxShrink,
+  sfxOnePunch,
 } from "./audio";
 // @ts-ignore — JS asset modules following 404 asset contract
 import generateMecha from "../assets/toy_mecha.js";
@@ -607,8 +608,14 @@ export class BouncebackEngine {
         this.juice.trigger("shrink");
         this.showAnnouncement("🩳 SHRINK!");
         break;
+      case "onepunch":
+        sfxOnePunch();
+        this.juice.trigger("onepunch", data);
+        this.showAnnouncement("💥 ONE PUNCH!!");
+        break;
       case "whiff":
         sfxWhiff();
+        this.juice.trigger("whiff", data);
         break;
     }
   };
@@ -659,6 +666,12 @@ export class BouncebackEngine {
         isFirstPerson
       );
 
+      // Player debug grant skill via number keys 1-7
+      if (this.player.debugGrantSkill !== null) {
+        this.skillSlots[0].type = this.player.debugGrantSkill;
+        this.player.debugGrantSkill = null;
+      }
+
       // Player skill activation
       const input = this.player.getInput();
       if (input.skill && this.skillSlots[0] && this.skillSlots[0].type !== SkillType.None) {
@@ -667,7 +680,8 @@ export class BouncebackEngine {
           this.entities[0],
           this.entities,
           this.skillSlots,
-          this.handleSkillEvent
+          this.handleSkillEvent,
+          this.gates
         );
       }
 
@@ -906,11 +920,14 @@ export class BouncebackEngine {
             u.bunnyEars.rotation.x = Math.sin(spd > 0.4 ? u.walkPhase * 1.5 : now * 0.004) * 0.12;
           }
 
-          // Punch extension animation
-          if (ent.punchCd > C.PUNCH_CD * 0.4) {
-            const punchProgress = (ent.punchCd - C.PUNCH_CD * 0.4) / (C.PUNCH_CD * 0.6);
-            u.rightArm.rotation.x = -1.5;
-            u.rightArm.position.z = 0.06 + punchProgress * 0.35;
+          // Punch extension animation (satisfying snappy punch thrust & recovery)
+          if (ent.punchCd > 0) {
+            const punchProgress = 1.0 - (ent.punchCd / C.PUNCH_CD);
+            const punchDist = punchProgress < 0.35 ? (punchProgress / 0.35) : (1.0 - (punchProgress - 0.35) / 0.65);
+            u.rightArm.rotation.x = -1.6;
+            u.rightArm.rotation.y = 0.25;
+            u.rightArm.position.z = 0.06 + punchDist * 0.65;
+            if (u.torso) u.torso.rotation.y = -punchDist * 0.35;
           } else {
             u.rightArm.position.z = 0.06;
           }

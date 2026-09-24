@@ -145,6 +145,17 @@ export class JuiceSystem {
         break;
 
       case "whiff":
+        this.addTrauma(0.12);
+        this.spawnShockwave(x, y, z, 0xffffff, 1.4);
+        this.spawnHitSparks(x, y + 0.1, z, 0xf8fafc, 8);
+        break;
+
+      case "onepunch":
+        this.addTrauma(1.0);
+        this.hitStopTimer = 0.085;
+        this.spawnComicPopup("💥 ONE PUNCH!!", x, y + 1.2, z, "rainbow");
+        this.spawnShockwave(x, 0.2, z, 0xff002b, 6.5);
+        this.spawnHitSparks(x, y + 0.6, z, 0xffd700, 42);
         break;
 
       case "goal":
