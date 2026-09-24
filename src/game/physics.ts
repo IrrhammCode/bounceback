@@ -29,6 +29,7 @@ export class Entity {
   team: number;
   isPlayer: boolean;
   launched = false;
+  launchTimer = 0;
   launchSpeed = 0;
   immuneTimer = 0;
   bounceCount = 0;
@@ -67,10 +68,11 @@ export function applyPunch(
   target.vx = nx * impulse;
   target.vz = nz * impulse;
   target.launched = true;
+  target.launchTimer = 0;
   target.launchSpeed = impulse;
   target.bounceCount = 0;
   target.immuneTimer = 0;
-  target.stunTimer = 0.3;
+  target.stunTimer = 0.25;
   return { nx, nz, impulse };
 }
 
@@ -105,19 +107,26 @@ export function updatePhysics(
     e.x += e.vx * dt;
     e.z += e.vz * dt;
 
-    // Friction
+    // Friction & Launch Auto-Recovery
     if (e.launched) {
-      e.vx *= C.LAUNCH_FRICTION;
-      e.vz *= C.LAUNCH_FRICTION;
+      e.launchTimer = (e.launchTimer || 0) + dt;
+      const decay = Math.pow(0.968, dt * 60);
+      e.vx *= decay;
+      e.vz *= decay;
       const spd = Math.sqrt(e.vx * e.vx + e.vz * e.vz);
-      if (spd < C.LAUNCH_THRESHOLD) {
+      // Auto-recover after max 0.95s or when speed drops below threshold
+      if (spd < C.LAUNCH_THRESHOLD || e.launchTimer > 0.95) {
         e.launched = false;
         e.bounceCount = 0;
         e.launchSpeed = 0;
+        e.launchTimer = 0;
+        e.stunTimer = 0;
       }
     } else {
-      e.vx *= C.GROUND_FRICTION;
-      e.vz *= C.GROUND_FRICTION;
+      e.launchTimer = 0;
+      const gDecay = Math.pow(C.GROUND_FRICTION, dt * 60);
+      e.vx *= gDecay;
+      e.vz *= gDecay;
     }
 
     e.speed = Math.sqrt(e.vx * e.vx + e.vz * e.vz);
@@ -222,6 +231,7 @@ export function updatePhysics(
         b.vx = nx * a.speed * 0.7;
         b.vz = nz * a.speed * 0.7;
         b.launched = true;
+        b.launchTimer = 0;
         b.launchSpeed = a.speed * 0.7;
         b.bounceCount = 0;
         b.lastHitBy = a.lastHitBy;
@@ -239,6 +249,7 @@ function respawnEntity(e: Entity, halfW: number, halfL: number) {
   e.vx = 0;
   e.vz = 0;
   e.launched = false;
+  e.launchTimer = 0;
   e.launchSpeed = 0;
   e.bounceCount = 0;
   e.immuneTimer = C.IMMUNITY_DUR;

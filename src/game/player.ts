@@ -292,9 +292,22 @@ export class PlayerController {
     cameraFacingAngle = 0,
     isFirstPerson = false
   ) {
-    if (player.stunTimer > 0) return;
-
     let { mx, mz, punch, dash } = this.getInput();
+
+    // Active Recovery / Teching:
+    // When knocked down / launched, player can press any movement key, dash, or punch after 0.28s
+    // to instantly break out of the tumble and stand back up on two feet!
+    if (player.launched && (player.launchTimer || 0) > 0.28) {
+      if (mx !== 0 || mz !== 0 || dash || punch) {
+        player.launched = false;
+        player.stunTimer = 0;
+        player.launchTimer = 0;
+        player.launchSpeed = 0;
+        player.bounceCount = 0;
+      }
+    }
+
+    if (player.stunTimer > 0) return;
 
     // In 1st-person camera mode, rotate movement vector according to player's look direction
     if (isFirstPerson && (mx !== 0 || mz !== 0)) {

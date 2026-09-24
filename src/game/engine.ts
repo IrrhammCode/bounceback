@@ -774,11 +774,17 @@ export class BouncebackEngine {
         const footOffset = u.footOffset || 0.25;
         ent.mesh.position.x = ent.x;
         ent.mesh.position.z = ent.z;
+        ent.mesh.rotation.order = "YXZ";
+
         // Visual bounce & comedic tumble on Y when launched
         if (ent.launched) {
-          ent.mesh.position.y = groundH + footOffset + Math.abs(Math.sin(now * 0.015)) * 0.95 + 0.15;
-          if (u.torso) u.torso.rotation.x += dt * 14.0;
-          ent.mesh.rotation.z += dt * 8.0;
+          ent.mesh.position.y = groundH + footOffset + Math.abs(Math.sin(now * 0.015)) * 0.85 + 0.12;
+          if (u.torso) u.torso.rotation.x = Math.sin(now * 0.02) * 0.75;
+          ent.mesh.rotation.z += dt * 6.0;
+          // Keep rotation.z within [-PI, PI] to prevent huge unwinding delays
+          while (ent.mesh.rotation.z > Math.PI) ent.mesh.rotation.z -= Math.PI * 2;
+          while (ent.mesh.rotation.z < -Math.PI) ent.mesh.rotation.z += Math.PI * 2;
+
           if (u.leftArm && u.rightArm) {
             u.leftArm.rotation.set(-2.2 + Math.sin(now * 0.025) * 0.6, 0, 1.2);
             u.rightArm.rotation.set(-2.2 - Math.sin(now * 0.025) * 0.6, 0, -1.2);
@@ -788,11 +794,20 @@ export class BouncebackEngine {
             u.rightLeg.rotation.x = -Math.sin(now * 0.035) * 0.85;
           }
         } else {
+          // STANDING UPRIGHT FIRMLY ON TWO FEET!
           ent.mesh.position.y = groundH + footOffset;
+          // Strictly zero out pitch X tilt
+          ent.mesh.rotation.x = 0;
+          // Quickly spring back to 0 roll Z (standing straight)
+          ent.mesh.rotation.z += (0 - ent.mesh.rotation.z) * Math.min(1.0, 24.0 * dt);
+          if (Math.abs(ent.mesh.rotation.z) < 0.03) ent.mesh.rotation.z = 0;
+
           if (u.torso && !ent.stunTimer && spd > 0.4) {
             u.torso.rotation.x = slope.pitch * 0.65;
+            u.torso.rotation.y = 0;
           } else if (u.torso && !ent.stunTimer) {
             u.torso.rotation.x = 0;
+            u.torso.rotation.y = 0;
           }
         }
 
@@ -806,13 +821,16 @@ export class BouncebackEngine {
           // Snappy turning lerp
           ent.mesh.rotation.y += diffY * Math.min(1.0, 16.0 * dt);
 
-          // Dynamic banking lean into turn
+          // Dynamic banking lean into turn (clamped subtle lean [-0.22, 0.22])
           if (!ent.launched && !ent.stunTimer) {
-            const leanZ = -diffY * 0.35;
-            ent.mesh.rotation.z += (leanZ - ent.mesh.rotation.z) * Math.min(1.0, 12.0 * dt);
+            const leanZ = Math.max(-0.22, Math.min(0.22, -diffY * 0.25));
+            ent.mesh.rotation.z += (leanZ - ent.mesh.rotation.z) * Math.min(1.0, 18.0 * dt);
+            ent.mesh.rotation.x = 0;
           }
         } else if (!ent.launched && !ent.stunTimer) {
-          ent.mesh.rotation.z += (0 - ent.mesh.rotation.z) * Math.min(1.0, 10.0 * dt);
+          ent.mesh.rotation.z += (0 - ent.mesh.rotation.z) * Math.min(1.0, 24.0 * dt);
+          if (Math.abs(ent.mesh.rotation.z) < 0.03) ent.mesh.rotation.z = 0;
+          ent.mesh.rotation.x = 0;
         }
 
         // Scale effects & Stun wobble
