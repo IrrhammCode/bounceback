@@ -63,6 +63,7 @@ export interface GameState {
   playerSkill: SkillType;
   playerSkillName: string;
   playerSkillIcon: string;
+  cameraMode: "third_wide" | "third_close" | "first_person";
 }
 
 export type GameStateCallback = (state: GameState) => void;
@@ -87,6 +88,9 @@ export class BouncebackEngine {
   private running = false;
   private onStateChange: GameStateCallback;
   private onMatchEnd: ((winner: number, scores: [number, number]) => void) | null = null;
+
+  public cameraMode: "third_wide" | "third_close" | "first_person" = "third_wide";
+  private boundCamKeyDown?: (e: KeyboardEvent) => void;
 
   private announcement = "";
   private announcementTimer = 0;
@@ -201,6 +205,14 @@ export class BouncebackEngine {
     // Resize handler
     this.handleResize();
     window.addEventListener("resize", this.handleResize);
+
+    // Camera toggle key listener (C or V)
+    this.boundCamKeyDown = (e: KeyboardEvent) => {
+      if (e.code === "KeyC" || e.code === "KeyV") {
+        this.toggleCamera();
+      }
+    };
+    window.addEventListener("keydown", this.boundCamKeyDown);
   }
 
   private setupLighting() {
@@ -424,28 +436,81 @@ export class BouncebackEngine {
     this.camera.updateProjectionMatrix();
   };
 
-  // ─── 3rd-Person Camera Follow ───
+  // ─── Camera System (3rd-Person Wide, 3rd-Person Close, 1st-Person POV) ───
+  public toggleCamera(): string {
+    if (this.cameraMode === "third_wide") {
+      this.cameraMode = "third_close";
+      this.announce("CAM: 3RD PERSON (ACTION CLOSE)");
+      return "3rd Close";
+    } else if (this.cameraMode === "third_close") {
+      this.cameraMode = "first_person";
+      this.announce("CAM: 1ST PERSON (ACTION POV)");
+      return "1st Person";
+    } else {
+      this.cameraMode = "third_wide";
+      this.announce("CAM: 3RD PERSON (STADIUM WIDE)");
+      return "3rd Wide";
+    }
+  }
+
   private updateCamera(dt: number) {
     const p = this.entities[0];
     if (!p) return;
 
-    // In an elongated sports arena, camera stays behind Team 0 looking downfield (+Z)
-    // toward the opponent's goal. Spacious framing provides plenty of breathing room.
-    const camDist = 14.0;
-    const camHeight = 8.5;
     const pGroundY = getArenaHeight(p.x, p.z);
+    const isFirstPerson = this.cameraMode === "first_person";
 
-    const targetX = p.x * 0.65;
-    const targetY = pGroundY + camHeight;
-    const targetZ = p.z - camDist;
+    // Auto-hide player mecha mesh in 1st-person POV so inside of head doesn't clip
+    if (p.mesh) {
+      p.mesh.visible = !isFirstPerson;
+    }
 
-    this.camTargetPos.set(targetX, targetY, targetZ);
-    this.camLookTarget.set(p.x * 0.4, pGroundY + 1.2, p.z + 6.0);
+    if (isFirstPerson) {
+      // 1st Person: Camera directly at player's eye level looking forward
+      const eyeY = pGroundY + 1.15;
+      this.camTargetPos.set(p.x, eyeY, p.z);
 
-    // Gentle lerp for comfortable, smooth motion (zero dizziness)
-    const lerpSpeed = Math.min(1.0, 3.8 * dt);
-    this.camera.position.lerp(this.camTargetPos, lerpSpeed);
-    this.camera.lookAt(this.camLookTarget);
+      // Facing angle from velocity or rotation
+      let facingAngle = 0;
+      if (Math.hypot(p.vx, p.vz) > 0.3) {
+        facingAngle = Math.atan2(p.vx, p.vz);
+      }
+      this.camLookTarget.set(
+        p.x + Math.sin(facingAngle) * 14.0,
+        eyeY - 0.05,
+        p.z + Math.cos(facingAngle) * 14.0
+      );
+      this.camera.position.copy(this.camTargetPos);
+      this.camera.lookAt(this.camLookTarget);
+    } else if (this.cameraMode === "third_close") {
+      // Close Over-The-Shoulder Action Cam
+      const camDist = 6.8;
+      const camHeight = 3.8;
+      const targetX = p.x * 0.82;
+      const targetY = pGroundY + camHeight;
+      const targetZ = p.z - camDist;
+
+      this.camTargetPos.set(targetX, targetY, targetZ);
+      this.camLookTarget.set(p.x * 0.5, pGroundY + 1.3, p.z + 8.0);
+
+      const lerpSpeed = Math.min(1.0, 5.0 * dt);
+      this.camera.position.lerp(this.camTargetPos, lerpSpeed);
+      this.camera.lookAt(this.camLookTarget);
+    } else {
+      // Standard Spacious Stadium 3rd-Person (Recommended for spatial awareness)
+      const camDist = 14.0;
+      const camHeight = 8.5;
+      const targetX = p.x * 0.65;
+      const targetY = pGroundY + camHeight;
+      const targetZ = p.z - camDist;
+
+      this.camTargetPos.set(targetX, targetY, targetZ);
+      this.camLookTarget.set(p.x * 0.4, pGroundY + 1.2, p.z + 6.0);
+
+      const lerpSpeed = Math.min(1.0, 3.8 * dt);
+      this.camera.position.lerp(this.camTargetPos, lerpSpeed);
+      this.camera.lookAt(this.camLookTarget);
+    }
 
     // Dynamic FOV (gentle transitions)
     const playerSlot = this.skillSlots[0];
@@ -805,6 +870,7 @@ export class BouncebackEngine {
       playerSkill: pSlot ? pSlot.type : SkillType.None,
       playerSkillName: pSlot ? SKILL_NAMES[pSlot.type] : "",
       playerSkillIcon: pSlot ? SKILL_ICONS[pSlot.type] : "",
+      cameraMode: this.cameraMode,
     });
 
     this.renderer.render(this.scene, this.camera);
@@ -824,6 +890,9 @@ export class BouncebackEngine {
     this.running = false;
     cancelAnimationFrame(this.animId);
     window.removeEventListener("resize", this.handleResize);
+    if (this.boundCamKeyDown) {
+      window.removeEventListener("keydown", this.boundCamKeyDown);
+    }
     this.player.destroy();
     this.skills.destroy();
     this.arenaController?.dispose();

@@ -19,6 +19,7 @@ const initialState: GameState = {
   playerSkill: SkillType.None,
   playerSkillName: "",
   playerSkillIcon: "",
+  cameraMode: "third_wide",
 };
 
 export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
@@ -73,8 +74,21 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
       {/* HUD Overlay — always visible during match */}
       <div className="hud">
         {/* Exit button */}
-        <button className="exit-btn" onClick={onExit}>
+        <button className="exit-btn" onClick={onExit} title="Exit Match">
           ✕
+        </button>
+
+        {/* Camera mode toggle button */}
+        <button
+          className="cam-toggle-btn"
+          onClick={() => engineRef.current?.toggleCamera()}
+          title="Toggle Camera (or press C / V)"
+        >
+          {gameState.cameraMode === "first_person"
+            ? "🎥 1ST POV"
+            : gameState.cameraMode === "third_close"
+              ? "🎥 3RD CLOSE"
+              : "🎥 3RD WIDE"}
         </button>
 
         {/* Top Bar: Scoreboard + Timer */}
@@ -167,6 +181,9 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
           </span>
           <span>
             <kbd>E</kbd> Skill
+          </span>
+          <span>
+            <kbd>C</kbd> Camera
           </span>
         </div>
       </div>
