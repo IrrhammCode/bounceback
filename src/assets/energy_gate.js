@@ -1,148 +1,156 @@
 /**
- * BOUNCEBACK! — Energy Scoring Gate (Sci-Fi Archway with Laser Curtain & Multiplier Crown)
- * Pure Three.js code asset meeting the 404 asset contract.
+ * BOUNCEBACK! — Holographic Championship Energy Scoring Gate
+ *
+ * Arcade Fall Guys / Rocket League aesthetic:
+ * - Thick, rounded futuristic goalposts with glowing neon edge runners
+ * - Arched top crossbar with illuminated score sensor diodes
+ * - Holographic glowing laser energy net with grid scanlines
+ * - Floating score multiplier crystal crown atop the gate
+ * - Sturdy rounded base pods with neon energy ground rings
  */
 export default function generate(THREE) {
   const g = new THREE.Group();
 
-  const frameMat = new THREE.MeshStandardMaterial({
+  // Primary team accent material (recolored dynamically by engine.ts)
+  const neonMat = new THREE.MeshStandardMaterial({
     color: 0xffd166,
-    roughness: 0.25,
-    metalness: 0.45,
-    name: 'metal_painted'
+    emissive: 0xffd166,
+    emissiveIntensity: 0.75,
+    roughness: 0.15,
+    metalness: 0.8,
+    name: "neon_emissive",
+  });
+
+  const frameMat = new THREE.MeshStandardMaterial({
+    color: 0xf8fafc,
+    roughness: 0.2,
+    metalness: 0.1,
+    name: "metal_painted",
   });
 
   const darkMat = new THREE.MeshStandardMaterial({
-    color: 0x1e293b,
-    roughness: 0.5,
-    metalness: 0.3,
-    name: 'metal_painted'
+    color: 0x0f172a,
+    roughness: 0.4,
+    metalness: 0.5,
+    name: "metal_dark",
   });
 
-  const beamMat = new THREE.MeshBasicMaterial({
+  // Holographic energy curtain texture
+  const c = document.createElement("canvas");
+  c.width = 256;
+  c.height = 256;
+  const ctx = c.getContext("2d");
+  if (ctx) {
+    ctx.fillStyle = "rgba(0, 0, 0, 0)";
+    ctx.fillRect(0, 0, 256, 256);
+
+    // Glowing energy grid / honeycomb lines
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 4;
+    for (let y = 0; y < 256; y += 24) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(256, y);
+      ctx.stroke();
+    }
+    for (let x = 0; x < 256; x += 24) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, 256);
+      ctx.stroke();
+    }
+  }
+  const netTex = new THREE.CanvasTexture(c);
+  netTex.wrapS = THREE.RepeatWrapping;
+  netTex.wrapT = THREE.RepeatWrapping;
+  netTex.repeat.set(4, 4);
+
+  const netMat = new THREE.MeshBasicMaterial({
+    map: netTex,
     color: 0xffd166,
     transparent: true,
-    opacity: 0.35,
+    opacity: 0.45,
     side: THREE.DoubleSide,
-    name: 'neon_emissive'
+    depthWrite: false,
+    name: "neon_emissive",
   });
 
-  const laserLineMat = new THREE.MeshBasicMaterial({
-    color: 0xffffff,
-    transparent: true,
-    opacity: 0.75,
-    name: 'neon_emissive'
-  });
+  const gateWidth = 3.6;
+  const halfW = gateWidth / 2;
+  const gateHeight = 3.8;
 
-  const rimMat = new THREE.MeshBasicMaterial({
-    color: 0xffd166,
-    name: 'neon_emissive'
-  });
+  // 1. Sturdy Base Pods
+  for (const bx of [-halfW, halfW]) {
+    const basePod = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.65, 0.35, 18), darkMat);
+    basePod.position.set(bx, 0.175, 0);
+    basePod.receiveShadow = true;
+    g.add(basePod);
 
-  // 1. Heavy Base Ground Pedestals
-  const baseGeo = new THREE.BoxGeometry(0.85, 0.16, 0.85);
-  const leftBase = new THREE.Mesh(baseGeo, darkMat);
-  leftBase.position.set(-1.75, 0.08, 0);
-  leftBase.receiveShadow = true;
-  g.add(leftBase);
-
-  const rightBase = new THREE.Mesh(baseGeo, darkMat);
-  rightBase.position.set(1.75, 0.08, 0);
-  rightBase.receiveShadow = true;
-  g.add(rightBase);
-
-  // Pedestal Neon Rings
-  const baseRingGeo = new THREE.BoxGeometry(0.92, 0.04, 0.92);
-  const leftBaseRing = new THREE.Mesh(baseRingGeo, rimMat);
-  leftBaseRing.position.set(-1.75, 0.16, 0);
-  g.add(leftBaseRing);
-
-  const rightBaseRing = new THREE.Mesh(baseRingGeo, rimMat);
-  rightBaseRing.position.set(1.75, 0.16, 0);
-  g.add(rightBaseRing);
-
-  // 2. Pillars (Sturdy Cyberpunk Arch Towers)
-  const pillarGeo = new THREE.BoxGeometry(0.42, 4.0, 0.42);
-  const leftPillar = new THREE.Mesh(pillarGeo, frameMat);
-  leftPillar.position.set(-1.75, 2.0, 0);
-  leftPillar.castShadow = true;
-  g.add(leftPillar);
-
-  const rightPillar = new THREE.Mesh(pillarGeo, frameMat);
-  rightPillar.position.set(1.75, 2.0, 0);
-  rightPillar.castShadow = true;
-  g.add(rightPillar);
-
-  // Dark Recessed Panels on Pillars
-  const insetGeo = new THREE.BoxGeometry(0.16, 3.4, 0.28);
-  const leftInset = new THREE.Mesh(insetGeo, darkMat);
-  leftInset.position.set(-1.75, 1.9, 0.12);
-  g.add(leftInset);
-
-  const rightInset = new THREE.Mesh(insetGeo, darkMat);
-  rightInset.position.set(1.75, 1.9, 0.12);
-  g.add(rightInset);
-
-  // Vertical Neon Piping on Pillars
-  const stripGeo = new THREE.BoxGeometry(0.06, 3.7, 0.06);
-  [-1.52, -1.98, 1.52, 1.98].forEach(x => {
-    const strip = new THREE.Mesh(stripGeo, rimMat);
-    strip.position.set(x, 2.0, 0.22);
-    g.add(strip);
-  });
-
-  // 3. Top Crossbar Header Arch
-  const crossGeo = new THREE.BoxGeometry(4.1, 0.45, 0.45);
-  const cross = new THREE.Mesh(crossGeo, frameMat);
-  cross.position.set(0, 4.05, 0);
-  cross.castShadow = true;
-  g.add(cross);
-
-  // Top Neon Runner Strip
-  const topStripGeo = new THREE.BoxGeometry(3.9, 0.06, 0.06);
-  const topStrip = new THREE.Mesh(topStripGeo, rimMat);
-  topStrip.position.set(0, 4.28, 0.24);
-  g.add(topStrip);
-
-  // 4. Energy Laser Curtain (Translucent Glow Sheet + Individual Laser Rods)
-  const curtainGeo = new THREE.PlaneGeometry(3.08, 3.75);
-  const curtain = new THREE.Mesh(curtainGeo, beamMat);
-  curtain.position.set(0, 2.05, 0);
-  g.add(curtain);
-
-  // Individual laser beams
-  const laserBeamGeo = new THREE.CylinderGeometry(0.018, 0.018, 3.7, 8);
-  const beamCount = 7;
-  for (let i = 0; i < beamCount; i++) {
-    const lx = -1.2 + (i / (beamCount - 1)) * 2.4;
-    const beam = new THREE.Mesh(laserBeamGeo, laserLineMat);
-    beam.position.set(lx, 2.05, 0);
-    g.add(beam);
+    const baseRing = new THREE.Mesh(new THREE.TorusGeometry(0.68, 0.05, 8, 24), neonMat);
+    baseRing.rotation.x = Math.PI / 2;
+    baseRing.position.set(bx, 0.2, 0);
+    g.add(baseRing);
   }
 
-  // 5. Crown & Multiplier Crystals on Top
-  const crownGeo = new THREE.OctahedronGeometry(0.28, 0);
-  const centerCrown = new THREE.Mesh(crownGeo, rimMat);
-  centerCrown.position.set(0, 4.58, 0);
-  g.add(centerCrown);
+  // 2. Thick Rounded Goalposts
+  for (const px of [-halfW, halfW]) {
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, gateHeight, 16), frameMat);
+    post.position.set(px, gateHeight / 2 + 0.35, 0);
+    post.castShadow = true;
+    g.add(post);
 
-  const orbGeo = new THREE.SphereGeometry(0.18, 12, 10);
-  const leftOrb = new THREE.Mesh(orbGeo, rimMat);
-  leftOrb.position.set(-1.75, 4.38, 0);
-  g.add(leftOrb);
+    // Glowing Neon Vertical Guide Rod on Post
+    const neonRod = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, gateHeight, 8), neonMat);
+    neonRod.position.set(px + (px < 0 ? 0.22 : -0.22), gateHeight / 2 + 0.35, 0.05);
+    g.add(neonRod);
+  }
 
-  const rightOrb = new THREE.Mesh(orbGeo, rimMat);
-  rightOrb.position.set(1.75, 4.38, 0);
-  g.add(rightOrb);
+  // 3. Top Crossbar with Neon Header
+  const crossbar = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, gateWidth + 0.44, 16), frameMat);
+  crossbar.rotation.z = Math.PI / 2;
+  crossbar.position.set(0, gateHeight + 0.35, 0);
+  crossbar.castShadow = true;
+  g.add(crossbar);
 
-  // Normalize placement: Base at y=0, centered on X and Z, front faces +Z
+  const neonTopStrip = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, gateWidth + 0.35, 8), neonMat);
+  neonTopStrip.rotation.z = Math.PI / 2;
+  neonTopStrip.position.set(0, gateHeight + 0.58, 0);
+  g.add(neonTopStrip);
+
+  // 4. Holographic Glowing Energy Net Curtain
+  const netMesh = new THREE.Mesh(new THREE.PlaneGeometry(gateWidth - 0.4, gateHeight - 0.1), netMat);
+  netMesh.position.set(0, gateHeight / 2 + 0.35, 0);
+  g.add(netMesh);
+
+  // Vertical Laser Light Strands
+  const laserMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 });
+  for (let l = -3; l <= 3; l++) {
+    const laser = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, gateHeight - 0.2, 6), laserMat);
+    laser.position.set((l / 3.5) * (halfW - 0.25), gateHeight / 2 + 0.35, 0);
+    g.add(laser);
+  }
+
+  // 5. Floating Score Multiplier Crystal Diamond atop Crossbar
+  const crownGeo = new THREE.OctahedronGeometry(0.42, 0);
+  const crownMesh = new THREE.Mesh(crownGeo, neonMat);
+  crownMesh.position.set(0, gateHeight + 1.05, 0);
+  crownMesh.scale.set(1.0, 1.35, 1.0);
+  g.add(crownMesh);
+
+  for (const ox of [-halfW, halfW]) {
+    const orb = new THREE.Mesh(new THREE.SphereGeometry(0.24, 12, 10), neonMat);
+    orb.position.set(ox, gateHeight + 0.72, 0);
+    g.add(orb);
+  }
+
+  // Center alignment normalization
   const box = new THREE.Box3();
   box.setFromObject(g);
-  const c = box.getCenter(new THREE.Vector3());
+  const cVec = box.getCenter(new THREE.Vector3());
   g.children.forEach((o) => {
-    o.position.x -= c.x;
+    o.position.x -= cVec.x;
     o.position.y -= box.min.y;
-    o.position.z -= c.z;
+    o.position.z -= cVec.z;
   });
 
   return g;
