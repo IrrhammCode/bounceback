@@ -994,6 +994,121 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     searchlights.push({ mesh: beam, baseAngle: s * 1.57, speed: 0.8 + s * 0.2 });
   }
 
+  // ─── 11.B 4 VOLUMETRIC PITCH FLOODLIGHTS FROM CORNER TOWERS ──
+  const towerFloodlights: {
+    cone: THREE.Mesh;
+    pool: THREE.Mesh;
+    origin: THREE.Vector3;
+    baseTarget: THREE.Vector3;
+    sweepRadius: number;
+    sweepSpeed: number;
+    phase: number;
+  }[] = [];
+
+  const towerPositions = [
+    { x: -hW - 10.5, y: 21.0, z: -hL - 10.5, col: 0x38bdf8, tx: -6, tz: -10 },
+    { x: hW + 10.5, y: 21.0, z: -hL - 10.5, col: 0xfbbf24, tx: 6, tz: -10 },
+    { x: -hW - 10.5, y: 21.0, z: hL + 11.5, col: 0xf43f5e, tx: -6, tz: 10 },
+    { x: hW + 10.5, y: 21.0, z: hL + 11.5, col: 0x22d3ee, tx: 6, tz: 10 },
+  ];
+
+  for (let tf = 0; tf < towerPositions.length; tf++) {
+    const tp = towerPositions[tf];
+    // Cone: apex at top (radius 0.6), base on field (radius 7.5), length 48
+    const fConeGeo = new THREE.CylinderGeometry(0.6, 7.5, 48, 16, 1, true);
+    fConeGeo.translate(0, 24, 0);
+    fConeGeo.rotateX(-Math.PI / 2); // Point along +Z
+
+    const fConeMat = new THREE.MeshBasicMaterial({
+      color: tp.col,
+      transparent: true,
+      opacity: 0.16,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    const fCone = new THREE.Mesh(fConeGeo, fConeMat);
+    fCone.position.set(tp.x, tp.y, tp.z);
+    root.add(fCone);
+
+    // Floor light pool decal
+    const poolGeo = new THREE.CircleGeometry(5.5, 24);
+    poolGeo.rotateX(-Math.PI / 2);
+    const poolMat = new THREE.MeshBasicMaterial({
+      color: tp.col,
+      transparent: true,
+      opacity: 0.28,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const pool = new THREE.Mesh(poolGeo, poolMat);
+    pool.position.set(tp.tx, 0.06, tp.tz);
+    root.add(pool);
+
+    towerFloodlights.push({
+      cone: fCone,
+      pool,
+      origin: new THREE.Vector3(tp.x, tp.y, tp.z),
+      baseTarget: new THREE.Vector3(tp.tx, 0.05, tp.tz),
+      sweepRadius: 5.0,
+      sweepSpeed: 0.7 + tf * 0.15,
+      phase: tf * 1.57,
+    });
+  }
+
+  // ─── 11.C 4 CORNER PYROTECHNIC CANNONS ───────────────────
+  const cannonMat = new THREE.MeshStandardMaterial({
+    color: 0x0f172a,
+    metalness: 0.85,
+    roughness: 0.25,
+  });
+  const cannonGoldMat = new THREE.MeshStandardMaterial({
+    color: 0xf59e0b,
+    metalness: 0.9,
+    roughness: 0.2,
+  });
+  const cannonGlowMat = new THREE.MeshBasicMaterial({
+    color: 0xff0055,
+  });
+
+  const cannonCorners = [
+    { x: -hW + 0.8, z: -hL + 1.2, rotY: 0.78 },
+    { x: hW - 0.8, z: -hL + 1.2, rotY: -0.78 },
+    { x: -hW + 0.8, z: hL - 1.2, rotY: 2.35 },
+    { x: hW - 0.8, z: hL - 1.2, rotY: -2.35 },
+  ];
+
+  for (const cc of cannonCorners) {
+    const cg = new THREE.Group();
+    cg.position.set(cc.x, 0.2, cc.z);
+    cg.rotation.y = cc.rotY;
+
+    // Base podium
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 1.1, 0.45, 16), cannonMat);
+    cg.add(base);
+
+    // Gold swivel bracket
+    const bracket = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.6, 0.8), cannonGoldMat);
+    bracket.position.y = 0.5;
+    cg.add(bracket);
+
+    // Twin angled cannon barrels (angled 48° upward)
+    for (const bx of [-0.26, 0.26]) {
+      const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.24, 1.6, 14), cannonMat);
+      barrel.position.set(bx, 1.0, 0);
+      barrel.rotation.x = -0.8;
+      cg.add(barrel);
+
+      // Glowing muzzle ring
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.04, 8, 16), cannonGlowMat);
+      ring.position.set(bx, 1.5, 0.6);
+      ring.rotation.x = -0.8;
+      cg.add(ring);
+    }
+
+    root.add(cg);
+  }
+
   // ─── 12. MOVING SKY ROLLERCOASTER WITH 4-CAR TRAIN ─────
   const coasterPts: THREE.Vector3[] = [
     new THREE.Vector3(-42, 14, -20),
@@ -1512,6 +1627,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
 
   // ─── STATE & ANIMATION LOOP ───────────────────────────
   let goalCelebTimer = 0;
+  let goalCelebTeam = 0;
 
   function update(dt: number, time: number) {
     // 1. Scroll LED Ribbon Boards
@@ -1548,6 +1664,22 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
       const angle = time * sl.speed + sl.baseAngle;
       sl.mesh.rotation.z = Math.sin(angle) * 0.35;
       sl.mesh.rotation.x = Math.cos(angle * 0.8) * 0.3;
+    }
+
+    // 6.B Animate Volumetric Tower Pitch Floodlights
+    for (const tfl of towerFloodlights) {
+      const curTarget = tfl.baseTarget.clone();
+      if (goalCelebTimer > 0) {
+        // Converge dynamically onto scoring goal
+        const targetZ = goalCelebTeam === 0 ? 23.0 : -23.0;
+        curTarget.set(Math.sin(time * 5.0) * 3.0, 0.05, targetZ);
+      } else {
+        curTarget.x += Math.cos(time * tfl.sweepSpeed + tfl.phase) * tfl.sweepRadius;
+        curTarget.z += Math.sin(time * tfl.sweepSpeed * 0.75 + tfl.phase) * (tfl.sweepRadius * 1.5);
+      }
+      tfl.cone.position.copy(tfl.origin);
+      tfl.cone.lookAt(curTarget);
+      tfl.pool.position.set(curTarget.x, 0.06, curTarget.z);
     }
 
     // 7. Animate Sky Rollercoaster Train
@@ -1648,8 +1780,9 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     confMesh.instanceMatrix.needsUpdate = true;
   }
 
-  function onGoalCelebration(_team: number) {
+  function onGoalCelebration(team: number) {
     goalCelebTimer = 3.5;
+    goalCelebTeam = team;
   }
 
   function dispose() {

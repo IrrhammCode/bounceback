@@ -23,6 +23,11 @@ import {
 import {
   initAudio,
   resumeAudio,
+  startBGM,
+  stopBGM,
+  sfxBoing,
+  sfxCrowdCheer,
+  sfxStadiumAirhorn,
   sfxPunch,
   sfxWhiff,
   sfxDash,
@@ -140,7 +145,7 @@ export class BouncebackEngine {
     this.camera.lookAt(0, 1.2, -11.0);
 
     // Juice system
-    this.juice = new JuiceSystem(this.camera);
+    this.juice = new JuiceSystem(this.camera, this.scene);
     this.juice.init(this.camera.position);
 
     // Lighting
@@ -167,7 +172,8 @@ export class BouncebackEngine {
     this.match.onGoal = (team, points, combo, bounces) => {
       sfxGoal();
       if (combo > 1) sfxCombo(combo);
-      this.juice.trigger("goal");
+      const goalZ = team === 0 ? C.ARENA_L * 0.5 : -C.ARENA_L * 0.5;
+      this.juice.trigger("goal", { team, x: 0, y: 1.5, z: goalZ });
       this.arenaController?.onGoalCelebration(team);
       const teamName = team === 0 ? "CYAN" : "CORAL";
       let txt = `${teamName} +${points}!`;
@@ -421,6 +427,7 @@ export class BouncebackEngine {
   startMatch() {
     resumeAudio();
     sfxMatchStart();
+    startBGM();
     this.match.start();
     this.running = true;
     this.lastTime = performance.now();
@@ -591,7 +598,7 @@ export class BouncebackEngine {
 
     const rawDt = (now - this.lastTime) / 1000;
     this.lastTime = now;
-    const dt = Math.min(rawDt, 0.05); // cap delta
+    const dt = Math.min(rawDt, 0.05) * this.juice.getTimeScale();
 
     // Hit-stop: skip physics when frozen
     if (!this.juice.isHitStopped()) {
@@ -601,10 +608,23 @@ export class BouncebackEngine {
         this.entities,
         dt,
         (type, data) => {
-          this.juice.trigger(type, data);
-          if (type === "punch") sfxPunch();
-          else if (type === "whiff") sfxWhiff();
-          else if (type === "dash") sfxDash();
+          const d = data as any;
+          if (type === "punch") {
+            sfxPunch();
+            this.juice.trigger("punch", {
+              x: d?.x ?? this.entities[0].x,
+              y: 1.2,
+              z: d?.z ?? this.entities[0].z,
+              text: "SMASH!",
+            });
+          } else if (type === "whiff") {
+            sfxWhiff();
+          } else if (type === "dash") {
+            sfxDash();
+            this.juice.trigger("dash", { x: this.entities[0].x, z: this.entities[0].z });
+          } else {
+            this.juice.trigger(type, data);
+          }
         }
       );
 
@@ -622,8 +642,17 @@ export class BouncebackEngine {
 
       // AI
       updateBots(this.entities, this.bumpers, this.gates, dt, (type, data) => {
-        this.juice.trigger(type, data);
-        if (type === "botpunch") sfxPunch();
+        const d = data as any;
+        if (type === "botpunch") {
+          sfxPunch();
+          this.juice.trigger("botpunch", {
+            x: d?.x ?? 0,
+            y: 1.2,
+            z: d?.z ?? 0,
+          });
+        } else {
+          this.juice.trigger(type, data);
+        }
       });
 
       // Physics
@@ -668,8 +697,13 @@ export class BouncebackEngine {
                 ent.launchSpeed = Math.sqrt(ent.vx * ent.vx + ent.vz * ent.vz);
                 ent.bounceCount++;
 
-                sfxBumperHit(0);
-                this.juice.trigger("bumper");
+                sfxBoing();
+                this.juice.trigger("bumper", {
+                  x: ent.x,
+                  y: getArenaHeight(ent.x, ent.z) + 1.0,
+                  z: ent.z,
+                  text: "BOING!",
+                });
               }
             }
           }
@@ -710,11 +744,16 @@ export class BouncebackEngine {
         ent.mesh.position.z = ent.z;
         // Visual bounce & comedic tumble on Y when launched
         if (ent.launched) {
-          ent.mesh.position.y = groundH + Math.abs(Math.sin(now * 0.015)) * 0.75 + 0.1;
-          if (u.torso) u.torso.rotation.x += dt * 9.0;
+          ent.mesh.position.y = groundH + Math.abs(Math.sin(now * 0.015)) * 0.95 + 0.15;
+          if (u.torso) u.torso.rotation.x += dt * 14.0;
+          ent.mesh.rotation.z += dt * 8.0;
           if (u.leftArm && u.rightArm) {
-            u.leftArm.rotation.set(-2.0, 0, 0.85);
-            u.rightArm.rotation.set(-2.0, 0, -0.85);
+            u.leftArm.rotation.set(-2.2 + Math.sin(now * 0.025) * 0.6, 0, 1.2);
+            u.rightArm.rotation.set(-2.2 - Math.sin(now * 0.025) * 0.6, 0, -1.2);
+          }
+          if (u.leftLeg && u.rightLeg) {
+            u.leftLeg.rotation.x = Math.sin(now * 0.035) * 0.85;
+            u.rightLeg.rotation.x = -Math.sin(now * 0.035) * 0.85;
           }
         } else {
           ent.mesh.position.y = groundH;
@@ -730,16 +769,22 @@ export class BouncebackEngine {
           ent.mesh.rotation.y = Math.atan2(ent.vx, ent.vz);
         }
 
-        // Scale effects
+        // Scale effects & Stun wobble
         const baseScale = ent.mesh.userData.baseScale || 1;
         if (ent.stunTimer > 0) {
-          // Squash/stretch on stun
+          // Squash/stretch & comedic wobble on stun
           const t = ent.stunTimer / 0.3;
           ent.mesh.scale.set(
             baseScale * (1 + t * 0.15),
             baseScale * (1 - t * 0.3),
             baseScale * (1 + t * 0.15)
           );
+          ent.mesh.rotation.z = Math.sin(now * 0.025) * 0.35;
+          if (u.torso) u.torso.rotation.x = -0.35;
+          if (u.leftArm && u.rightArm) {
+            u.leftArm.rotation.set(-2.4, 0, 0.45);
+            u.rightArm.rotation.set(-2.4, 0, -0.45);
+          }
         } else if (slot && slot.shrinkScale < 1.0) {
           // Shrunk!
           const s = baseScale * slot.shrinkScale;
@@ -848,11 +893,19 @@ export class BouncebackEngine {
       if (!mesh) continue;
       mesh.position.set(b.x, getArenaHeight(b.x, b.z), b.z);
       if (b.hitFlash > 0) {
+        if (b.hitFlash > 0.9) {
+          sfxBumperHit(0);
+          this.juice.trigger("bumper", {
+            x: b.x,
+            y: getArenaHeight(b.x, b.z) + 1.0,
+            z: b.z,
+            text: "BOING!",
+          });
+        }
         b.hitFlash -= dt * 3;
         const bscl = mesh.userData.baseScale || 1;
-        const s = bscl * (1 + b.hitFlash * 0.2);
+        const s = bscl * (1 + b.hitFlash * 0.25);
         mesh.scale.setScalar(s);
-        sfxBumperHit(0);
       }
     }
 
@@ -887,6 +940,8 @@ export class BouncebackEngine {
   };
 
   destroy() {
+    stopBGM();
+    this.juice.dispose();
     this.running = false;
     cancelAnimationFrame(this.animId);
     window.removeEventListener("resize", this.handleResize);
