@@ -493,36 +493,41 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   const stadiumRoofGroup = new THREE.Group();
   stadiumRoofGroup.name = "StadiumDomeRoof";
 
-  // Canvas texture for the stadium canopy dome (Vibrant striped tensile fabric)
-  const roofStripesTex = makeCanvasTex(1024, 512, (ctx) => {
-    const colors = ["#0284c7", "#ffffff", "#f59e0b", "#ffffff", "#e11d48", "#ffffff"];
-    const stripeW = 1024 / (colors.length * 3);
-    for (let x = 0; x < 1024; x += stripeW) {
-      const idx = Math.floor(x / stripeW) % colors.length;
-      ctx.fillStyle = colors[idx];
-      ctx.fillRect(x, 0, stripeW, 512);
-    }
-    // High-tech translucent grid pattern overlay
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
-    ctx.lineWidth = 2;
-    for (let y = 0; y < 512; y += 32) {
+  // Modern architectural tensile roof panel texture (Sleek off-white composite with cyan/gold seams)
+  const stadiumCanopyTex = makeCanvasTex(1024, 512, (ctx) => {
+    // Base pristine architectural white-grey
+    ctx.fillStyle = "#f1f5f9";
+    ctx.fillRect(0, 0, 1024, 512);
+
+    // Subtle ribbed standing-seam panels
+    for (let x = 0; x < 1024; x += 32) {
+      ctx.fillStyle = (x / 32) % 2 === 0 ? "rgba(226, 232, 240, 0.7)" : "rgba(255, 255, 255, 0.9)";
+      ctx.fillRect(x, 0, 32, 512);
+      ctx.strokeStyle = "rgba(148, 163, 184, 0.4)";
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(1024, y);
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, 512);
       ctx.stroke();
     }
-  });
-  roofStripesTex.wrapS = THREE.RepeatWrapping;
-  roofStripesTex.wrapT = THREE.RepeatWrapping;
-  roofStripesTex.repeat.set(4, 2);
 
-  const roofFabricMat = new THREE.MeshStandardMaterial({
-    map: roofStripesTex,
+    // Elegant tournament trim stripes along the inner fascia
+    ctx.fillStyle = "#0284c7";
+    ctx.fillRect(0, 0, 1024, 28);
+    ctx.fillStyle = "#f59e0b";
+    ctx.fillRect(0, 28, 1024, 10);
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(0, 480, 1024, 32);
+  });
+  stadiumCanopyTex.wrapS = THREE.RepeatWrapping;
+  stadiumCanopyTex.wrapT = THREE.RepeatWrapping;
+  stadiumCanopyTex.repeat.set(4, 2);
+
+  const canopyRoofMat = new THREE.MeshStandardMaterial({
+    map: stadiumCanopyTex,
+    roughness: 0.3,
+    metalness: 0.15,
     side: THREE.DoubleSide,
-    roughness: 0.35,
-    metalness: 0.1,
-    emissive: 0x0284c7,
-    emissiveIntensity: 0.12,
   });
 
   const steelTrussMat = new THREE.MeshStandardMaterial({
@@ -537,92 +542,136 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     roughness: 0.25,
   });
 
-  // 1. East & West Cantilevered Curved Canopy Roofs (Left & Right Sidelines)
+  const darkFasciaMat = new THREE.MeshStandardMaterial({
+    color: 0x0f172a,
+    metalness: 0.8,
+    roughness: 0.3,
+  });
+
+  // 1. Sideline Cantilevered Bleacher Canopies (West & East)
+  // These sit atop the outer walls (y = 16.8m) and cantilever inward to y = 18.8m over the stands
   for (const side of [-1, 1]) {
-    const sideCanopyGeo = new THREE.CylinderGeometry(
-      28, 28, wallL + 8, 32, 1, true,
-      side < 0 ? -Math.PI * 0.45 : Math.PI * 0.05,
-      Math.PI * 0.4
+    const sideCanopy = new THREE.Mesh(
+      new THREE.BoxGeometry(10.5, 0.45, wallL + 6),
+      canopyRoofMat
     );
-    sideCanopyGeo.rotateX(Math.PI / 2);
-    const sideCanopy = new THREE.Mesh(sideCanopyGeo, roofFabricMat);
-    sideCanopy.position.set(side * (hW + 6.0), 19.5, 0);
+    sideCanopy.position.set(side * 20.0, 18.2, 0);
+    sideCanopy.rotation.z = side * 0.16; // Tilted upward toward the field (lowest at outer wall = 17.3m, lip = 19.1m)
+    sideCanopy.castShadow = true;
+    sideCanopy.receiveShadow = true;
     stadiumRoofGroup.add(sideCanopy);
 
-    // Structural Space-Frame Steel Arches (every 8m along the sideline)
-    for (let tz = -32; tz <= 32; tz += 8) {
-      const archTrussGeo = new THREE.TorusGeometry(14, 0.22, 8, 24, Math.PI * 0.45);
-      const archTruss = new THREE.Mesh(archTrussGeo, steelTrussMat);
-      archTruss.position.set(side * (hW + 5.5), 18.0, tz);
-      archTruss.rotation.y = side < 0 ? 0 : Math.PI;
-      archTruss.rotation.z = Math.PI * 0.25;
-      stadiumRoofGroup.add(archTruss);
+    // Front edge fascia trim (glowing edge bar)
+    const edgeTrim = new THREE.Mesh(
+      new THREE.BoxGeometry(0.3, 0.65, wallL + 6),
+      darkFasciaMat
+    );
+    edgeTrim.position.set(side * 14.8, 19.1, 0);
+    stadiumRoofGroup.add(edgeTrim);
 
-      // Downward stadium floodlight cluster on each arch
-      const gantryFloodlight = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.35, 0.45, 0.5, 12),
+    // Accent LED strip under the canopy edge
+    const ledStrip = new THREE.Mesh(
+      new THREE.BoxGeometry(0.12, 0.12, wallL + 6),
+      new THREE.MeshBasicMaterial({ color: side < 0 ? 0x38bdf8 : 0xf43f5e })
+    );
+    ledStrip.position.set(side * 14.85, 18.8, 0);
+    stadiumRoofGroup.add(ledStrip);
+  }
+
+  // 2. Endzone Cantilevered Bleacher Canopies (North & South)
+  // Behind Cyan and Coral goals, sheltering endzone bleachers at y = 17.3m to 19.1m
+  for (const end of [-1, 1]) {
+    const endCanopy = new THREE.Mesh(
+      new THREE.BoxGeometry(34.0, 0.45, 10.5),
+      canopyRoofMat
+    );
+    endCanopy.position.set(0, 18.2, end * 32.8);
+    endCanopy.rotation.x = -end * 0.16; // Tilted upward toward field
+    endCanopy.castShadow = true;
+    endCanopy.receiveShadow = true;
+    stadiumRoofGroup.add(endCanopy);
+
+    // Front edge fascia trim
+    const endEdgeTrim = new THREE.Mesh(
+      new THREE.BoxGeometry(34.0, 0.65, 0.3),
+      darkFasciaMat
+    );
+    endEdgeTrim.position.set(0, 19.1, end * 27.6);
+    stadiumRoofGroup.add(endEdgeTrim);
+
+    // Accent LED strip
+    const endLed = new THREE.Mesh(
+      new THREE.BoxGeometry(34.0, 0.12, 0.12),
+      new THREE.MeshBasicMaterial({ color: end < 0 ? 0x38bdf8 : 0xfbbf24 })
+    );
+    endLed.position.set(0, 18.8, end * 27.65);
+    stadiumRoofGroup.add(endLed);
+  }
+
+  // 3. High Overhead Olympic Arch Trusses (Spanning West to East at y = 17.5m to 27.5m)
+  const archZPositions = [-26, -13, 0, 13, 26];
+  for (const az of archZPositions) {
+    const archPoints = [
+      new THREE.Vector3(-24.5, 17.2, az),
+      new THREE.Vector3(-15.0, 24.5, az),
+      new THREE.Vector3(0, 27.8, az),
+      new THREE.Vector3(15.0, 24.5, az),
+      new THREE.Vector3(24.5, 17.2, az),
+    ];
+    const archCurve = new THREE.CatmullRomCurve3(archPoints);
+    const archGeo = new THREE.TubeGeometry(archCurve, 36, 0.32, 8, false);
+    const archMesh = new THREE.Mesh(archGeo, steelTrussMat);
+    stadiumRoofGroup.add(archMesh);
+
+    // Secondary lower tension chord forming a true 3D space-truss
+    const chordPoints = [
+      new THREE.Vector3(-24.0, 17.8, az),
+      new THREE.Vector3(-14.0, 23.3, az),
+      new THREE.Vector3(0, 26.2, az),
+      new THREE.Vector3(14.0, 23.3, az),
+      new THREE.Vector3(24.0, 17.8, az),
+    ];
+    const chordCurve = new THREE.CatmullRomCurve3(chordPoints);
+    const chordGeo = new THREE.TubeGeometry(chordCurve, 36, 0.18, 6, false);
+    const chordMesh = new THREE.Mesh(chordGeo, goldTrussMat);
+    stadiumRoofGroup.add(chordMesh);
+
+    // Downward Floodlight Pods mounted on each arch
+    for (const fx of [-14.0, 14.0]) {
+      const floodlightHousing = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.35, 0.45, 0.6, 12),
         goldTrussMat
       );
-      gantryFloodlight.position.set(side * (hW + 0.5), 20.0, tz);
-      gantryFloodlight.rotation.x = Math.PI / 2;
-      stadiumRoofGroup.add(gantryFloodlight);
+      floodlightHousing.position.set(fx, 23.5, az);
+      floodlightHousing.rotation.x = Math.PI / 2;
+      stadiumRoofGroup.add(floodlightHousing);
 
-      const lampGlow = new THREE.Mesh(
+      const floodlightGlow = new THREE.Mesh(
         new THREE.CircleGeometry(0.38, 12),
         new THREE.MeshBasicMaterial({ color: 0xfffbeb, side: THREE.DoubleSide })
       );
-      lampGlow.position.set(side * (hW + 0.5), 19.7, tz);
-      lampGlow.rotation.x = Math.PI / 2;
-      stadiumRoofGroup.add(lampGlow);
+      floodlightGlow.position.set(fx, 23.18, az);
+      floodlightGlow.rotation.x = Math.PI / 2;
+      stadiumRoofGroup.add(floodlightGlow);
     }
   }
 
-  // 2. North & South Endzone Canopies (Behind Both Goals)
-  for (const end of [-1, 1]) {
-    const endCanopyGeo = new THREE.CylinderGeometry(
-      24, 24, W + 16, 28, 1, true,
-      -Math.PI * 0.45, Math.PI * 0.4
-    );
-    endCanopyGeo.rotateZ(Math.PI / 2);
-    const endCanopy = new THREE.Mesh(endCanopyGeo, roofFabricMat);
-    if (end > 0) {
-      endCanopy.rotation.y = Math.PI;
-    }
-    endCanopy.position.set(0, 19.5, end * (hL + 6.5));
-    stadiumRoofGroup.add(endCanopy);
+  // Longitudinal Spine Beams connecting the arch crowns along Z (at x = -15, 0, 15)
+  for (const bx of [-15.0, 0, 15.0]) {
+    const by = bx === 0 ? 27.8 : 24.5;
+    const spineGeo = new THREE.CylinderGeometry(0.24, 0.24, 56.0, 8);
+    spineGeo.rotateX(Math.PI / 2);
+    const spineMesh = new THREE.Mesh(spineGeo, steelTrussMat);
+    spineMesh.position.set(bx, by, 0);
+    stadiumRoofGroup.add(spineMesh);
   }
 
-  // 2.5 Radial Cable-Net Tension Cables connecting Sideline Arches to Central Ring
-  for (const side of [-1, 1]) {
-    for (let tz = -32; tz <= 32; tz += 16) {
-      const p1 = new THREE.Vector3(side * (hW + 3.0), 19.8, tz);
-      const p2 = new THREE.Vector3(side * 11.0, 22.5, tz * 0.6);
-      const dir = new THREE.Vector3().subVectors(p2, p1);
-      const len = dir.length();
-      const cableGeo = new THREE.CylinderGeometry(0.06, 0.06, len, 6);
-      cableGeo.translate(0, len / 2, 0);
-      cableGeo.rotateX(Math.PI / 2);
-      const cableMesh = new THREE.Mesh(cableGeo, steelTrussMat);
-      cableMesh.position.copy(p1);
-      cableMesh.lookAt(p2);
-      stadiumRoofGroup.add(cableMesh);
-    }
-  }
-
-  // 3. Central Suspended Elliptical Ring Light Truss & Oculus (at y = 22.5m)
-  const centralRingGeo = new THREE.TorusGeometry(15, 0.38, 8, 36);
-  centralRingGeo.scale(0.85, 1.0, 1.6);
-  centralRingGeo.rotateX(Math.PI / 2);
-  const centralRing = new THREE.Mesh(centralRingGeo, goldTrussMat);
-  centralRing.position.set(0, 22.5, 0);
-  stadiumRoofGroup.add(centralRing);
-
-  // 4. Center-Hung 4-Sided Holographic Stadium Cube Jumbotron (Suspended in Center of Dome!)
+  // 4. Central Suspended 4-Sided Holographic Stadium Cube Jumbotron (At y = 22.0m)
   const centerJumboGroup = new THREE.Group();
-  centerJumboGroup.position.set(0, 21.0, 0);
+  centerJumboGroup.position.set(0, 22.0, 0);
 
   const centerJumboFrame = new THREE.Mesh(
-    new THREE.BoxGeometry(5.2, 3.4, 5.2),
+    new THREE.BoxGeometry(5.2, 3.2, 5.2),
     new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.9, roughness: 0.2 })
   );
   centerJumboGroup.add(centerJumboFrame);
@@ -631,11 +680,15 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   const jumboScreenTex = makeCanvasTex(512, 256, (ctx) => {
     ctx.fillStyle = "#0284c7";
     ctx.fillRect(0, 0, 512, 256);
+    ctx.strokeStyle = "#ffd166";
+    ctx.lineWidth = 8;
+    ctx.strokeRect(6, 6, 500, 244);
+
     ctx.fillStyle = "#ffffff";
-    ctx.font = "900 46px 'Arial Black', sans-serif";
+    ctx.font = "900 44px 'Arial Black', sans-serif";
     ctx.textAlign = "center";
     ctx.fillText("★ BOUNCEBACK! ★", 256, 75);
-    ctx.font = "700 32px 'Arial Black', sans-serif";
+    ctx.font = "700 30px 'Arial Black', sans-serif";
     ctx.fillStyle = "#fef08a";
     ctx.fillText("CHAMPIONSHIP ARENA", 256, 140);
     ctx.fillStyle = "#f43f5e";
@@ -644,42 +697,26 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   const jumboScreenMat = new THREE.MeshBasicMaterial({ map: jumboScreenTex });
 
   for (let face = 0; face < 4; face++) {
-    const screen = new THREE.Mesh(new THREE.PlaneGeometry(4.8, 3.0), jumboScreenMat);
+    const screen = new THREE.Mesh(new THREE.PlaneGeometry(4.8, 2.8), jumboScreenMat);
     screen.position.set(0, 0, 2.62);
     screen.rotation.y = face * (Math.PI / 2);
     screen.position.applyAxisAngle(new THREE.Vector3(0, 1, 0), face * (Math.PI / 2));
     centerJumboGroup.add(screen);
   }
 
-  // 4 Steel Suspension Cables hanging the Jumbotron from Central Ring
-  for (const sx of [-2.4, 2.4]) {
-    for (const sz of [-2.4, 2.4]) {
+  // 4 Steel Suspension Cables hanging the Jumbotron from Central Arch (y = 27.8m down to 22.0m)
+  for (const sx of [-2.2, 2.2]) {
+    for (const sz of [-2.2, 2.2]) {
       const cable = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.04, 0.04, 4.0, 6),
+        new THREE.CylinderGeometry(0.04, 0.04, 5.8, 6),
         steelTrussMat
       );
-      cable.position.set(sx, 2.0, sz);
+      cable.position.set(sx, 3.0, sz);
       centerJumboGroup.add(cable);
     }
   }
 
   stadiumRoofGroup.add(centerJumboGroup);
-
-  // 5. Hanging Stadium Tournament Bunting Ribbons
-  for (let b = 0; b < 12; b++) {
-    const bAngle = (b / 12) * Math.PI * 2;
-    const bx = Math.cos(bAngle) * 12.0;
-    const bz = Math.sin(bAngle) * 22.0;
-    const buntingGeo = new THREE.PlaneGeometry(1.2, 2.8);
-    const buntingMat = new THREE.MeshBasicMaterial({
-      color: b % 2 === 0 ? 0x27e5ff : 0xff5268,
-      side: THREE.DoubleSide,
-    });
-    const bunting = new THREE.Mesh(buntingGeo, buntingMat);
-    bunting.position.set(bx, 20.8, bz);
-    bunting.rotation.y = bAngle + Math.PI / 2;
-    stadiumRoofGroup.add(bunting);
-  }
 
   coliseumShellGroup.add(stadiumRoofGroup);
 
