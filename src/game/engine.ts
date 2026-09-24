@@ -46,6 +46,7 @@ import {
   sfxBombExplode,
   sfxShrink,
   sfxOnePunch,
+  playHumanCommentary,
 } from "./audio";
 // @ts-ignore — JS asset modules following 404 asset contract
 import generateMecha from "../assets/toy_mecha.js";
@@ -215,6 +216,7 @@ export class BouncebackEngine {
       ];
       const phrase = gongPhrases[Math.floor(Math.random() * gongPhrases.length)];
       this.triggerCommentary(phrase, "crazy", 32);
+      playHumanCommentary("gong", true);
     };
     this.match.onPhaseChange = (phase) => {
       if (phase === 2) {
@@ -224,6 +226,7 @@ export class BouncebackEngine {
       } else if (phase === 3) {
         this.showAnnouncement("🔥 OVERDRIVE — TRIPLE GONG!");
         this.triggerCommentary("🔥 OVERDRIVE SHOWTIME! SEMUA POIN GONG DILIPAT TIGA!", "crazy", 35);
+        playHumanCommentary("overdrive", true);
       }
     };
     this.match.onOverdrive = () => {
@@ -236,6 +239,7 @@ export class BouncebackEngine {
       this.running = false;
       const winTeam = winner === 0 ? "TEAM CYAN" : "TEAM CORAL";
       this.triggerCommentary(`PELUIT AKHIR BERBUNYI! ${winTeam} KELUAR SEBAGAI JUARA!`, "crazy", 25);
+      playHumanCommentary("gameover", true);
       if (this.onMatchEnd) this.onMatchEnd(winner, scores);
     };
 
@@ -496,6 +500,7 @@ export class BouncebackEngine {
       "excited",
       15
     );
+    playHumanCommentary("start", true);
     this.loop(this.lastTime);
   }
 
@@ -680,6 +685,7 @@ export class BouncebackEngine {
         this.juice.trigger("onepunch", data);
         this.showAnnouncement("💥 ONE PUNCH!!");
         this.triggerCommentary("JURUS SATU PUKULAN AKTIF! HANCUR SUDAH SEMUANYA!!", "crazy", 45);
+        playHumanCommentary("onepunch", true);
         break;
       case "whiff":
         sfxWhiff();
@@ -726,6 +732,7 @@ export class BouncebackEngine {
               "excited",
               8
             );
+            playHumanCommentary("punch");
             this.juice.trigger("punch", {
               x: d?.x ?? this.entities[0].x,
               y: 1.2,
@@ -784,6 +791,9 @@ export class BouncebackEngine {
         const d = data as any;
         if (type === "botpunch") {
           sfxPunch();
+          if (Math.random() < 0.35) {
+            playHumanCommentary("punch");
+          }
           this.juice.trigger("botpunch", {
             x: d?.x ?? 0,
             y: 1.2,
@@ -851,6 +861,7 @@ export class BouncebackEngine {
                 ent.immuneTimer = 1.4; // 1.4s immunity prevents sweeper multi-hit juggle!
 
                 sfxBoing();
+                playHumanCommentary("launch");
                 this.juice.trigger("bumper", {
                   x: ent.x,
                   y: getArenaHeight(ent.x, ent.z) + 1.0,

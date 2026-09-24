@@ -10,6 +10,7 @@ let ctx: AudioContext | null = null;
 let masterGain: GainNode | null = null;
 let bgmGain: GainNode | null = null;
 let sfxGain: GainNode | null = null;
+let voiceGain: GainNode | null = null;
 let muted = false;
 
 // BGM State
@@ -23,16 +24,22 @@ export function initAudio() {
   ctx = new AudioCtx();
 
   masterGain = ctx.createGain();
-  masterGain.gain.value = 0.45;
+  masterGain.gain.value = 0.5;
   masterGain.connect(ctx.destination);
 
   bgmGain = ctx.createGain();
-  bgmGain.gain.value = 0.22;
+  bgmGain.gain.value = 0.2;
   bgmGain.connect(masterGain);
 
   sfxGain = ctx.createGain();
-  sfxGain.gain.value = 0.55;
+  sfxGain.gain.value = 0.5;
   sfxGain.connect(masterGain);
+
+  voiceGain = ctx.createGain();
+  voiceGain.gain.value = 0.95;
+  voiceGain.connect(masterGain);
+
+  preloadVoiceClips();
 }
 
 export function resumeAudio() {
@@ -40,6 +47,7 @@ export function resumeAudio() {
   if (ctx && ctx.state === "suspended") {
     ctx.resume();
   }
+  preloadVoiceClips();
 }
 
 export function setMuted(v: boolean) {
@@ -744,5 +752,131 @@ export function sfxCommentatorGasp() {
   playNoise(0.06, 0.22, 1800);
   playTone(580, 0.12, "square", 0.2);
   setTimeout(() => playTone(820, 0.18, "sawtooth", 0.25), 50);
+}
+
+// ─── High-Quality Human Voice Commentary System (Microsoft Neural TTS Clips) ───
+const VOICE_CLIPS: Record<string, string[]> = {
+  start: ["start_1", "start_2"],
+  gong: ["gong_1", "gong_2", "gong_3", "gong_4"],
+  punch: ["punch_1", "punch_2", "punch_3", "punch_4", "punch_5"],
+  onepunch: ["onepunch_1", "onepunch_2"],
+  launch: ["launch_1", "launch_2", "launch_3"],
+  overdrive: ["overdrive_1", "overdrive_2"],
+  gameover: ["gameover_1", "gameover_2"],
+};
+
+const voiceBuffers = new Map<string, AudioBuffer>();
+let currentVoiceSource: AudioBufferSourceNode | null = null;
+let lastCommentaryTime = 0;
+
+export async function preloadVoiceClips() {
+  if (!ctx) return;
+  for (const clips of Object.values(VOICE_CLIPS)) {
+    for (const clip of clips) {
+      if (voiceBuffers.has(clip)) continue;
+      fetch(`/voice/${clip}.mp3`)
+        .then((r) => (r.ok ? r.arrayBuffer() : null))
+        .then((arrayBuf) => {
+          if (arrayBuf && ctx) {
+            ctx.decodeAudioData(arrayBuf).then((decoded) => {
+              voiceBuffers.set(clip, decoded);
+            }).catch(() => {});
+          }
+        })
+        .catch(() => {});
+    }
+  }
+}
+
+export type CommentaryCategory = "start" | "gong" | "punch" | "onepunch" | "launch" | "overdrive" | "gameover";
+
+export function playHumanCommentary(category: CommentaryCategory, force = false) {
+  if (muted || !ctx || !voiceGain) return;
+
+  const now = performance.now();
+  // Prevent spamming repetitive punch clips (cooldown 2.2s unless forced or high priority like gong/onepunch/overdrive)
+  if (!force && category === "punch" && now - lastCommentaryTime < 2200) {
+    return;
+  }
+  if (!force && category === "launch" && now - lastCommentaryTime < 2500) {
+    return;
+  }
+
+  const clips = VOICE_CLIPS[category];
+  if (!clips || clips.length === 0) return;
+
+  const pick = clips[Math.floor(Math.random() * clips.length)];
+  lastCommentaryTime = now;
+
+  const buffer = voiceBuffers.get(pick);
+  if (!buffer) {
+    // If buffer not preloaded yet, fetch and play
+    fetch(`/voice/${pick}.mp3`)
+      .then((r) => (r.ok ? r.arrayBuffer() : null))
+      .then((ab) => {
+        if (ab && ctx && voiceGain && !muted) {
+          ctx.decodeAudioData(ab).then((decoded) => {
+            voiceBuffers.set(pick, decoded);
+            playDecodedBuffer(decoded);
+          });
+        }
+      })
+      .catch(() => {
+        // Fallback to browser Web Speech API
+        speakFallback(category);
+      });
+    return;
+  }
+
+  playDecodedBuffer(buffer);
+}
+
+function playDecodedBuffer(buffer: AudioBuffer) {
+  if (!ctx || !voiceGain || muted) return;
+  try {
+    if (currentVoiceSource) {
+      try {
+        currentVoiceSource.stop();
+      } catch {}
+      currentVoiceSource.disconnect();
+      currentVoiceSource = null;
+    }
+
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    src.connect(voiceGain);
+    src.start(ctx.currentTime);
+    currentVoiceSource = src;
+    src.onended = () => {
+      if (currentVoiceSource === src) {
+        currentVoiceSource = null;
+      }
+    };
+  } catch {}
+}
+
+function speakFallback(category: string) {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+  const FALLBACK_PHRASES: Record<string, string[]> = {
+    start: ["Pertandingan dimulai!", "Ayo bertanding!"],
+    gong: ["Gong! Poin spektakuler!", "Gong masuk telak!"],
+    punch: ["Aduhai kerasnya!", "Pukulan telak!"],
+    onepunch: ["Jurus satu pukulan!", "Saitama punch!"],
+    launch: ["Melayang tinggi!", "Terpental jauh!"],
+    overdrive: ["Overdrive showtime!"],
+    gameover: ["Kemenangan mutlak!", "Pertandingan selesai!"],
+  };
+  const list = FALLBACK_PHRASES[category] || ["Bagus sekali!"];
+  const text = list[Math.floor(Math.random() * list.length)];
+  try {
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 1.15;
+    utter.pitch = 1.05;
+    const voices = window.speechSynthesis.getVoices();
+    const idVoice = voices.find((v) => v.lang.startsWith("id"));
+    if (idVoice) utter.voice = idVoice;
+    window.speechSynthesis.speak(utter);
+  } catch {}
 }
 

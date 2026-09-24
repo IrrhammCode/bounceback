@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { BouncebackEngine, type GameState } from "../game/engine";
 import { SkillType } from "../game/skills";
 import TVIntroOverlay from "../components/TVIntroOverlay";
-import TVCommentaryBox from "../components/TVCommentaryBox";
 
 interface GameScreenProps {
   onMatchEnd: (winner: number, scores: [number, number]) => void;
@@ -106,25 +105,6 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
               ? "🎥 3RD CLOSE"
               : "🎥 3RD WIDE"}
         </button>
-
-        {/* TV Roster Showcase button */}
-        <button
-          className="roster-toggle-btn"
-          onClick={() => setShowIntro(true)}
-          title="Show 3v3 TV Roster Intro"
-        >
-          📺 ROSTER
-        </button>
-
-        {/* TV Game Show Live Commentary & Hype Meter Desk */}
-        {!showIntro && (
-          <TVCommentaryBox
-            hypeMeter={gameState.hypeMeter}
-            commentaryText={gameState.commentaryText}
-            commentaryMood={gameState.commentaryMood}
-            scores={gameState.scores}
-          />
-        )}
 
         {/* Top Bar: Scoreboard + Timer */}
         <div className="hud-top">
