@@ -140,7 +140,7 @@ export class BouncebackEngine {
 
     // Camera — 3rd-person stadium perspective looking downfield
     const aspect = this.canvas.clientWidth / this.canvas.clientHeight;
-    this.camera = new THREE.PerspectiveCamera(this.baseFov, aspect, 0.5, 250);
+    this.camera = new THREE.PerspectiveCamera(this.baseFov, aspect, 0.1, 350);
     this.camera.position.set(0, 8.5, -31.0);
     this.camera.lookAt(0, 1.2, -11.0);
 
@@ -302,15 +302,20 @@ export class BouncebackEngine {
         costume: assignedCostume,
       });
 
-      const initH = getArenaHeight(sp.x, sp.z);
-      mecha.position.set(sp.x, initH, sp.z);
-      mecha.rotation.y = sp.team === 1 ? Math.PI : 0;
       const desiredHeight = 1.6;
       const box = new THREE.Box3().setFromObject(mecha);
       const currentHeight = box.max.y - box.min.y;
       const scl = desiredHeight / (currentHeight || 1);
       mecha.scale.setScalar(scl);
       mecha.userData.baseScale = scl;
+
+      // Exact bottom sole contact offset so feet never sink into turf
+      const scaledBox = new THREE.Box3().setFromObject(mecha);
+      const footOffset = Math.max(0.18, -scaledBox.min.y + 0.05);
+      mecha.userData.footOffset = footOffset;
+      const initH = getArenaHeight(sp.x, sp.z);
+      mecha.position.set(sp.x, initH + footOffset, sp.z);
+      mecha.rotation.y = sp.team === 1 ? Math.PI : 0;
       ent.mesh = mecha;
       this.scene.add(mecha);
     }
@@ -494,8 +499,16 @@ export class BouncebackEngine {
       const camDist = 6.8;
       const camHeight = 3.8;
       const targetX = p.x * 0.82;
-      const targetY = pGroundY + camHeight;
-      const targetZ = p.z - camDist;
+      let targetY = pGroundY + camHeight;
+      let targetZ = p.z - camDist;
+
+      // Wall avoidance clamp: never hit north bleachers or turn black
+      const minCamZ = -28.0;
+      if (targetZ < minCamZ) {
+        const over = minCamZ - targetZ;
+        targetZ = minCamZ;
+        targetY += over * 0.55;
+      }
 
       this.camTargetPos.set(targetX, targetY, targetZ);
       this.camLookTarget.set(p.x * 0.5, pGroundY + 1.3, p.z + 8.0);
@@ -505,16 +518,24 @@ export class BouncebackEngine {
       this.camera.lookAt(this.camLookTarget);
     } else {
       // Standard Spacious Stadium 3rd-Person (Recommended for spatial awareness)
-      const camDist = 14.0;
+      const camDist = 13.5;
       const camHeight = 8.5;
       const targetX = p.x * 0.65;
-      const targetY = pGroundY + camHeight;
-      const targetZ = p.z - camDist;
+      let targetY = pGroundY + camHeight;
+      let targetZ = p.z - camDist;
+
+      // Wall avoidance clamp: never hit north bleachers or turn black
+      const minCamZ = -28.5;
+      if (targetZ < minCamZ) {
+        const over = minCamZ - targetZ;
+        targetZ = minCamZ;
+        targetY += over * 0.6; // smoothly tilt and elevate view over own goal
+      }
 
       this.camTargetPos.set(targetX, targetY, targetZ);
       this.camLookTarget.set(p.x * 0.4, pGroundY + 1.2, p.z + 6.0);
 
-      const lerpSpeed = Math.min(1.0, 3.8 * dt);
+      const lerpSpeed = Math.min(1.0, 4.2 * dt);
       this.camera.position.lerp(this.camTargetPos, lerpSpeed);
       this.camera.lookAt(this.camLookTarget);
     }
@@ -750,11 +771,12 @@ export class BouncebackEngine {
 
         const groundH = getArenaHeight(ent.x, ent.z);
         const slope = getArenaSlope(ent.x, ent.z);
+        const footOffset = u.footOffset || 0.25;
         ent.mesh.position.x = ent.x;
         ent.mesh.position.z = ent.z;
         // Visual bounce & comedic tumble on Y when launched
         if (ent.launched) {
-          ent.mesh.position.y = groundH + Math.abs(Math.sin(now * 0.015)) * 0.95 + 0.15;
+          ent.mesh.position.y = groundH + footOffset + Math.abs(Math.sin(now * 0.015)) * 0.95 + 0.15;
           if (u.torso) u.torso.rotation.x += dt * 14.0;
           ent.mesh.rotation.z += dt * 8.0;
           if (u.leftArm && u.rightArm) {
@@ -766,7 +788,7 @@ export class BouncebackEngine {
             u.rightLeg.rotation.x = -Math.sin(now * 0.035) * 0.85;
           }
         } else {
-          ent.mesh.position.y = groundH;
+          ent.mesh.position.y = groundH + footOffset;
           if (u.torso && !ent.stunTimer && spd > 0.4) {
             u.torso.rotation.x = slope.pitch * 0.65;
           } else if (u.torso && !ent.stunTimer) {

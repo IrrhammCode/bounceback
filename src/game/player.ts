@@ -246,9 +246,9 @@ export class PlayerController {
     if (up && !down) mz = 1;
     else if (down && !up) mz = -1;
 
-    // Left (-X) / Right (+X)
-    if (left && !right) mx = -1;
-    else if (right && !left) mx = 1;
+    // Left on screen (A / ArrowLeft) / Right on screen (D / ArrowRight)
+    if (left && !right) mx = 1;
+    else if (right && !left) mx = -1;
 
     // Diagonal speed normalization
     const len = Math.sqrt(mx * mx + mz * mz);
