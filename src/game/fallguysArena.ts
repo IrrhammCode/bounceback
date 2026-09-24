@@ -266,6 +266,9 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     map: floorTex,
     roughness: 0.25,
     metalness: 0.05,
+    polygonOffset: true,
+    polygonOffsetFactor: -1.0,
+    polygonOffsetUnits: -4.0,
   });
 
   const floorMesh = new THREE.Mesh(floorGeo, floorMat);
@@ -283,9 +286,9 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     metalness: 0.8,
   });
 
-  // Main ground foundation slab under pitch
+  // Main ground foundation slab under pitch (safely 30cm below floor to prevent z-fighting)
   const baseSlab = new THREE.Mesh(new THREE.BoxGeometry(W + 3, 2.0, L + 3), foundationMat);
-  baseSlab.position.y = -1.0;
+  baseSlab.position.y = -1.3;
   baseSlab.receiveShadow = true;
   root.add(baseSlab);
 
@@ -316,9 +319,9 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
 
   // Side foundation skirts under elevated midfield plateau (z = -5 to +5)
   for (const side of [-1, 1]) {
-    const skirtGeo = new THREE.BoxGeometry(0.6, 1.2, 10);
+    const skirtGeo = new THREE.BoxGeometry(0.5, 1.1, 10);
     const skirtMesh = new THREE.Mesh(skirtGeo, foundationMat);
-    skirtMesh.position.set(side * (hW + 0.3), 0.6, 0);
+    skirtMesh.position.set(side * (hW + 0.35), 0.55, 0);
     skirtMesh.receiveShadow = true;
     root.add(skirtMesh);
   }
@@ -471,9 +474,10 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
       bench.receiveShadow = true;
       root.add(bench);
 
-      // Concrete riser underneath
-      const riser = new THREE.Mesh(new THREE.BoxGeometry(1.4, tierY + 0.3, L + 6), riserMat);
-      riser.position.set(tierX, (tierY - 0.15) / 2, 0);
+      // Concrete riser underneath (meets bench bottom at tierY - 0.15)
+      const riserH = tierY - 0.15;
+      const riser = new THREE.Mesh(new THREE.BoxGeometry(1.36, riserH, L + 6), riserMat);
+      riser.position.set(tierX, riserH / 2, 0);
       riser.receiveShadow = true;
       root.add(riser);
 
