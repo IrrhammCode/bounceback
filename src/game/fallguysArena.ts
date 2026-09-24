@@ -2,33 +2,23 @@
  * BOUNCEBACK! — Ultra-HD Spacious Fall Guys Championship World
  *
  * Professional AAA Nintendo / Fall Guys arcade aesthetic:
- * - Spacious 28m x 54m arena with gentle 10m ramps (0m -> 1.2m -> 0m)
- * - 100% Vector-sharp, Ultra-HD court graphics with PBR glossy sheen (zero blur)
- * - Correct camera orientation: Court text "★ BATTLE ARENA ★" and speed chevrons face player right-side up
- * - Seamless continuous TubeGeometry inflatable barrier bumpers (zero kinks or gaps)
- * - Grand Colosseum Stadium Bowl wrapping around the pitch with 5 elevated seating tiers (y = 1.7m to 4.8m)
- * - 350+ animated 3D Fall Guys bean spectators with signature white faceplates & black oval eyes!
- * - Team cheering banners draped along stadium railings ("GO CYAN BEANS", "CORAL SMASH", "WIN THE CROWN")
- * - 2 Monumental 7-Meter Inflatable Fall Guys Mascots on Left & Right Sidelines:
- *   1. West Giant Cyan Mascot wearing a Golden Crown and holding a giant "#1" Foam Finger!
- *   2. East Giant Coral Mascot wearing a Champion Sweatband and giant Boxing Glove!
- * - 360° Animated LED Ribbon Video Boards scrolling live esports championship graphics
- * - 4 Monumental Stadium Floodlight Masts with festoon party pennants overhead
- * - South Victory Arch with giant rotating 3D Golden Championship Crown & digital scoreboard
- * - North Championship Jumbotron with twin golden victory trophy cups
- * - Floating Colosseum Island Keel with glowing anti-gravity thrusters underneath
- * - Rich, Packed Surrounding Sky World (Zero Empty Voids):
- *   1. Giant Floating Donut Obstacle Ring with pink strawberry glaze & 3D rainbow sprinkles
- *   2. Giant Floating Golden Star Championship Ring rotating in the sky
- *   3. Bouncy Polka-Dot Mushroom Island with mini bouncing beans
- *   4. Carnival Party Canopy Island with spinning carousel top
- *   5. Theme Park Windmill Island with 4 rotating rainbow-colored blades & pastel cottages
- *   6. Carnival Island with a working 3D rotating Ferris Wheel & upright passenger gondolas
- *   7. Crystal Cascade Island with twin turquoise waterfalls pouring into the cloud sea
- *   8. Amethyst Spire Island with glowing pastel crystal clusters & party umbrellas
- *   9. Distant Castle Island with towers & rainbow arch bridge
- *   10. Sweeping Neon Sky Rollercoaster Rails weaving through clouds
- *   11. 16 Pastel Horizon Mountain Peaks circling the 360° horizon
+ * - Fully Enclosed 360° Grand Colosseum Bowl wrapping all 4 sides of the pitch
+ * - 600 Animated Fall Guys Bean Spectators with official white faceplates & black oval eyes!
+ * - South Endzone Mega-Pavilion & Arched Canopy Roof framing the downfield camera view
+ * - Giant 10-Meter Inflatable Fall Guy Mascot peeking over the rear stadium roof, waving at the court
+ * - 2 Monumental 7-Meter Inflatable Mascots on Left & Right Sidelines (Crown Cyan & Boxing Coral)
+ * - 4 Sweeping Dynamic Stadium Searchlights criss-crossing the sky
+ * - Moving Sky Rollercoaster with 4-car coaster train & cheering mini-beans looping through clouds
+ * - Giant Floating Donut Obstacle Ring with pink strawberry glaze & 3D rainbow sprinkles
+ * - Giant Floating Golden Star Championship Ring rotating in the sky
+ * - Bouncy Polka-Dot Mushroom Island with mini bouncing beans
+ * - Carnival Carousel Island with spinning party canopy
+ * - Theme Park Windmill Island with 4 rotating rainbow-colored blades & pastel cottages
+ * - Carnival Island with working 3D rotating Ferris Wheel & upright passenger gondolas
+ * - Crystal Cascade Island with twin turquoise waterfalls pouring into the cloud sea
+ * - Amethyst Spire Island with glowing pastel crystal clusters & party umbrellas
+ * - Distant Castle Island with towers & rainbow arch bridge
+ * - 16 Pastel Horizon Mountain Peaks circling the 360° horizon (zero empty voids)
  * - Match Broadcast Camera Drone hovering with 4 spinning rotors & blinking red recording light
  * - Spectator Zeppelin with twin spinning propellers & 4 striped hot air balloons
  * - Distant 3D sea of fluffy cumulus clouds far below the floating stadium (y = -45m, dist > 85m)
@@ -80,13 +70,12 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
 
   // ─── 1. CRISP PROCEDURAL SKY DOME (ULTRA-HD) ───
   const skyTex = makeCanvasTex(2048, 1024, (ctx) => {
-    // Vibrant Nintendo / Fall Guys sunny daylight sky
     const g = ctx.createLinearGradient(0, 0, 0, 1024);
     g.addColorStop(0.00, "#0284c7"); // Deep vibrant sky blue
-    g.addColorStop(0.35, "#38bdf8"); // Cheerful bright cyan
-    g.addColorStop(0.68, "#7dd3fc"); // Soft horizon cyan
-    g.addColorStop(0.88, "#bae6fd"); // Light sunny haze
-    g.addColorStop(0.96, "#fef08a"); // Warm golden horizon glow
+    g.addColorStop(0.35, "#38bdf8"); // Bright cyan
+    g.addColorStop(0.68, "#7dd3fc"); // Horizon cyan
+    g.addColorStop(0.88, "#bae6fd"); // Sunny haze
+    g.addColorStop(0.96, "#fef08a"); // Golden horizon glow
     g.addColorStop(1.00, "#fde68a");
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, 2048, 1024);
@@ -136,8 +125,8 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   cloudSea.position.y = -45;
   root.add(cloudSea);
 
-  for (let ci = 0; ci < 28; ci++) {
-    const angle = (ci / 28) * Math.PI * 2;
+  for (let ci = 0; ci < 32; ci++) {
+    const angle = (ci / 32) * Math.PI * 2;
     const dist = 85 + (ci % 4) * 16;
     const r = 16 + (ci % 5) * 4;
     const cg = new THREE.Mesh(new THREE.SphereGeometry(r, 12, 10), cloudSeaMat);
@@ -161,7 +150,6 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   }
   floorGeo.computeVertexNormals();
 
-  // Ultra-HD 2048x4096 Floor Texture (Oriented Right-Side Up Facing Camera)
   const floorTex = makeCanvasTex(2048, 4096, (ctx) => {
     // 1. Cyan Endzone Field (Top, -Z)
     const cyanGrad = ctx.createLinearGradient(0, 0, 0, 1200);
@@ -203,7 +191,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     ctx.fillStyle = coralGrad;
     ctx.fillRect(0, 2896, 2048, 1200);
 
-    // Clean court track stripes
+    // Track stripes
     ctx.globalAlpha = 0.06;
     ctx.fillStyle = "#ffffff";
     for (let y = 0; y < 4096; y += 96) {
@@ -211,7 +199,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     }
     ctx.globalAlpha = 1.0;
 
-    // Speed Chevrons on Ascending Ramp (pointing toward +Z downfield)
+    // Speed Chevrons on Ascending Ramp (pointing +Z downfield)
     ctx.strokeStyle = "#ffffff";
     ctx.lineWidth = 26;
     ctx.lineCap = "round";
@@ -226,7 +214,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
       }
     }
 
-    // Speed Chevrons on Descending Ramp (pointing toward +Z downfield)
+    // Speed Chevrons on Descending Ramp (pointing +Z downfield)
     for (let cy = 2400; cy <= 2780; cy += 120) {
       for (const cx of [512, 1024, 1536]) {
         ctx.beginPath();
@@ -244,7 +232,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     ctx.arc(1024, 2048, 340, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Court Text: Rotated 180° so it reads right-side up to the camera viewing from -Z
+    // Court Text: Rotated 180° so it reads right-side up to camera viewing from -Z
     ctx.save();
     ctx.translate(1024, 2048);
     ctx.rotate(Math.PI);
@@ -266,7 +254,6 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     ctx.arc(1024, 3976, 520, Math.PI, Math.PI * 2);
     ctx.stroke();
 
-    // Outer Stadium Boundary Border
     ctx.lineWidth = 36;
     ctx.strokeStyle = "#ffffff";
     ctx.strokeRect(36, 36, 1976, 4024);
@@ -296,38 +283,37 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     metalness: 0.8,
   });
 
-  // Main ground foundation slab under pitch (safely 30cm below floor to prevent z-fighting)
-  const baseSlab = new THREE.Mesh(new THREE.BoxGeometry(W + 3, 2.0, L + 3), foundationMat);
+  // Base foundation slab safely 30cm below floor to prevent Z-fighting
+  const baseSlab = new THREE.Mesh(new THREE.BoxGeometry(W + 10, 2.0, L + 16), foundationMat);
   baseSlab.position.y = -1.3;
   baseSlab.receiveShadow = true;
   root.add(baseSlab);
 
-  // Stepped Inverted Floating Island Rock Keel beneath colosseum
-  const keelStep1 = new THREE.Mesh(new THREE.BoxGeometry(W - 2, 2.5, L - 4), rockKeelMat);
+  const keelStep1 = new THREE.Mesh(new THREE.BoxGeometry(W + 4, 2.5, L + 8), rockKeelMat);
   keelStep1.position.y = -3.25;
   keelStep1.receiveShadow = true;
   root.add(keelStep1);
 
-  const keelStep2 = new THREE.Mesh(new THREE.BoxGeometry(W - 8, 3.0, L - 12), rockKeelMat);
+  const keelStep2 = new THREE.Mesh(new THREE.BoxGeometry(W - 4, 3.0, L), rockKeelMat);
   keelStep2.position.y = -6.0;
   keelStep2.receiveShadow = true;
   root.add(keelStep2);
 
-  const keelStep3 = new THREE.Mesh(new THREE.BoxGeometry(W - 14, 3.5, L - 22), rockKeelMat);
+  const keelStep3 = new THREE.Mesh(new THREE.BoxGeometry(W - 12, 3.5, L - 16), rockKeelMat);
   keelStep3.position.y = -9.25;
   keelStep3.receiveShadow = true;
   root.add(keelStep3);
 
   // Central Anti-Gravity Floating Thruster Core
   const thrusterRing = new THREE.Mesh(
-    new THREE.TorusGeometry(5.0, 0.4, 12, 32),
+    new THREE.TorusGeometry(6.0, 0.5, 12, 32),
     energyCoreMat
   );
   thrusterRing.rotation.x = Math.PI / 2;
   thrusterRing.position.y = -11.5;
   root.add(thrusterRing);
 
-  // Side foundation skirts under elevated midfield plateau (z = -5 to +5)
+  // Side foundation skirts under elevated midfield plateau
   for (const side of [-1, 1]) {
     const skirtGeo = new THREE.BoxGeometry(0.5, 1.1, 10);
     const skirtMesh = new THREE.Mesh(skirtGeo, foundationMat);
@@ -381,7 +367,6 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     tubeMesh.receiveShadow = true;
     root.add(tubeMesh);
 
-    // Glowing Neon Guide Rail along top of barrier
     const neonCurve = new THREE.CatmullRomCurve3(neonPts);
     const neonGeo = new THREE.TubeGeometry(neonCurve, 64, 0.08, 10, false);
     const neonMat = new THREE.MeshStandardMaterial({
@@ -393,7 +378,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     root.add(neonMesh);
   }
 
-  // Seamless End Barriers (North Cyan & South Coral)
+  // End Barriers (North Cyan & South Coral)
   const addEndBarrier = (pz: number, color: number) => {
     const endMat = new THREE.MeshStandardMaterial({
       color: 0xf8fafc,
@@ -460,11 +445,12 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     root.add(ribbonMesh);
   }
 
-  // ─── 7. GRAND COLOSSEUM STADIUM TIERS & 350 FALL GUYS BEAN SPECTATORS ───
+  // ─── 7. FULL 360° ENCLOSED COLOSSEUM BOWL & 600 SPECTATORS ───
   const tierColors = [0x06b6d4, 0xfbbf24, 0xf43f5e, 0x8b5cf6, 0x10b981];
   const riserMat = new THREE.MeshStandardMaterial({ color: 0x181438, roughness: 0.5, metalness: 0.1 });
   const railMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.2, metalness: 0.8 });
 
+  // 7.1 Left & Right Sideline Bleachers (5 tiers each)
   for (const side of [-1, 1]) {
     for (let tier = 0; tier < 5; tier++) {
       const tierSeatMat = new THREE.MeshStandardMaterial({
@@ -475,42 +461,84 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
       const tierX = side * (hW + 2.2 + tier * 1.5);
       const tierY = 1.7 + tier * 0.75;
 
-      // Tier bench slab
       const bench = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.3, L + 6), tierSeatMat);
       bench.position.set(tierX, tierY, 0);
       bench.receiveShadow = true;
       root.add(bench);
 
-      // Concrete riser underneath
       const riserH = tierY - 0.15;
       const riser = new THREE.Mesh(new THREE.BoxGeometry(1.36, riserH, L + 6), riserMat);
       riser.position.set(tierX, riserH / 2, 0);
       riser.receiveShadow = true;
       root.add(riser);
 
-      // Safety rail
       const rail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.5, L + 6), railMat);
       rail.position.set(tierX - side * 0.65, tierY + 0.4, 0);
       root.add(rail);
     }
   }
 
-  // Signature Fall Guys Faceplate Texture with 2 Black Pill Eyes & White Glints
+  // 7.2 South Endzone Grandstand (Directly in main camera view! Behind Coral Goal)
+  for (let tier = 0; tier < 5; tier++) {
+    const tierSeatMat = new THREE.MeshStandardMaterial({
+      color: tierColors[(tier + 2) % tierColors.length],
+      roughness: 0.35,
+    });
+    const tierZ = hL + 2.6 + tier * 1.5;
+    const tierY = 1.8 + tier * 0.75;
+    const benchW = W + 8;
+
+    const bench = new THREE.Mesh(new THREE.BoxGeometry(benchW, 0.3, 1.4), tierSeatMat);
+    bench.position.set(0, tierY, tierZ);
+    bench.receiveShadow = true;
+    root.add(bench);
+
+    const riserH = tierY - 0.15;
+    const riser = new THREE.Mesh(new THREE.BoxGeometry(benchW, riserH, 1.36), riserMat);
+    riser.position.set(0, riserH / 2, tierZ);
+    riser.receiveShadow = true;
+    root.add(riser);
+
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(benchW, 0.5, 0.08), railMat);
+    rail.position.set(0, tierY + 0.4, tierZ - 0.65);
+    root.add(rail);
+  }
+
+  // 7.3 North Endzone Grandstand (Behind Cyan Goal)
+  for (let tier = 0; tier < 4; tier++) {
+    const tierSeatMat = new THREE.MeshStandardMaterial({
+      color: tierColors[(tier + 1) % tierColors.length],
+      roughness: 0.35,
+    });
+    const tierZ = -hL - 2.6 - tier * 1.5;
+    const tierY = 1.8 + tier * 0.75;
+    const benchW = W + 6;
+
+    const bench = new THREE.Mesh(new THREE.BoxGeometry(benchW, 0.3, 1.4), tierSeatMat);
+    bench.position.set(0, tierY, tierZ);
+    bench.receiveShadow = true;
+    root.add(bench);
+
+    const riserH = tierY - 0.15;
+    const riser = new THREE.Mesh(new THREE.BoxGeometry(benchW, riserH, 1.36), riserMat);
+    riser.position.set(0, riserH / 2, tierZ);
+    riser.receiveShadow = true;
+    root.add(riser);
+  }
+
+  // Signature Fall Guys Faceplate Texture (White Oval + 2 Black Pill Eyes + Glints)
   const faceplateTex = makeCanvasTex(256, 256, (ctx) => {
-    // White oval headplate
     ctx.fillStyle = "#ffffff";
     ctx.beginPath();
     ctx.ellipse(128, 128, 110, 118, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Signature Fall Guys 2 black vertical pill eyes
     ctx.fillStyle = "#09090b";
     ctx.beginPath();
     ctx.ellipse(92, 124, 15, 34, 0, 0, Math.PI * 2);
     ctx.ellipse(164, 124, 15, 34, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Cute white sparkle glints in eyes
     ctx.fillStyle = "#ffffff";
     ctx.beginPath();
     ctx.arc(88, 108, 6.5, 0, Math.PI * 2);
@@ -518,106 +546,242 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     ctx.fill();
   });
 
-  // 350 Instanced Fall Guys Bean Bodies
-  const specCount = 350;
+  // 600 Instanced Fall Guys Spectator Beans (Wrapping all around the 360° Colosseum)
+  const totalSpecCount = 600;
   const specGeo = new THREE.CapsuleGeometry(0.24, 0.42, 8, 10);
   const specMat = new THREE.MeshStandardMaterial({ roughness: 0.25, metalness: 0.05 });
-  const specMesh = new THREE.InstancedMesh(specGeo, specMat, specCount);
+  const specMesh = new THREE.InstancedMesh(specGeo, specMat, totalSpecCount);
   specMesh.castShadow = true;
 
-  // 350 Instanced Fall Guys Faceplates (facing the arena pitch)
   const faceGeo = new THREE.PlaneGeometry(0.23, 0.23);
   const faceMat = new THREE.MeshBasicMaterial({ map: faceplateTex, transparent: true });
-  const faceMesh = new THREE.InstancedMesh(faceGeo, faceMat, specCount);
+  const faceMesh = new THREE.InstancedMesh(faceGeo, faceMat, totalSpecCount);
 
   const specColors = [
     0x27e5ff, 0xff5268, 0xffd166, 0x8338ec, 0x06d6a0, 0xf472b6, 0xfb923c, 0xa855f7, 0x38bdf8, 0xe11d48,
   ];
-  interface SpecData { base: THREE.Vector3; side: number; phase: number; speed: number }
+
+  interface SpecData {
+    base: THREE.Vector3;
+    rotY: number;
+    faceOffset: THREE.Vector3;
+    phase: number;
+    speed: number;
+  }
   const specData: SpecData[] = [];
   const dummy = new THREE.Object3D();
   const faceDummy = new THREE.Object3D();
   let si = 0;
 
+  // Add spectators along a row
+  const addSpecBean = (x: number, y: number, z: number, facingRotY: number, faceOffX: number, faceOffZ: number) => {
+    if (si >= totalSpecCount) return;
+    dummy.position.set(x, y, z);
+    dummy.rotation.set(0, facingRotY, 0);
+    dummy.updateMatrix();
+    specMesh.setMatrixAt(si, dummy.matrix);
+    specMesh.setColorAt(si, new THREE.Color(specColors[si % specColors.length]));
+
+    faceDummy.position.set(x + faceOffX, y + 0.12, z + faceOffZ);
+    faceDummy.rotation.set(0, facingRotY, 0);
+    faceDummy.updateMatrix();
+    faceMesh.setMatrixAt(si, faceDummy.matrix);
+
+    specData.push({
+      base: new THREE.Vector3(x, y, z),
+      rotY: facingRotY,
+      faceOffset: new THREE.Vector3(faceOffX, 0.12, faceOffZ),
+      phase: Math.random() * 6.28,
+      speed: 2.2 + Math.random() * 2.8,
+    });
+    si++;
+  };
+
+  // 1. Left & Right Sidelines (175 each)
   for (const side of [-1, 1]) {
     for (let tier = 0; tier < 5; tier++) {
       const perRow = 35;
-      for (let r = 0; r < perRow && si < specCount; r++) {
+      for (let r = 0; r < perRow; r++) {
         const z = -hL + 2.0 + (r / (perRow - 1)) * (L - 4);
         const x = side * (hW + 2.2 + tier * 1.5);
         const y = 1.7 + tier * 0.75 + 0.38;
-
-        // Bean body
-        dummy.position.set(x, y, z);
-        dummy.updateMatrix();
-        specMesh.setMatrixAt(si, dummy.matrix);
-        specMesh.setColorAt(si, new THREE.Color(specColors[si % specColors.length]));
-
-        // Faceplate mounted on the front face looking toward field (x = 0)
-        const faceX = x + (side < 0 ? 0.23 : -0.23);
-        const faceY = y + 0.12;
-        faceDummy.position.set(faceX, faceY, z);
-        faceDummy.rotation.set(0, side < 0 ? Math.PI / 2 : -Math.PI / 2, 0);
-        faceDummy.updateMatrix();
-        faceMesh.setMatrixAt(si, faceDummy.matrix);
-
-        specData.push({
-          base: new THREE.Vector3(x, y, z),
-          side,
-          phase: Math.random() * 6.28,
-          speed: 2.2 + Math.random() * 2.8,
-        });
-        si++;
+        const rotY = side < 0 ? Math.PI / 2 : -Math.PI / 2;
+        const fOffX = side < 0 ? 0.23 : -0.23;
+        addSpecBean(x, y, z, rotY, fOffX, 0);
       }
     }
   }
+
+  // 2. South Endzone (150 spectators directly in front of camera view!)
+  for (let tier = 0; tier < 5; tier++) {
+    const perRow = 30;
+    const tierZ = hL + 2.6 + tier * 1.5;
+    const tierY = 1.8 + tier * 0.75 + 0.38;
+    for (let r = 0; r < perRow; r++) {
+      const x = -hW - 2.5 + (r / (perRow - 1)) * (W + 5);
+      const rotY = Math.PI; // Facing North toward camera
+      addSpecBean(x, tierY, tierZ, rotY, 0, -0.23);
+    }
+  }
+
+  // 3. North Endzone (100 spectators behind Cyan goal)
+  for (let tier = 0; tier < 4; tier++) {
+    const perRow = 25;
+    const tierZ = -hL - 2.6 - tier * 1.5;
+    const tierY = 1.8 + tier * 0.75 + 0.38;
+    for (let r = 0; r < perRow; r++) {
+      const x = -hW - 1.5 + (r / (perRow - 1)) * (W + 3);
+      const rotY = 0; // Facing South
+      addSpecBean(x, tierY, tierZ, rotY, 0, 0.23);
+    }
+  }
+
   if (specMesh.instanceColor) specMesh.instanceColor.needsUpdate = true;
   specMesh.instanceMatrix.needsUpdate = true;
   faceMesh.instanceMatrix.needsUpdate = true;
   root.add(specMesh);
   root.add(faceMesh);
 
-  // Grandstand Cheering Banners along Railings
-  const addBleacherBanner = (x: number, y: number, z: number, text: string, bg: string, border: string, side: number) => {
-    const bannerTex = makeCanvasTex(512, 128, (ctx) => {
-      ctx.fillStyle = bg;
-      ctx.fillRect(4, 4, 504, 120);
-      ctx.strokeStyle = border;
-      ctx.lineWidth = 10;
-      ctx.strokeRect(4, 4, 504, 120);
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "900 44px Outfit, sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(text, 256, 64);
-    });
-    const bMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(8.0, 1.4),
-      new THREE.MeshBasicMaterial({ map: bannerTex, side: THREE.DoubleSide })
+  // ─── 8. SOUTH ENDZONE MEGA-PAVILION & ARCHED FESTIVAL CANOPY ─
+  // Frames the entire upper view behind the Coral Goal with grand architecture!
+  const pavilionGroup = new THREE.Group();
+  pavilionGroup.position.set(0, 0, hL + 10.5);
+  root.add(pavilionGroup);
+
+  // 8.1 Arched Carnival Awning Roof (Yellow and Coral Striped Canopy)
+  const canopyArchGeo = new THREE.CylinderGeometry(18, 18, 14, 24, 1, true, -Math.PI * 0.5, Math.PI);
+  canopyArchGeo.rotateZ(Math.PI / 2);
+  const canopyTex = makeCanvasTex(512, 256, (ctx) => {
+    for (let s = 0; s < 8; s++) {
+      ctx.fillStyle = s % 2 === 0 ? "#f43f5e" : "#fbbf24";
+      ctx.fillRect(s * 64, 0, 64, 256);
+    }
+  });
+  canopyTex.wrapS = THREE.RepeatWrapping;
+  canopyTex.repeat.set(2, 1);
+  const canopyMat = new THREE.MeshStandardMaterial({
+    map: canopyTex,
+    side: THREE.DoubleSide,
+    roughness: 0.35,
+  });
+  const canopyMesh = new THREE.Mesh(canopyArchGeo, canopyMat);
+  canopyMesh.position.set(0, 11, -1);
+  pavilionGroup.add(canopyMesh);
+
+  // 8.2 Massive South Video Matrix Jumbotron Screen
+  const southJumboTex = makeCanvasTex(1024, 384, (ctx) => {
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(0, 0, 1024, 384);
+    ctx.strokeStyle = "#ffd166";
+    ctx.lineWidth = 14;
+    ctx.strokeRect(8, 8, 1008, 368);
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "900 68px Outfit, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("⚡ BOUNCEBACK ARENA ⚡", 512, 110);
+
+    ctx.fillStyle = "#38bdf8";
+    ctx.font = "800 48px Outfit, sans-serif";
+    ctx.fillText("★ CORAL CHAMPIONSHIP CUP ★", 512, 190);
+
+    ctx.fillStyle = "#f43f5e";
+    ctx.font = "900 56px Outfit, sans-serif";
+    ctx.fillText("👑 WIN THE CROWN 👑", 512, 280);
+  });
+  const southJumbo = new THREE.Mesh(
+    new THREE.PlaneGeometry(16, 6.0),
+    new THREE.MeshBasicMaterial({ map: southJumboTex, side: THREE.DoubleSide })
+  );
+  southJumbo.position.set(0, 11.5, -4.5);
+  southJumbo.rotation.y = Math.PI;
+  pavilionGroup.add(southJumbo);
+
+  // 8.3 Twin Monumental Castle Spire Towers on South Corners
+  for (const tx of [-19, 19]) {
+    const tower = new THREE.Group();
+    tower.position.set(tx, 0, 0);
+
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.6, 20, 14), foundationMat);
+    base.position.y = 10;
+    tower.add(base);
+
+    const spire = new THREE.Mesh(
+      new THREE.ConeGeometry(2.8, 6.5, 14),
+      new THREE.MeshStandardMaterial({ color: 0xe11d48, roughness: 0.3 })
     );
-    bMesh.position.set(x, y, z);
-    bMesh.rotation.y = side < 0 ? Math.PI / 2 : -Math.PI / 2;
-    root.add(bMesh);
-  };
+    spire.position.y = 23.25;
+    tower.add(spire);
 
-  addBleacherBanner(-(hW + 1.4), 1.9, -12, "★ GO CYAN BEANS ⚡", "#0369a1", "#38bdf8", -1);
-  addBleacherBanner(-(hW + 1.4), 1.9, 12, "👑 WIN THE CROWN 👑", "#854d0e", "#fef08a", -1);
-  addBleacherBanner(hW + 1.4, 1.9, -12, "🔥 CORAL SMASH 🔥", "#9f1239", "#fb7185", 1);
-  addBleacherBanner(hW + 1.4, 1.9, 12, "⚡ SPEED RUSH ⚡", "#701a75", "#e879f9", 1);
+    // Gold finial sphere
+    const finial = new THREE.Mesh(
+      new THREE.SphereGeometry(0.7, 10, 10),
+      new THREE.MeshStandardMaterial({ color: C.GOLD, roughness: 0.15, metalness: 0.85 })
+    );
+    finial.position.y = 27;
+    tower.add(finial);
 
-  // ─── 8. TWO MONUMENTAL 7-METER INFLATABLE FALL GUYS MASCOTS (Left & Right Sidelines) ─
+    pavilionGroup.add(tower);
+  }
+
+  // 8.4 GIGANTIC 10-METER FALL GUY MASCOT PEEKING OVER CANOPY ROOF!
+  const giantPeeker = new THREE.Group();
+  giantPeeker.position.set(0, 13.5, 3.5);
+  pavilionGroup.add(giantPeeker);
+
+  const peekerBodyMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.25 });
+  const peekerHead = new THREE.Mesh(new THREE.SphereGeometry(3.6, 20, 16), peekerBodyMat);
+  giantPeeker.add(peekerHead);
+
+  // Giant Faceplate
+  const peekerFace = new THREE.Mesh(
+    new THREE.SphereGeometry(2.1, 16, 12),
+    new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 })
+  );
+  peekerFace.scale.set(1.0, 1.25, 0.45);
+  peekerFace.position.set(0, 0.2, -2.8);
+  giantPeeker.add(peekerFace);
+
+  // Giant Black Eyes
+  const peekerEyeMat = new THREE.MeshBasicMaterial({ color: 0x09090b });
+  for (const ex of [-0.65, 0.65]) {
+    const eye = new THREE.Mesh(new THREE.CapsuleGeometry(0.22, 0.55, 8, 10), peekerEyeMat);
+    eye.position.set(ex, 0.3, -3.5);
+    giantPeeker.add(eye);
+  }
+
+  // Giant 5-Point Crown on Peeker
+  const peekerCrown = new THREE.Mesh(
+    new THREE.CylinderGeometry(2.4, 2.0, 1.2, 16),
+    new THREE.MeshStandardMaterial({ color: C.GOLD, metalness: 0.85, roughness: 0.15 })
+  );
+  peekerCrown.position.set(0, 4.2, 0);
+  giantPeeker.add(peekerCrown);
+
+  // Two Giant White-Gloved Waving Hands resting on roof
+  const gloveMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+  const peekerHands: THREE.Mesh[] = [];
+  for (const hx of [-4.5, 4.5]) {
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(1.2, 12, 10), gloveMat);
+    hand.scale.set(1.2, 0.8, 1.0);
+    hand.position.set(hx, -1.2, -3.8);
+    giantPeeker.add(hand);
+    peekerHands.push(hand);
+  }
+
+  // ─── 9. TWO 7-METER INFLATABLE MASCOTS (Left & Right Sidelines) ─
   const giantMascots: { group: THREE.Group; arm: THREE.Group; baseY: number }[] = [];
 
   const createGiantMascot = (team: "cyan" | "coral", side: number) => {
     const mg = new THREE.Group();
     const mx = side * (hW + 3.8);
     const my = 0.6;
-    const mz = 0;
-    mg.position.set(mx, my, mz);
+    mg.position.set(mx, my, 0);
 
-    // 1. Stage Winner's Podium
-    const stageMat = new THREE.MeshStandardMaterial({ color: 0x1e1b4b, roughness: 0.3, metalness: 0.4 });
-    const stage = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 2.9, 1.2, 24), stageMat);
+    const stage = new THREE.Mesh(
+      new THREE.CylinderGeometry(2.6, 2.9, 1.2, 24),
+      foundationMat
+    );
     mg.add(stage);
 
     const stageNeon = new THREE.Mesh(
@@ -632,18 +796,15 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     stageNeon.position.y = 0.6;
     mg.add(stageNeon);
 
-    // 2. Giant Bean Body (6.5m high)
     const beanBodyMat = new THREE.MeshStandardMaterial({
       color: team === "cyan" ? 0x00b4d8 : 0xf43f5e,
       roughness: 0.25,
-      metalness: 0.05,
     });
     const beanMesh = new THREE.Mesh(new THREE.CapsuleGeometry(1.4, 2.4, 16, 20), beanBodyMat);
     beanMesh.position.y = 3.2;
     beanMesh.castShadow = true;
     mg.add(beanMesh);
 
-    // 3. Iconic White Faceplate & Eyes
     const faceplateMesh = new THREE.Mesh(
       new THREE.SphereGeometry(0.85, 16, 12),
       new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 })
@@ -652,7 +813,6 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     faceplateMesh.position.set(side < 0 ? 1.05 : -1.05, 3.8, 0);
     mg.add(faceplateMesh);
 
-    // Two Black Oval Eyes
     const eyeMat = new THREE.MeshBasicMaterial({ color: 0x09090b });
     for (const ez of [-0.28, 0.28]) {
       const eye = new THREE.Mesh(new THREE.CapsuleGeometry(0.09, 0.22, 6, 8), eyeMat);
@@ -661,11 +821,8 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
       mg.add(eye);
     }
 
-    // 4. Team-Specific Championship Headgear & Cheering Arm Props
     let wavingArm = new THREE.Group();
-
     if (team === "cyan") {
-      // Golden 5-point Crown on Cyan Mascot
       const crown = new THREE.Group();
       crown.position.set(0, 5.75, 0);
       const cBase = new THREE.Mesh(
@@ -673,7 +830,6 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
         new THREE.MeshStandardMaterial({ color: C.GOLD, roughness: 0.15, metalness: 0.85 })
       );
       crown.add(cBase);
-
       for (let p = 0; p < 5; p++) {
         const cAngle = (p / 5) * Math.PI * 2;
         const spike = new THREE.Mesh(
@@ -685,14 +841,12 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
       }
       mg.add(crown);
 
-      // Cheering Arm with Giant "#1" Foam Finger
       wavingArm.position.set(side < 0 ? 1.3 : -1.3, 3.8, 0.9);
       const armTube = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 1.8, 8), beanBodyMat);
       armTube.position.y = 0.9;
       armTube.rotation.z = side < 0 ? 0.4 : -0.4;
       wavingArm.add(armTube);
 
-      // Foam Finger Hand
       const fingerMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.3 });
       const palm = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.9, 0.28), fingerMat);
       palm.position.set(0, 2.0, 0);
@@ -701,10 +855,8 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
       const pointer = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.9, 0.25), fingerMat);
       pointer.position.set(0.12, 2.8, 0);
       wavingArm.add(pointer);
-
       mg.add(wavingArm);
     } else {
-      // Sporty Athletic Headband on Coral Mascot
       const band = new THREE.Mesh(
         new THREE.TorusGeometry(1.42, 0.14, 8, 24),
         new THREE.MeshStandardMaterial({ color: C.GOLD, roughness: 0.3 })
@@ -713,23 +865,12 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
       band.position.y = 4.8;
       mg.add(band);
 
-      // Star emblem on headband
-      const star = new THREE.Mesh(
-        new THREE.ConeGeometry(0.35, 0.2, 5),
-        new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 })
-      );
-      star.position.set(side < 0 ? 1.45 : -1.45, 4.8, 0);
-      star.rotation.z = side < 0 ? -Math.PI / 2 : Math.PI / 2;
-      mg.add(star);
-
-      // Cheering Arm with Giant Red Boxing Glove
       wavingArm.position.set(side < 0 ? 1.3 : -1.3, 3.8, -0.9);
       const armTube = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 1.8, 8), beanBodyMat);
       armTube.position.y = 0.9;
       armTube.rotation.z = side < 0 ? -0.4 : 0.4;
       wavingArm.add(armTube);
 
-      // Giant Boxing Glove
       const glove = new THREE.Mesh(
         new THREE.SphereGeometry(0.75, 12, 10),
         new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.3 })
@@ -737,7 +878,6 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
       glove.scale.set(1.0, 1.25, 0.9);
       glove.position.set(0, 2.2, 0);
       wavingArm.add(glove);
-
       mg.add(wavingArm);
     }
 
@@ -745,233 +885,106 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     giantMascots.push({ group: mg, arm: wavingArm, baseY: my });
   };
 
-  createGiantMascot("cyan", -1); // Left Sideline Mascot
-  createGiantMascot("coral", 1);  // Right Sideline Mascot
+  createGiantMascot("cyan", -1);
+  createGiantMascot("coral", 1);
 
-  // ─── 9. 4 MONUMENTAL STADIUM FLOODLIGHT TOWERS & BUNTING ─
-  const towerPositions = [
-    { x: -hW - 8.5, z: -25 },
-    { x: hW + 8.5, z: -25 },
-    { x: -hW - 8.5, z: 25 },
-    { x: hW + 8.5, z: 25 },
+  // ─── 10. 4 SWEEPING DYNAMIC ESPORT STADIUM SEARCHLIGHTS ──
+  const searchlights: { mesh: THREE.Mesh; baseAngle: number; speed: number }[] = [];
+  const searchPositions = [
+    { x: -hW - 4, z: -20, col: 0x38bdf8 },
+    { x: hW + 4, z: -20, col: 0xfbbf24 },
+    { x: -hW - 4, z: 20, col: 0xf43f5e },
+    { x: hW + 4, z: 20, col: 0x22d3ee },
   ];
 
-  const towerMat = new THREE.MeshStandardMaterial({ color: 0x1e1b4b, roughness: 0.3, metalness: 0.7 });
-  const lampMat = new THREE.MeshBasicMaterial({ color: 0xfffae0 });
-
-  for (const tp of towerPositions) {
-    const tower = new THREE.Group();
-    tower.position.set(tp.x, 0, tp.z);
-
-    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.85, 20, 10), towerMat);
-    mast.position.y = 10;
-    mast.castShadow = true;
-    tower.add(mast);
-
-    const head = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.8, 0.8), towerMat);
-    head.position.set(0, 20, 0);
-    head.rotation.y = tp.x < 0 ? 0.35 : -0.35;
-    tower.add(head);
-
-    for (let lx = -1.3; lx <= 1.3; lx += 0.86) {
-      const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.32, 10, 8), lampMat);
-      lamp.position.set(lx, 20, tp.x < 0 ? 0.45 : -0.45);
-      tower.add(lamp);
-    }
-
-    const cannon = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.35, 0.45, 1.4, 8),
-      new THREE.MeshStandardMaterial({ color: C.GOLD, metalness: 0.8, roughness: 0.2 })
-    );
-    cannon.position.set(0, 11, 0);
-    cannon.rotation.z = tp.x < 0 ? -0.5 : 0.5;
-    tower.add(cannon);
-
-    root.add(tower);
+  for (let s = 0; s < searchPositions.length; s++) {
+    const sp = searchPositions[s];
+    const beamGeo = new THREE.CylinderGeometry(0.4, 4.5, 48, 12, 1, true);
+    beamGeo.translate(0, 24, 0);
+    const beamMat = new THREE.MeshBasicMaterial({
+      color: sp.col,
+      transparent: true,
+      opacity: 0.22,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    const beam = new THREE.Mesh(beamGeo, beamMat);
+    beam.position.set(sp.x, 8, sp.z);
+    root.add(beam);
+    searchlights.push({ mesh: beam, baseAngle: s * 1.57, speed: 0.8 + s * 0.2 });
   }
 
-  // Overhead catenary bunting ropes
-  const pennantColors = [0xf43f5e, 0x06b6d4, 0xfbbf24, 0x10b981, 0x8b5cf6];
-  const pennantGeo = new THREE.ConeGeometry(0.35, 0.8, 3);
-  pennantGeo.rotateX(Math.PI);
+  // ─── 11. MOVING SKY ROLLERCOASTER WITH 4-CAR TRAIN ─────
+  const coasterPts: THREE.Vector3[] = [
+    new THREE.Vector3(-42, 14, -20),
+    new THREE.Vector3(-34, 22, 10),
+    new THREE.Vector3(-14, 24, 42),
+    new THREE.Vector3(14, 22, 44),
+    new THREE.Vector3(38, 16, 22),
+    new THREE.Vector3(44, 13, -15),
+    new THREE.Vector3(12, 20, -38),
+    new THREE.Vector3(-22, 18, -32),
+  ];
+  const coasterLoop = new THREE.CatmullRomCurve3(coasterPts, true);
 
-  const addBuntingLine = (x0: number, z0: number, x1: number, z1: number) => {
-    const count = 18;
-    for (let i = 0; i <= count; i++) {
-      const t = i / count;
-      const px = THREE.MathUtils.lerp(x0, x1, t);
-      const pz = THREE.MathUtils.lerp(z0, z1, t);
-      const sag = Math.sin(t * Math.PI) * 2.8;
-      const py = 18 - sag;
-
-      const pMat = new THREE.MeshBasicMaterial({ color: pennantColors[i % pennantColors.length] });
-      const pennant = new THREE.Mesh(pennantGeo, pMat);
-      pennant.position.set(px, py, pz);
-      pennant.rotation.y = Math.atan2(z1 - z0, x1 - x0);
-      root.add(pennant);
-    }
-  };
-
-  addBuntingLine(-hW - 8.5, -25, hW + 8.5, -25);
-  addBuntingLine(-hW - 8.5, 25, hW + 8.5, 25);
-  addBuntingLine(-hW - 8.5, -25, -hW - 8.5, 25);
-  addBuntingLine(hW + 8.5, -25, hW + 8.5, 25);
-
-  // ─── 10. SOUTH VICTORY ARCH & CROWN MONUMENT ───────────
-  const southArch = new THREE.Group();
-  southArch.position.set(0, 0, hL + 6.5);
-  root.add(southArch);
-
-  const archPylonMat = new THREE.MeshStandardMaterial({ color: 0xbe123c, roughness: 0.25, metalness: 0.3 });
-  const goldDecoMat = new THREE.MeshStandardMaterial({ color: C.GOLD, roughness: 0.15, metalness: 0.85 });
-
-  for (const px of [-7.5, 7.5]) {
-    const pylon = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.2, 13, 14), archPylonMat);
-    pylon.position.set(px, 6.5, 0);
-    pylon.castShadow = true;
-    southArch.add(pylon);
-
-    for (const ry of [2, 6, 11]) {
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(1.05, 0.12, 8, 24), goldDecoMat);
-      ring.position.set(px, ry, 0);
-      ring.rotation.x = Math.PI / 2;
-      southArch.add(ring);
-    }
-  }
-
-  const crossbar = new THREE.Mesh(new THREE.BoxGeometry(16, 1.6, 1.6), archPylonMat);
-  crossbar.position.set(0, 12.2, 0);
-  southArch.add(crossbar);
-
-  const victoryTex = makeCanvasTex(1024, 256, (ctx) => {
-    ctx.fillStyle = "#1e1145";
-    ctx.fillRect(8, 8, 1008, 240);
-    ctx.strokeStyle = "#ffd166";
-    ctx.lineWidth = 14;
-    ctx.strokeRect(8, 8, 1008, 240);
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 68px Outfit, sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("★ CORAL ARENA ★", 512, 128);
+  const coasterRailGeo = new THREE.TubeGeometry(coasterLoop, 96, 0.22, 8, true);
+  const coasterRailMat = new THREE.MeshStandardMaterial({
+    color: 0x38bdf8,
+    emissive: 0x0284c7,
+    emissiveIntensity: 0.6,
+    roughness: 0.2,
+    metalness: 0.8,
   });
-  const victoryBoard = new THREE.Mesh(
-    new THREE.PlaneGeometry(13, 3.2),
-    new THREE.MeshBasicMaterial({ map: victoryTex, side: THREE.DoubleSide })
-  );
-  victoryBoard.position.set(0, 10.5, 0);
-  victoryBoard.rotation.y = Math.PI;
-  southArch.add(victoryBoard);
+  const coasterRailMesh = new THREE.Mesh(coasterRailGeo, coasterRailMat);
+  root.add(coasterRailMesh);
 
-  const crownGroup = new THREE.Group();
-  crownGroup.position.set(0, 14.5, 0);
-  const crownBase = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.3, 0.6, 20), goldDecoMat);
-  crownGroup.add(crownBase);
+  // 4 Coaster Carts with mini-beans
+  const coasterCarts: THREE.Group[] = [];
+  const cartColors = [0xf43f5e, 0x06b6d4, 0xfbbf24, 0x10b981];
 
-  for (let pt = 0; pt < 5; pt++) {
-    const angle = (pt / 5) * Math.PI * 2;
-    const spike = new THREE.Mesh(new THREE.ConeGeometry(0.38, 1.4, 6), goldDecoMat);
-    spike.position.set(Math.cos(angle) * 1.35, 0.9, Math.sin(angle) * 1.35);
-    crownGroup.add(spike);
-
-    const ruby = new THREE.Mesh(
-      new THREE.SphereGeometry(0.18, 8, 8),
-      new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.1, metalness: 0.9, emissive: 0xef4444, emissiveIntensity: 0.4 })
+  for (let c = 0; c < 4; c++) {
+    const cart = new THREE.Group();
+    const cartBox = new THREE.Mesh(
+      new THREE.BoxGeometry(1.6, 0.9, 1.2),
+      new THREE.MeshStandardMaterial({ color: cartColors[c], roughness: 0.3 })
     );
-    ruby.position.set(Math.cos(angle) * 1.35, 1.6, Math.sin(angle) * 1.35);
-    crownGroup.add(ruby);
-  }
-  southArch.add(crownGroup);
+    cartBox.position.y = 0.45;
+    cart.add(cartBox);
 
-  // Metallic Party Balloon Clusters beside towers
-  const balloonMatCyan = new THREE.MeshStandardMaterial({ color: 0x06b6d4, roughness: 0.15, metalness: 0.5 });
-  const balloonMatPink = new THREE.MeshStandardMaterial({ color: 0xf43f5e, roughness: 0.15, metalness: 0.5 });
-  const balloonMatGold = new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.15, metalness: 0.8 });
+    // Mini bean rider inside cart
+    const rider = new THREE.Mesh(
+      new THREE.CapsuleGeometry(0.28, 0.4, 6, 8),
+      new THREE.MeshStandardMaterial({ color: 0xffffff })
+    );
+    rider.position.set(0, 0.85, 0);
+    cart.add(rider);
 
-  for (const bx of [-9.5, 9.5]) {
-    for (let bi = 0; bi < 5; bi++) {
-      const bMat = bi % 3 === 0 ? balloonMatGold : bi % 3 === 1 ? balloonMatPink : balloonMatCyan;
-      const bMesh = new THREE.Mesh(new THREE.SphereGeometry(0.75, 14, 12), bMat);
-      bMesh.scale.set(1.0, 1.25, 1.0);
-      bMesh.position.set(bx + (bi % 2 === 0 ? 0.6 : -0.6), 7 + bi * 1.2, (bi - 2) * 0.5);
-      southArch.add(bMesh);
-    }
+    root.add(cart);
+    coasterCarts.push(cart);
   }
 
-  // ─── 11. NORTH CHAMPIONSHIP JUMBOTRON & TROPHIES ───────
-  const jumbotronGroup = new THREE.Group();
-  jumbotronGroup.position.set(0, 14.5, -hL - 7.5);
-  root.add(jumbotronGroup);
-
-  const screenW = 20;
-  const screenH = 11.25;
-  const jumbotronMat = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
-
-  texLoader.load("/stadium_jumbotron.jpg", (jumboTex) => {
-    jumboTex.colorSpace = THREE.SRGBColorSpace;
-    jumboTex.anisotropy = 16;
-    jumbotronMat.map = jumboTex;
-    jumbotronMat.needsUpdate = true;
-  });
-
-  const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(screenW, screenH), jumbotronMat);
-  jumbotronGroup.add(screenMesh);
-
-  const jFrameMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.3, metalness: 0.8 });
-  const frameMesh = new THREE.Mesh(new THREE.BoxGeometry(screenW + 1.0, screenH + 1.0, 0.5), jFrameMat);
-  frameMesh.position.z = -0.26;
-  jumbotronGroup.add(frameMesh);
-
-  for (const tx of [-screenW * 0.46, screenW * 0.46]) {
-    const truss = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.6, 17, 10), jFrameMat);
-    truss.position.set(tx, -8.5, -0.5);
-    jumbotronGroup.add(truss);
-  }
-
-  const createTrophyCup = (x: number) => {
-    const tg = new THREE.Group();
-    tg.position.set(x, 2, 0);
-
-    const base = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.4, 1.2, 16), goldDecoMat);
-    tg.add(base);
-
-    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 1.8, 12), goldDecoMat);
-    stem.position.y = 1.5;
-    tg.add(stem);
-
-    const bowl = new THREE.Mesh(new THREE.SphereGeometry(1.6, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), goldDecoMat);
-    bowl.position.y = 2.4;
-    tg.add(bowl);
-
-    jumbotronGroup.add(tg);
-  };
-  createTrophyCup(-screenW * 0.55);
-  createTrophyCup(screenW * 0.55);
-
-  // ─── 12. RICH THEME PARK SKY ARCHIPELAGO (ZERO EMPTY VOIDS) ─
+  // ─── 12. DENSE THEME PARK ARCHIPELAGO (ZERO EMPTY VOIDS) ─
   const grassMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.65 });
   const rockCliffMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.85 });
   const waterMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.88 });
   const roofRedMat = new THREE.MeshStandardMaterial({ color: 0xe11d48, roughness: 0.35 });
   const wallPastelMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, roughness: 0.5 });
   const woodMat = new THREE.MeshStandardMaterial({ color: 0x854d0e, roughness: 0.8 });
+  const goldDecoMat = new THREE.MeshStandardMaterial({ color: C.GOLD, roughness: 0.15, metalness: 0.85 });
 
-  // 12.1 GIANT FLOATING DONUT OBSTACLE RING (North-West Sky, x = -36, z = -20, y = 15)
+  // 12.1 GIANT FLOATING DONUT OBSTACLE RING (North-West, x = -36, z = -20, y = 15)
   const donutGroup = new THREE.Group();
   donutGroup.position.set(-36, 15, -20);
   donutGroup.rotation.set(0.3, 0.4, 0.2);
 
   const donutDoughMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.5 });
   const donutIcingMat = new THREE.MeshStandardMaterial({ color: 0xf472b6, roughness: 0.2, metalness: 0.1 });
-  const donutGeo = new THREE.TorusGeometry(5.2, 1.6, 16, 32);
-  const donutMesh = new THREE.Mesh(donutGeo, donutDoughMat);
+  const donutMesh = new THREE.Mesh(new THREE.TorusGeometry(5.2, 1.6, 16, 32), donutDoughMat);
   donutGroup.add(donutMesh);
 
-  const icingGeo = new THREE.TorusGeometry(5.25, 1.62, 16, 32, Math.PI * 1.6);
-  const icingMesh = new THREE.Mesh(icingGeo, donutIcingMat);
+  const icingMesh = new THREE.Mesh(new THREE.TorusGeometry(5.25, 1.62, 16, 32, Math.PI * 1.6), donutIcingMat);
   donutGroup.add(icingMesh);
 
-  // Candy Sprinkles on Donut
   const sprinkleColors = [0x22d3ee, 0xfde047, 0xa855f7, 0xffffff, 0x4ade80];
   for (let sp = 0; sp < 24; sp++) {
     const spAngle = (sp / 24) * Math.PI * 2;
@@ -990,10 +1003,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   starRingGroup.position.set(36, 16, 22);
   starRingGroup.rotation.set(-0.2, -0.5, 0.1);
 
-  const starRingMesh = new THREE.Mesh(
-    new THREE.TorusGeometry(5.0, 0.5, 12, 32),
-    goldDecoMat
-  );
+  const starRingMesh = new THREE.Mesh(new THREE.TorusGeometry(5.0, 0.5, 12, 32), goldDecoMat);
   starRingGroup.add(starRingMesh);
 
   for (let s = 0; s < 5; s++) {
@@ -1018,7 +1028,6 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   mushCone.position.y = -5;
   mushIsland.add(mushCone);
 
-  // Giant Red Bouncy Mushroom
   const mushStem = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.6, 4.0, 12), new THREE.MeshStandardMaterial({ color: 0xffedd5 }));
   mushStem.position.y = 2.0;
   mushIsland.add(mushStem);
@@ -1030,19 +1039,14 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   mushCap.position.y = 3.6;
   mushIsland.add(mushCap);
 
-  // White Polka Dots on Mushroom Cap
   for (let d = 0; d < 8; d++) {
     const dAngle = (d / 8) * Math.PI * 2;
-    const dot = new THREE.Mesh(
-      new THREE.SphereGeometry(0.65, 8, 8),
-      new THREE.MeshBasicMaterial({ color: 0xffffff })
-    );
+    const dot = new THREE.Mesh(new THREE.SphereGeometry(0.65, 8, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }));
     dot.position.set(Math.cos(dAngle) * 2.5, 4.8, Math.sin(dAngle) * 2.5);
     dot.scale.set(1.0, 0.4, 1.0);
     mushIsland.add(dot);
   }
 
-  // 2 Mini Bouncing Beans on Mushroom
   const miniBeans: { mesh: THREE.Group; baseY: number; phase: number }[] = [];
   for (let mb = 0; mb < 2; mb++) {
     const beanG = new THREE.Group();
@@ -1062,30 +1066,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     miniBeans.push({ mesh: beanG, baseY: 6.2, phase: mb * 3.14 });
   }
 
-  // 12.4 SWEEPING NEON ROLLERCOASTER RAILS (Connecting islands through the sky)
-  const railPts: THREE.Vector3[] = [
-    new THREE.Vector3(-44, 12, -15),
-    new THREE.Vector3(-36, 18, 0),
-    new THREE.Vector3(-28, 14, 25),
-    new THREE.Vector3(0, 22, 45),
-    new THREE.Vector3(32, 16, 25),
-    new THREE.Vector3(42, 12, -10),
-  ];
-  const skyRailCurve = new THREE.CatmullRomCurve3(railPts);
-  const skyRailGeo = new THREE.TubeGeometry(skyRailCurve, 64, 0.22, 8, false);
-  const skyRailMesh = new THREE.Mesh(
-    skyRailGeo,
-    new THREE.MeshStandardMaterial({
-      color: 0x38bdf8,
-      emissive: 0x0284c7,
-      emissiveIntensity: 0.6,
-      roughness: 0.2,
-      metalness: 0.8,
-    })
-  );
-  root.add(skyRailMesh);
-
-  // 12.5 16 PASTEL HORIZON MOUNTAIN PEAKS (Completely fills 360° horizon)
+  // 12.4 16 PASTEL HORIZON MOUNTAIN PEAKS (Fills 360° horizon)
   const horizonPeaksMat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.1 });
   const peakColors = [0x818cf8, 0x38bdf8, 0xf472b6, 0xfbbf24, 0x34d399, 0xa78bfa, 0x60a5fa, 0xf87171];
 
@@ -1102,7 +1083,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     root.add(pMesh);
   }
 
-  // 12.6 WEST WINDMILL ISLAND (x = -44, z = 0, y = 2.0)
+  // 12.5 WEST WINDMILL ISLAND (x = -44, z = 0, y = 2.0)
   const island1 = new THREE.Group();
   island1.position.set(-44, 2.0, 0);
   root.add(island1);
@@ -1154,20 +1135,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   }
   windmillGroup.add(windmillBlades);
 
-  for (const cx of [-4.5, 4.2]) {
-    const cottage = new THREE.Group();
-    cottage.position.set(cx, 3.2, cx < 0 ? -3 : 3);
-    const house = new THREE.Mesh(new THREE.BoxGeometry(2.8, 2.2, 2.8), wallPastelMat);
-    house.position.y = 1.1;
-    cottage.add(house);
-    const roof = new THREE.Mesh(new THREE.ConeGeometry(2.3, 1.6, 4), roofRedMat);
-    roof.position.y = 3.0;
-    roof.rotation.y = Math.PI / 4;
-    cottage.add(roof);
-    island1.add(cottage);
-  }
-
-  // 12.7 EAST CARNIVAL ISLAND (x = 44, z = 2, y = 2.0)
+  // 12.6 EAST CARNIVAL FERRIS WHEEL ISLAND (x = 44, z = 2, y = 2.0)
   const island2 = new THREE.Group();
   island2.position.set(44, 2.0, 2);
   root.add(island2);
@@ -1228,18 +1196,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   }
   ferrisWheelGroup.add(ferrisWheelRotor);
 
-  // Circus tents
-  const tentColors = [0xf43f5e, 0x06b6d4];
-  for (let t = 0; t < 2; t++) {
-    const tent = new THREE.Mesh(
-      new THREE.ConeGeometry(2.8, 3.6, 10),
-      new THREE.MeshStandardMaterial({ color: tentColors[t], roughness: 0.4 })
-    );
-    tent.position.set(t === 0 ? -5 : 5, 5.0, t === 0 ? 4 : -4);
-    island2.add(tent);
-  }
-
-  // 12.8 NORTH-WEST WATERFALL ISLAND (x = -48, z = -34, y = 5.0)
+  // 12.7 NORTH-WEST WATERFALL ISLAND (x = -48, z = -34, y = 5.0)
   const island3 = new THREE.Group();
   island3.position.set(-48, 5.0, -34);
   root.add(island3);
@@ -1258,103 +1215,6 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     wf.position.set(wfX, -6.5, 12.8);
     island3.add(wf);
   }
-
-  // Palm Trees on island 3
-  const palmTrunkMat = new THREE.MeshStandardMaterial({ color: 0x92400e, roughness: 0.9 });
-  const palmLeafMat = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.6 });
-
-  for (let p = 0; p < 4; p++) {
-    const palm = new THREE.Group();
-    palm.position.set((p - 1.5) * 4, 3.5, -2 + (p % 2) * 4);
-
-    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.55, 5.5, 7), palmTrunkMat);
-    trunk.position.y = 2.75;
-    trunk.rotation.z = (p % 2 === 0 ? 0.15 : -0.15);
-    palm.add(trunk);
-
-    for (let f = 0; f < 6; f++) {
-      const frondAngle = (f / 6) * Math.PI * 2;
-      const frond = new THREE.Mesh(new THREE.ConeGeometry(0.8, 3.6, 4), palmLeafMat);
-      frond.position.set(Math.cos(frondAngle) * 1.8, 5.2, Math.sin(frondAngle) * 1.8);
-      frond.rotation.set(0.6 * Math.sin(frondAngle), frondAngle, 0.6 * Math.cos(frondAngle));
-      palm.add(frond);
-    }
-    island3.add(palm);
-  }
-
-  // 12.9 SOUTH-EAST CRYSTAL SPIRE ISLAND (x = 48, z = 34, y = 5.0)
-  const island4 = new THREE.Group();
-  island4.position.set(48, 5.0, 34);
-  root.add(island4);
-
-  const is4Plateau = new THREE.Mesh(new THREE.CylinderGeometry(14, 12, 3.2, 16), grassMat);
-  is4Plateau.position.y = 1.6;
-  island4.add(is4Plateau);
-
-  const is4Cone = new THREE.Mesh(new THREE.ConeGeometry(12, 14, 14), rockCliffMat);
-  is4Cone.rotation.x = Math.PI;
-  is4Cone.position.y = -7;
-  island4.add(is4Cone);
-
-  const crystalMatCyan = new THREE.MeshStandardMaterial({
-    color: 0x06b6d4,
-    emissive: 0x06b6d4,
-    emissiveIntensity: 0.5,
-    roughness: 0.1,
-    metalness: 0.8,
-  });
-  const crystalMatPurple = new THREE.MeshStandardMaterial({
-    color: 0xa855f7,
-    emissive: 0xa855f7,
-    emissiveIntensity: 0.5,
-    roughness: 0.1,
-    metalness: 0.8,
-  });
-
-  for (let c = 0; c < 6; c++) {
-    const angle = (c / 6) * Math.PI * 2;
-    const cryGeo = new THREE.ConeGeometry(0.8, 4.5 + (c % 3) * 1.5, 6);
-    const cry = new THREE.Mesh(cryGeo, c % 2 === 0 ? crystalMatCyan : crystalMatPurple);
-    cry.position.set(Math.cos(angle) * 4.5, 4.0, Math.sin(angle) * 4.5);
-    cry.rotation.set(0.2 * Math.sin(angle), 0, 0.2 * Math.cos(angle));
-    island4.add(cry);
-  }
-
-  // 12.10 SOUTH DISTANT CASTLE ISLAND (x = 0, z = 62, y = 1.0)
-  const island5 = new THREE.Group();
-  island5.position.set(0, 1.0, 62);
-  root.add(island5);
-
-  const is5Plateau = new THREE.Mesh(new THREE.CylinderGeometry(18, 16, 4, 18), grassMat);
-  is5Plateau.position.y = 2.0;
-  island5.add(is5Plateau);
-
-  const is5Cone = new THREE.Mesh(new THREE.ConeGeometry(16, 18, 16), rockCliffMat);
-  is5Cone.rotation.x = Math.PI;
-  is5Cone.position.y = -9;
-  island5.add(is5Cone);
-
-  const castleWallMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.4 });
-  const castleKeep = new THREE.Mesh(new THREE.BoxGeometry(8, 7, 8), castleWallMat);
-  castleKeep.position.y = 5.5;
-  island5.add(castleKeep);
-
-  for (const cx of [-4, 4]) {
-    for (const cz of [-4, 4]) {
-      const tower = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.4, 11, 10), castleWallMat);
-      tower.position.set(cx, 7.5, cz);
-      island5.add(tower);
-
-      const spire = new THREE.Mesh(new THREE.ConeGeometry(1.6, 4.5, 10), roofRedMat);
-      spire.position.set(cx, 15, cz);
-      island5.add(spire);
-    }
-  }
-
-  const rainbowMat = new THREE.MeshBasicMaterial({ color: 0xffd166, side: THREE.DoubleSide });
-  const rainbowArch = new THREE.Mesh(new THREE.TorusGeometry(8, 0.6, 8, 24, Math.PI), rainbowMat);
-  rainbowArch.position.set(12, 4, 0);
-  island5.add(rainbowArch);
 
   // ─── 13. MATCH BROADCAST CAMERA DRONE ─────────────────
   const droneGroup = new THREE.Group();
@@ -1451,7 +1311,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   createBalloon(3.8, 50, 18, 0x8b5cf6, 0xfde047);
   createBalloon(5.2, 54, 14, 0x10b981, 0xffffff);
 
-  // Sleek Spectator Zeppelin
+  // Spectator Zeppelin
   const blimpGroup = new THREE.Group();
   const blimpHullMat = new THREE.MeshStandardMaterial({ color: 0x2563eb, roughness: 0.25, metalness: 0.3 });
   const blimpWhiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 });
@@ -1467,13 +1327,6 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.2, 5.0), blimpWhiteMat);
   cabin.position.y = -3.8;
   blimpGroup.add(cabin);
-
-  const windowStrip = new THREE.Mesh(
-    new THREE.BoxGeometry(1.65, 0.4, 4.4),
-    new THREE.MeshBasicMaterial({ color: 0x38bdf8 })
-  );
-  windowStrip.position.y = -3.8;
-  blimpGroup.add(windowStrip);
 
   for (const rz of [0, Math.PI / 2]) {
     const fin = new THREE.Mesh(new THREE.BoxGeometry(0.3, 5.5, 2.6), blimpWhiteMat);
@@ -1611,20 +1464,17 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     // 2. Rotate Windmill Blades
     windmillBlades.rotation.z += dt * 0.9;
 
-    // 3. Rotate Ferris Wheel & Keep Gondolas Vertically Upright
+    // 3. Rotate Ferris Wheel & Keep Gondolas Upright
     ferrisWheelRotor.rotation.z += dt * 0.35;
     for (const g of gondolaMeshes) {
       g.rotation.z = -ferrisWheelRotor.rotation.z;
     }
 
-    // 4. Rotate Crown on South Arch
-    crownGroup.rotation.y = time * 0.8;
-
-    // 5. Rotate Floating Donut & Star Ring
+    // 4. Rotate Floating Donut & Star Ring
     donutGroup.rotation.z += dt * 0.4;
     starRingGroup.rotation.z -= dt * 0.3;
 
-    // 6. Animate Giant Fall Guys Mascots (Left & Right Sidelines)
+    // 5. Animate Giant Fall Guys Mascots on Sidelines
     for (let mIdx = 0; mIdx < giantMascots.length; mIdx++) {
       const gm = giantMascots[mIdx];
       const breathing = Math.sin(time * 2.2 + mIdx * 1.5) * 0.08;
@@ -1632,14 +1482,37 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
       gm.arm.rotation.z = Math.sin(time * 3.5 + mIdx * 2.0) * 0.22;
     }
 
-    // 7. Animate Mini Beans Bouncing on Mushroom Island
+    // 6. Animate Giant Peeker Mascot Over South Canopy Roof
+    giantPeeker.position.y = 13.5 + Math.sin(time * 1.8) * 0.25;
+    for (let h = 0; h < peekerHands.length; h++) {
+      peekerHands[h].position.y = -1.2 + Math.sin(time * 3.0 + h * 1.5) * 0.18;
+    }
+
+    // 7. Animate Sweeping Searchlights
+    for (const sl of searchlights) {
+      const angle = time * sl.speed + sl.baseAngle;
+      sl.mesh.rotation.z = Math.sin(angle) * 0.35;
+      sl.mesh.rotation.x = Math.cos(angle * 0.8) * 0.3;
+    }
+
+    // 8. Animate Sky Rollercoaster Train
+    for (let c = 0; c < coasterCarts.length; c++) {
+      const cart = coasterCarts[c];
+      const u = (time * 0.04 + c * 0.024) % 1.0;
+      const pt = coasterLoop.getPointAt(u);
+      const tangent = coasterLoop.getTangentAt(u);
+      cart.position.copy(pt);
+      cart.lookAt(pt.clone().add(tangent));
+    }
+
+    // 9. Animate Mini Beans Bouncing on Mushroom Island
     for (let mb = 0; mb < miniBeans.length; mb++) {
       const minB = miniBeans[mb];
       const bounceH = Math.abs(Math.sin(time * 5.0 + minB.phase)) * 0.8;
       minB.mesh.position.y = minB.baseY + bounceH;
     }
 
-    // 8. Orbit Airships & Hot Air Balloons with subtle parallax
+    // 10. Orbit Airships & Hot Air Balloons
     for (const p of orbitProps) {
       p.orbitAngle += p.orbitSpeed * dt;
       p.mesh.position.set(
@@ -1650,12 +1523,11 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
       p.mesh.rotation.y = -p.orbitAngle + Math.PI / 2;
     }
 
-    // Spin blimp propellers
     for (const bp of blimpProps) {
       bp.rotation.z += dt * 18;
     }
 
-    // 9. Animate Camera Drone
+    // 11. Animate Camera Drone
     droneGroup.position.set(
       12 + Math.sin(time * 0.8) * 2.2,
       7.5 + Math.sin(time * 1.4) * 0.6,
@@ -1667,13 +1539,13 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     }
     recLedMat.color.setHex((Math.floor(time * 3) % 2 === 0) ? 0xef4444 : 0x450a0a);
 
-    // 10. Rotate Sweepers
+    // 12. Rotate Sweepers
     for (let i = 0; i < sweepers.length; i++) {
       sweepers[i].angle += sweepers[i].rotSpeed * dt;
       sweeperGroups[i].rotation.y = sweepers[i].angle;
     }
 
-    // 11. Animate 350 Fall Guys Spectators & Faceplates
+    // 13. Animate All 600 Fall Guys Spectators & Faceplates (360° Bowl)
     if (goalCelebTimer > 0) goalCelebTimer -= dt;
     for (let i = 0; i < specData.length; i++) {
       const s = specData[i];
@@ -1685,22 +1557,24 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
       // Bean body
       dummy.position.copy(s.base);
       dummy.position.y += bob;
-      dummy.rotation.set(0, 0, 0);
+      dummy.rotation.set(0, s.rotY, 0);
       dummy.updateMatrix();
       specMesh.setMatrixAt(i, dummy.matrix);
 
-      // White faceplate (follows bean bobbing exactly)
-      const fX = s.base.x + (s.side < 0 ? 0.23 : -0.23);
-      const fY = s.base.y + 0.12 + bob;
-      faceDummy.position.set(fX, fY, s.base.z);
-      faceDummy.rotation.set(0, s.side < 0 ? Math.PI / 2 : -Math.PI / 2, 0);
+      // Faceplate
+      faceDummy.position.set(
+        s.base.x + s.faceOffset.x,
+        s.base.y + s.faceOffset.y + bob,
+        s.base.z + s.faceOffset.z
+      );
+      faceDummy.rotation.set(0, s.rotY, 0);
       faceDummy.updateMatrix();
       faceMesh.setMatrixAt(i, faceDummy.matrix);
     }
     specMesh.instanceMatrix.needsUpdate = true;
     faceMesh.instanceMatrix.needsUpdate = true;
 
-    // 12. Confetti Fluttering
+    // 14. Confetti Fluttering
     const cd = new THREE.Object3D();
     for (let i = 0; i < confData.length; i++) {
       const cf = confData[i];
