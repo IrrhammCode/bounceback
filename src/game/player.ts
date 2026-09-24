@@ -1,5 +1,12 @@
 /**
- * BOUNCEBACK! — Player Controller (Touch + Keyboard)
+ * BOUNCEBACK! — Player Controller (Smooth Keyboard + Touch Joystick)
+ *
+ * Features:
+ * - Robust multi-layout WASD & Arrow Key detection (case-insensitive + code-fallback)
+ * - Window blur safety to eliminate stuck keys
+ * - Camera-aware 3D movement projection (forward is towards opponent goal in 3rd-person, look-relative in 1st-person)
+ * - Responsive acceleration & smooth ground momentum (no robotic jerky stops)
+ * - Snappy directional dashing & skill triggers
  */
 import * as C from "./config";
 import { Entity, applyPunch } from "./physics";
@@ -13,25 +20,56 @@ export class PlayerController {
   private stickId: number | null = null;
   private stickOriginX = 0;
   private stickOriginY = 0;
+
   punchPressed = false;
   dashPressed = false;
   skillPressed = false;
+
   private keys: Record<string, boolean> = {};
   private _boundKeyDown: (e: KeyboardEvent) => void;
   private _boundKeyUp: (e: KeyboardEvent) => void;
+  private _boundBlur: () => void;
 
   constructor() {
     this._boundKeyDown = (e) => {
       this.keys[e.code] = true;
+      if (e.key) {
+        this.keys[e.key] = true;
+        this.keys[e.key.toLowerCase()] = true;
+        this.keys[e.key.toUpperCase()] = true;
+      }
+      // Prevent browser default scroll for game controls
+      if (
+        ["KeyW", "KeyS", "KeyA", "KeyD", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(
+          e.code
+        )
+      ) {
+        e.preventDefault();
+      }
     };
+
     this._boundKeyUp = (e) => {
       this.keys[e.code] = false;
+      if (e.key) {
+        this.keys[e.key] = false;
+        this.keys[e.key.toLowerCase()] = false;
+        this.keys[e.key.toUpperCase()] = false;
+      }
+    };
+
+    this._boundBlur = () => {
+      // Clear all pressed keys on window blur to eliminate stuck movement
+      this.keys = {};
+      this.punchPressed = false;
+      this.dashPressed = false;
+      this.skillPressed = false;
     };
   }
 
   init() {
     window.addEventListener("keydown", this._boundKeyDown);
     window.addEventListener("keyup", this._boundKeyUp);
+    window.addEventListener("blur", this._boundBlur);
 
     const stickEl = document.getElementById("stick");
     const baseEl = document.getElementById("stickbase");
@@ -70,8 +108,8 @@ export class PlayerController {
         ev.preventDefault();
         for (const t of Array.from(ev.changedTouches)) {
           if (t.identifier !== this.stickId) continue;
-          let dx = t.clientX - this.stickOriginX;
-          let dy = t.clientY - this.stickOriginY;
+          const dx = t.clientX - this.stickOriginX;
+          const dy = t.clientY - this.stickOriginY;
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist < DEAD) {
             this.stickX = 0;
@@ -162,30 +200,57 @@ export class PlayerController {
     window.addEventListener("contextmenu", (e) => {
       e.preventDefault();
       this.skillPressed = true;
-      setTimeout(() => { this.skillPressed = false; }, 100);
+      setTimeout(() => {
+        this.skillPressed = false;
+      }, 100);
     });
   }
 
   destroy() {
     window.removeEventListener("keydown", this._boundKeyDown);
     window.removeEventListener("keyup", this._boundKeyUp);
+    window.removeEventListener("blur", this._boundBlur);
   }
 
   getInput() {
     let mx = this.stickX;
     let mz = this.stickZ;
 
-    const up = !!(this.keys["KeyW"] || this.keys["ArrowUp"]);
-    const down = !!(this.keys["KeyS"] || this.keys["ArrowDown"]);
-    const left = !!(this.keys["KeyA"] || this.keys["ArrowLeft"]);
-    const right = !!(this.keys["KeyD"] || this.keys["ArrowRight"]);
+    // Multi-key checking: accepts KeyW, "w", "W", ArrowUp, etc.
+    const up = !!(
+      this.keys["KeyW"] ||
+      this.keys["w"] ||
+      this.keys["W"] ||
+      this.keys["ArrowUp"]
+    );
+    const down = !!(
+      this.keys["KeyS"] ||
+      this.keys["s"] ||
+      this.keys["S"] ||
+      this.keys["ArrowDown"]
+    );
+    const left = !!(
+      this.keys["KeyA"] ||
+      this.keys["a"] ||
+      this.keys["A"] ||
+      this.keys["ArrowLeft"]
+    );
+    const right = !!(
+      this.keys["KeyD"] ||
+      this.keys["d"] ||
+      this.keys["D"] ||
+      this.keys["ArrowRight"]
+    );
 
-    if (up && !down) mz = 1;       // W / ArrowUp = MAJU (+Z, forward towards opponent goal)
-    else if (down && !up) mz = -1; // S / ArrowDown = MUNDUR (-Z, backward towards own goal)
+    // Forward (+Z) / Backward (-Z)
+    if (up && !down) mz = 1;
+    else if (down && !up) mz = -1;
 
-    if (left && !right) mx = -1;   // A / ArrowLeft = KIRI (-X)
-    else if (right && !left) mx = 1; // D / ArrowRight = KANAN (+X)
+    // Left (-X) / Right (+X)
+    if (left && !right) mx = -1;
+    else if (right && !left) mx = 1;
 
+    // Diagonal speed normalization
     const len = Math.sqrt(mx * mx + mz * mz);
     if (len > 1) {
       mx /= len;
@@ -195,50 +260,95 @@ export class PlayerController {
     const punch =
       this.punchPressed ||
       this.keys["Space"] ||
-      this.keys["KeyJ"];
+      this.keys["KeyJ"] ||
+      this.keys["j"] ||
+      this.keys["J"];
+
     const dash =
       this.dashPressed ||
       this.keys["ShiftLeft"] ||
       this.keys["ShiftRight"] ||
-      this.keys["KeyK"];
+      this.keys["KeyK"] ||
+      this.keys["k"] ||
+      this.keys["K"];
+
     const skill =
       this.skillPressed ||
       this.keys["KeyE"] ||
-      this.keys["KeyQ"];
+      this.keys["e"] ||
+      this.keys["E"] ||
+      this.keys["KeyQ"] ||
+      this.keys["q"] ||
+      this.keys["Q"];
 
     return { mx, mz, punch, dash, skill };
   }
 
-  update(player: Entity, entities: Entity[], dt: number, juiceFn?: JuiceFn) {
+  update(
+    player: Entity,
+    entities: Entity[],
+    dt: number,
+    juiceFn?: JuiceFn,
+    cameraFacingAngle = 0,
+    isFirstPerson = false
+  ) {
     if (player.stunTimer > 0) return;
 
-    const input = this.getInput();
+    let { mx, mz, punch, dash } = this.getInput();
 
-    // Dash
+    // In 1st-person camera mode, rotate movement vector according to player's look direction
+    if (isFirstPerson && (mx !== 0 || mz !== 0)) {
+      const cosA = Math.cos(cameraFacingAngle);
+      const sinA = Math.sin(cameraFacingAngle);
+      // Camera forward is facing vector
+      const forwardX = sinA;
+      const forwardZ = cosA;
+      const rightX = cosA;
+      const rightZ = -sinA;
+
+      const rX = forwardX * mz + rightX * mx;
+      const rZ = forwardZ * mz + rightZ * mx;
+      mx = rX;
+      mz = rZ;
+    }
+
+    // Dash with dynamic direction
     if (
-      input.dash &&
+      dash &&
       player.dashCd <= 0 &&
       player.dashTimer <= 0 &&
       !player.launched
     ) {
       player.dashTimer = C.DASH_DUR;
       player.dashCd = C.DASH_CD;
-      const dirX = input.mx || 0;
-      const dirZ = input.mz || 0;
+      let dirX = mx;
+      let dirZ = mz;
+      // If dashing while standing still, dash in current movement/facing direction
+      if (dirX === 0 && dirZ === 0) {
+        dirX = player.vx;
+        dirZ = player.vz;
+        if (dirX === 0 && dirZ === 0) dirZ = 1.0;
+      }
       const dLen = Math.sqrt(dirX * dirX + dirZ * dirZ) || 1;
       player.vx = (dirX / dLen) * C.DASH_SPEED;
       player.vz = (dirZ / dLen) * C.DASH_SPEED;
       if (juiceFn) juiceFn("dash");
     }
 
-    // Movement (only when not launched and not dashing)
+    // Smooth snappy movement physics (responsive acceleration + juicy momentum)
     if (!player.launched && player.dashTimer <= 0) {
-      player.vx = input.mx * C.PLAYER_SPEED;
-      player.vz = input.mz * C.PLAYER_SPEED;
+      const targetVx = mx * C.PLAYER_SPEED;
+      const targetVz = mz * C.PLAYER_SPEED;
+      const hasInput = mx !== 0 || mz !== 0;
+
+      // Snappy 24.0/s acceleration (instant responsivity) + smooth 16.0/s ground deceleration
+      const accelRate = hasInput ? 24.0 : 16.0;
+      player.vx += (targetVx - player.vx) * Math.min(1.0, accelRate * dt);
+      player.vz += (targetVz - player.vz) * Math.min(1.0, accelRate * dt);
     }
 
-    // Punch
-    if (input.punch && player.punchCd <= 0 && !player.launched) {
+    // Punch attack
+    if (punch && player.punchCd <= 0 && !player.launched) {
       player.punchCd = C.PUNCH_CD;
       let bestDist = C.PUNCH_RANGE;
       let bestIdx = -1;
@@ -246,8 +356,8 @@ export class PlayerController {
         const t = entities[i];
         if (t === player || t.team === player.team) continue;
         if (t.immuneTimer > 0) continue;
-        const dx = t.x - player.x,
-          dz = t.z - player.z;
+        const dx = t.x - player.x;
+        const dz = t.z - player.z;
         const dist = Math.sqrt(dx * dx + dz * dz);
         if (dist < bestDist) {
           bestDist = dist;

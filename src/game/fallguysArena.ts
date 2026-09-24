@@ -627,7 +627,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     ctx.fill();
   });
 
-  // 600 Instanced Fall Guys Spectator Beans (Wrapping all around the 360° Colosseum)
+  // 600 Instanced Fall Guys Spectator Beans + Waving Arms + Party Hats (360° Colosseum)
   const totalSpecCount = 600;
   const specGeo = new THREE.CapsuleGeometry(0.24, 0.42, 8, 10);
   const specMat = new THREE.MeshStandardMaterial({ roughness: 0.25, metalness: 0.05 });
@@ -637,6 +637,17 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   const faceGeo = new THREE.PlaneGeometry(0.23, 0.23);
   const faceMat = new THREE.MeshBasicMaterial({ map: faceplateTex, transparent: true });
   const faceMesh = new THREE.InstancedMesh(faceGeo, faceMat, totalSpecCount);
+
+  // Instanced Cheering Left & Right Arms
+  const armGeo = new THREE.CapsuleGeometry(0.065, 0.22, 6, 8);
+  const armMeshL = new THREE.InstancedMesh(armGeo, specMat, totalSpecCount);
+  const armMeshR = new THREE.InstancedMesh(armGeo, specMat, totalSpecCount);
+
+  // Instanced Party Hats on every 3rd spectator
+  const hatCount = Math.floor(totalSpecCount / 3);
+  const hatGeo = new THREE.ConeGeometry(0.12, 0.32, 8);
+  const hatMat = new THREE.MeshStandardMaterial({ color: 0xffd700, roughness: 0.2, metalness: 0.8 });
+  const hatMesh = new THREE.InstancedMesh(hatGeo, hatMat, hatCount);
 
   const specColors = [
     0x27e5ff, 0xff5268, 0xffd166, 0x8338ec, 0x06d6a0, 0xf472b6, 0xfb923c, 0xa855f7, 0x38bdf8, 0xe11d48,
@@ -652,6 +663,9 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   const specData: SpecData[] = [];
   const dummy = new THREE.Object3D();
   const faceDummy = new THREE.Object3D();
+  const armLDummy = new THREE.Object3D();
+  const armRDummy = new THREE.Object3D();
+  const hatDummy = new THREE.Object3D();
   let si = 0;
 
   const addSpecBean = (x: number, y: number, z: number, facingRotY: number, faceOffX: number, faceOffZ: number) => {
@@ -660,12 +674,36 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     dummy.rotation.set(0, facingRotY, 0);
     dummy.updateMatrix();
     specMesh.setMatrixAt(si, dummy.matrix);
-    specMesh.setColorAt(si, new THREE.Color(specColors[si % specColors.length]));
+    const col = new THREE.Color(specColors[si % specColors.length]);
+    specMesh.setColorAt(si, col);
 
     faceDummy.position.set(x + faceOffX, y + 0.12, z + faceOffZ);
     faceDummy.rotation.set(0, facingRotY, 0);
     faceDummy.updateMatrix();
     faceMesh.setMatrixAt(si, faceDummy.matrix);
+
+    const perpX = Math.cos(facingRotY);
+    const perpZ = -Math.sin(facingRotY);
+
+    armLDummy.position.set(x - perpX * 0.26, y + 0.08, z - perpZ * 0.26);
+    armLDummy.rotation.set(0, facingRotY, 0.3);
+    armLDummy.updateMatrix();
+    armMeshL.setMatrixAt(si, armLDummy.matrix);
+    armMeshL.setColorAt(si, col);
+
+    armRDummy.position.set(x + perpX * 0.26, y + 0.08, z + perpZ * 0.26);
+    armRDummy.rotation.set(0, facingRotY, -0.3);
+    armRDummy.updateMatrix();
+    armMeshR.setMatrixAt(si, armRDummy.matrix);
+    armMeshR.setColorAt(si, col);
+
+    if (si % 3 === 0 && Math.floor(si / 3) < hatCount) {
+      const hi = Math.floor(si / 3);
+      hatDummy.position.set(x, y + 0.52, z);
+      hatDummy.rotation.set(0, facingRotY, 0.1);
+      hatDummy.updateMatrix();
+      hatMesh.setMatrixAt(hi, hatDummy.matrix);
+    }
 
     specData.push({
       base: new THREE.Vector3(x, y, z),
@@ -717,10 +755,18 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   }
 
   if (specMesh.instanceColor) specMesh.instanceColor.needsUpdate = true;
+  if (armMeshL.instanceColor) armMeshL.instanceColor.needsUpdate = true;
+  if (armMeshR.instanceColor) armMeshR.instanceColor.needsUpdate = true;
   specMesh.instanceMatrix.needsUpdate = true;
   faceMesh.instanceMatrix.needsUpdate = true;
+  armMeshL.instanceMatrix.needsUpdate = true;
+  armMeshR.instanceMatrix.needsUpdate = true;
+  hatMesh.instanceMatrix.needsUpdate = true;
   root.add(specMesh);
   root.add(faceMesh);
+  root.add(armMeshL);
+  root.add(armMeshR);
+  root.add(hatMesh);
 
   // ─── 9. SOUTH ENDZONE 3-TIER VICTORY PAVILION & MEGA-STRUCTURE ─
   // Frames the entire background behind the Coral Goal with grand architecture
@@ -1732,18 +1778,40 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
       sweeperGroups[i].rotation.y = sweepers[i].angle;
     }
 
-    // 12. Animate All 600 Fall Guys Spectators & Faceplates (360° Bowl)
+    // 12. Animate All 600 Fall Guys Spectators & Mexican Wave ("La Ola")
     if (goalCelebTimer > 0) goalCelebTimer -= dt;
     for (let i = 0; i < specData.length; i++) {
       const s = specData[i];
-      let bob = Math.sin(time * s.speed + s.phase) * 0.08;
+
+      // Traveling stadium Mexican Wave around the bowl!
+      const wavePhase = time * 3.4 - (s.base.z * 0.12 + s.base.x * 0.06);
+      const waveSin = Math.sin(wavePhase);
+      const isWave = waveSin > 0.35;
+      const waveBoost = isWave ? Math.pow((waveSin - 0.35) / 0.65, 1.8) * 0.48 : 0;
+
+      let bob = Math.sin(time * s.speed + s.phase) * 0.08 + waveBoost;
+      let sway = 0;
+
+      // Arm wave angles
+      let armAngleX = -0.3 + Math.sin(time * s.speed * 1.5 + s.phase) * 0.4;
+      let armAngleZ = 0.4;
+
+      if (isWave) {
+        // Hands straight up in the air!
+        armAngleX = -2.7 + Math.sin(time * 10) * 0.3;
+        armAngleZ = 0.2;
+      }
+
       if (goalCelebTimer > 0) {
-        bob += Math.abs(Math.sin(time * 14 + s.phase)) * 0.55;
+        // Goal frenzy!
+        bob += Math.abs(Math.sin(time * 16 + s.phase)) * 0.65;
+        sway = Math.sin(time * 14 + s.phase) * 0.22;
+        armAngleX = -2.6 + Math.sin(time * 16 + s.phase) * 0.5;
       }
 
       dummy.position.copy(s.base);
       dummy.position.y += bob;
-      dummy.rotation.set(0, s.rotY, 0);
+      dummy.rotation.set(0, s.rotY, sway);
       dummy.updateMatrix();
       specMesh.setMatrixAt(i, dummy.matrix);
 
@@ -1752,12 +1820,37 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
         s.base.y + s.faceOffset.y + bob,
         s.base.z + s.faceOffset.z
       );
-      faceDummy.rotation.set(0, s.rotY, 0);
+      faceDummy.rotation.set(0, s.rotY, sway);
       faceDummy.updateMatrix();
       faceMesh.setMatrixAt(i, faceDummy.matrix);
+
+      // Waving arms
+      const perpX = Math.cos(s.rotY);
+      const perpZ = -Math.sin(s.rotY);
+
+      armLDummy.position.set(s.base.x - perpX * 0.26, s.base.y + 0.1 + bob, s.base.z - perpZ * 0.26);
+      armLDummy.rotation.set(armAngleX, s.rotY, armAngleZ);
+      armLDummy.updateMatrix();
+      armMeshL.setMatrixAt(i, armLDummy.matrix);
+
+      armRDummy.position.set(s.base.x + perpX * 0.26, s.base.y + 0.1 + bob, s.base.z + perpZ * 0.26);
+      armRDummy.rotation.set(armAngleX, s.rotY, -armAngleZ);
+      armRDummy.updateMatrix();
+      armMeshR.setMatrixAt(i, armRDummy.matrix);
+
+      if (i % 3 === 0 && Math.floor(i / 3) < hatCount) {
+        const hi = Math.floor(i / 3);
+        hatDummy.position.set(s.base.x, s.base.y + 0.52 + bob, s.base.z);
+        hatDummy.rotation.set(0, s.rotY, sway);
+        hatDummy.updateMatrix();
+        hatMesh.setMatrixAt(hi, hatDummy.matrix);
+      }
     }
     specMesh.instanceMatrix.needsUpdate = true;
     faceMesh.instanceMatrix.needsUpdate = true;
+    armMeshL.instanceMatrix.needsUpdate = true;
+    armMeshR.instanceMatrix.needsUpdate = true;
+    hatMesh.instanceMatrix.needsUpdate = true;
 
     // 13. Confetti Fluttering
     const cd = new THREE.Object3D();

@@ -1,13 +1,19 @@
 /**
- * BOUNCEBACK! — Mystery Power-Up Skill System (Nintendo Party Style)
+ * BOUNCEBACK! — Mystery Power-Up Skill System (AAA Nintendo Party Visuals)
  *
  * Spawns rotating holographic Mystery Cubes in the arena.
  * When a player/bot collides with one, they receive 1 of 6 random skills.
- * Skills are activated instantly (bots) or on player input.
+ * Features full 3D visual FX:
+ * - 🥊 GIGA FIST: 3D Giant Cartoon Spring Boxing Glove punching outward with shockwave
+ * - 🚀 ROCKET BOOST: Twin chrome jet thrusters with billowing flame & smoke particle plumes
+ * - 🧲 GIGA MAGNET: Floating holographic horseshoe magnet + concentric forcefields & lightning tethers
+ * - 💣 BOUNCE BOMB: Red pulsing pinball bomb + gigantic cartoon mushroom fireball dome with scorch marks
+ * - 🩳 SHRINK ZAP: High-energy electric laser beam + collapsing quantum rings & cartoon pop
+ * - 🍌 BANANA PEEL: Flying spinning peel + 720° victim slip spin with orbiting halo stars
  */
 import * as THREE from "three";
 import * as C from "./config";
-import { Entity, applyPunch } from "./physics";
+import { Entity } from "./physics";
 
 // ─── Skill Type Enum ───
 export enum SkillType {
@@ -71,20 +77,19 @@ export interface BounceBomb {
 
 const BOMB_LIFETIME = 3.0;
 const BOMB_SPEED = 12.0;
-const BOMB_RADIUS = 1.0;
 const BOMB_BLAST_RADIUS = 6.0;
 const BOMB_BLAST_IMPULSE = 16.0;
 
-// ─── Skill Durations ───
+// ─── Skill Durations & Parameters ───
 const ROCKET_DURATION = 2.5;
-const ROCKET_SPEED = C.PLAYER_SPEED * 3;
+const ROCKET_SPEED = C.PLAYER_SPEED * 2.8;
 const SHRINK_DURATION = 4.0;
 const SHRINK_SCALE = 0.5;
-const MAGNET_PULL_RADIUS = 10.0;
+const MAGNET_PULL_RADIUS = 11.0;
 const MAGNET_PULL_COUNT = 3;
 const MAGNET_PULL_SPEED = 20.0;
 const GIGA_FIST_RANGE = C.PUNCH_RANGE * 2.5;
-const GIGA_FIST_IMPULSE = C.PUNCH_IMPULSE * 3;
+const GIGA_FIST_IMPULSE = C.PUNCH_IMPULSE * 2.8;
 
 // ─── Mystery Box Data ───
 interface MysteryBox {
@@ -119,8 +124,12 @@ export function createEmptySkillSlot(): SkillSlot {
   };
 }
 
-// ─── Callback types ───
 export type SkillEventFn = (event: string, data?: unknown) => void;
+
+interface ActiveSkillFX {
+  update: (dt: number) => boolean; // return true if finished
+  dispose: () => void;
+}
 
 // ═══════════════════════════════════════════
 //  SKILL MANAGER
@@ -130,18 +139,20 @@ export class SkillManager {
   bananas: BananaTrap[] = [];
   bombs: BounceBomb[] = [];
   private scene: THREE.Scene;
+  private fxGroup = new THREE.Group();
+  private activeFX: ActiveSkillFX[] = [];
 
   // Shared geometry/material for mystery cubes
   private boxGeo: THREE.BoxGeometry;
   private boxMat: THREE.MeshStandardMaterial;
   private boxInnerMat: THREE.MeshStandardMaterial;
-  // Banana mesh material
   private bananaMat: THREE.MeshStandardMaterial;
-  // Bomb mesh material
   private bombMat: THREE.MeshStandardMaterial;
 
   constructor(scene: THREE.Scene) {
     this.scene = scene;
+    this.fxGroup.name = "SkillVisualEffects";
+    this.scene.add(this.fxGroup);
 
     // Golden holographic cube
     this.boxGeo = new THREE.BoxGeometry(0.9, 0.9, 0.9);
@@ -177,7 +188,6 @@ export class SkillManager {
   }
 
   init() {
-    // Spawn mystery boxes at 4 positions
     const halfW = C.ARENA_W * 0.35;
     const halfL = C.ARENA_L * 0.25;
     const positions = [
@@ -243,67 +253,46 @@ export class SkillManager {
       const angle = (i / sparkCount) * Math.PI * 2;
       const r = 0.72;
       sparkPositions[i * 3] = Math.cos(angle) * r;
-      sparkPositions[i * 3 + 1] = (Math.sin(angle * 2) * 0.18);
+      sparkPositions[i * 3 + 1] = Math.sin(angle * 2) * 0.18;
       sparkPositions[i * 3 + 2] = Math.sin(angle) * r;
     }
     const sparkGeo = new THREE.BufferGeometry();
     sparkGeo.setAttribute("position", new THREE.BufferAttribute(sparkPositions, 3));
     const sparkMat = new THREE.PointsMaterial({
-      color: 0xffd166,
-      size: 0.12,
+      color: 0xfff3b0,
+      size: 0.08,
       transparent: true,
-      opacity: 0.85,
+      opacity: 0.9,
       blending: THREE.AdditiveBlending,
     });
-    const sparks = new THREE.Points(sparkGeo, sparkMat);
-    group.add(sparks);
-
-    // 5. Point Light Glow
-    const light = new THREE.PointLight(C.GOLD, 0.8, 5);
-    light.position.y = 0.1;
-    group.add(light);
-
-    // 6. Ground Projection Ring (at local y = -BOX_FLOAT_HEIGHT + 0.02)
-    const haloGeo = new THREE.RingGeometry(0.45, 0.65, 24);
-    const haloMat = new THREE.MeshBasicMaterial({
-      color: C.GOLD,
-      transparent: true,
-      opacity: 0.45,
-      side: THREE.DoubleSide,
-    });
-    const groundHalo = new THREE.Mesh(haloGeo, haloMat);
-    groundHalo.rotation.x = -Math.PI / 2;
-    groundHalo.position.y = -BOX_FLOAT_HEIGHT + 0.02;
-    group.add(groundHalo);
+    const sparkPoints = new THREE.Points(sparkGeo, sparkMat);
+    group.add(sparkPoints);
 
     return group;
   }
 
   private createBananaMesh(): THREE.Object3D {
     const group = new THREE.Group();
+    const darkTipMat = new THREE.MeshStandardMaterial({ color: 0x3e2723, roughness: 0.8 });
 
-    // Banana peel core
-    const coreGeo = new THREE.CylinderGeometry(0.12, 0.08, 0.35, 8);
-    const core = new THREE.Mesh(coreGeo, this.bananaMat);
-    core.position.y = 0.16;
-    core.castShadow = true;
-    group.add(core);
+    // Center stalk
+    const stalkGeo = new THREE.CylinderGeometry(0.04, 0.05, 0.22, 6);
+    const stalk = new THREE.Mesh(stalkGeo, darkTipMat);
+    stalk.position.y = 0.18;
+    stalk.castShadow = true;
+    group.add(stalk);
 
-    // 3 curved peel flaps
-    const peelMat = this.bananaMat;
-    const darkTipMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.6 });
-
-    for (let i = 0; i < 3; i++) {
-      const angle = (i / 3) * Math.PI * 2;
-      const flapGeo = new THREE.TorusGeometry(0.32, 0.09, 6, 12, Math.PI * 0.7);
-      const flap = new THREE.Mesh(flapGeo, peelMat);
+    // 4 banana peel flaps
+    const flapGeo = new THREE.ConeGeometry(0.14, 0.42, 5);
+    for (let i = 0; i < 4; i++) {
+      const angle = (i / 4) * Math.PI * 2;
+      const flap = new THREE.Mesh(flapGeo, this.bananaMat);
       flap.rotation.x = -Math.PI / 2;
       flap.rotation.z = angle;
       flap.position.set(Math.cos(angle) * 0.18, 0.06, Math.sin(angle) * 0.18);
       flap.castShadow = true;
       group.add(flap);
 
-      // Tip
       const tipGeo = new THREE.SphereGeometry(0.045, 6, 6);
       const tip = new THREE.Mesh(tipGeo, darkTipMat);
       tip.position.set(Math.cos(angle) * 0.46, 0.04, Math.sin(angle) * 0.46);
@@ -342,11 +331,6 @@ export class SkillManager {
     sparkMesh.position.set(0.08, 1.15, 0);
     group.add(sparkMesh);
 
-    // Fuse spark point light
-    const spark = new THREE.PointLight(0xff4422, 1.2, 3.5);
-    spark.position.set(0.08, 1.15, 0);
-    group.add(spark);
-
     return group;
   }
 
@@ -367,7 +351,7 @@ export class SkillManager {
     for (let i = 0; i < entities.length; i++) {
       const ent = entities[i];
       const slot = skillSlots[i];
-      if (slot.type !== SkillType.None) continue; // already holding a skill
+      if (slot.type !== SkillType.None) continue;
 
       for (const box of this.boxes) {
         if (!box.active) continue;
@@ -375,14 +359,12 @@ export class SkillManager {
         const dz = ent.z - box.z;
         const dist = Math.sqrt(dx * dx + dz * dz);
         if (dist < BOX_PICKUP_RADIUS) {
-          // Pickup!
           slot.type = this.randomSkill();
           box.active = false;
           box.respawnTimer = BOX_RESPAWN_TIME;
           box.mesh.visible = false;
           if (eventFn) eventFn("pickup", { entityIdx: i, skill: slot.type });
 
-          // Bots instantly use their skill
           if (!ent.isPlayer) {
             this.activateSkill(i, ent, entities, skillSlots, eventFn);
           }
@@ -392,7 +374,7 @@ export class SkillManager {
     }
   }
 
-  // Activate the skill for entity at index
+  // ─── Activate Skill ───
   activateSkill(
     idx: number,
     user: Entity,
@@ -408,7 +390,6 @@ export class SkillManager {
 
     switch (skillType) {
       case SkillType.GigaFist: {
-        // Find nearest enemy in extended range and mega-punch them
         let bestDist = GIGA_FIST_RANGE;
         let bestTarget: Entity | null = null;
         for (const e of entities) {
@@ -422,6 +403,10 @@ export class SkillManager {
             bestTarget = e;
           }
         }
+
+        // Spawn 3D Cartoon Spring Boxing Glove Animation!
+        this.spawnGigaFistFX(user, bestTarget);
+
         if (bestTarget) {
           const dx = bestTarget.x - user.x;
           const dz = bestTarget.z - user.z;
@@ -433,7 +418,7 @@ export class SkillManager {
           bestTarget.launched = true;
           bestTarget.launchSpeed = GIGA_FIST_IMPULSE;
           bestTarget.bounceCount = 0;
-          bestTarget.stunTimer = 0.5;
+          bestTarget.stunTimer = 0.55;
           bestTarget.lastHitBy = idx;
           if (eventFn) eventFn("gigafist", { x: bestTarget.x, z: bestTarget.z });
         } else {
@@ -443,9 +428,8 @@ export class SkillManager {
       }
 
       case SkillType.BananaPeel: {
-        // Drop banana behind the user
-        const behindX = user.x - (user.vx > 0 ? 1 : user.vx < 0 ? -1 : 0) * 2;
-        const behindZ = user.z - (user.vz > 0 ? 1 : user.vz < 0 ? -1 : 0) * 2;
+        const behindX = user.x - (user.vx > 0 ? 1 : user.vx < 0 ? -1 : 0) * 1.8;
+        const behindZ = user.z - (user.vz > 0 ? 1 : user.vz < 0 ? -1 : 0) * 1.8;
         const mesh = this.createBananaMesh();
         mesh.position.set(behindX, 0.05, behindZ);
         this.scene.add(mesh);
@@ -461,12 +445,12 @@ export class SkillManager {
 
       case SkillType.RocketBoost: {
         slot.rocketTimer = ROCKET_DURATION;
+        this.spawnRocketThrusterFX(user, slot);
         if (eventFn) eventFn("rocket_start", { entityIdx: idx });
         break;
       }
 
       case SkillType.GigaMagnet: {
-        // Pull 3 nearest enemies toward user
         const enemies: { e: Entity; d: number }[] = [];
         for (const e of entities) {
           if (e === user || e.team === user.team) continue;
@@ -479,20 +463,23 @@ export class SkillManager {
         }
         enemies.sort((a, b) => a.d - b.d);
         const pulled = enemies.slice(0, MAGNET_PULL_COUNT);
+
+        // Spawn 3D Holographic Horseshoe Magnet & Lightning Tethers!
+        this.spawnMagnetFieldFX(user, pulled.map((p) => p.e));
+
         for (const { e } of pulled) {
           const dx = user.x - e.x;
           const dz = user.z - e.z;
           const d = Math.sqrt(dx * dx + dz * dz) || 0.01;
           e.vx = (dx / d) * MAGNET_PULL_SPEED;
           e.vz = (dz / d) * MAGNET_PULL_SPEED;
-          e.stunTimer = 0.3;
+          e.stunTimer = 0.35;
         }
         if (eventFn) eventFn("magnet", { count: pulled.length });
         break;
       }
 
       case SkillType.BounceBomb: {
-        // Roll a bomb in the direction the user faces
         const dirX = user.vx || 0;
         const dirZ = user.vz || 0;
         const dirLen = Math.sqrt(dirX * dirX + dirZ * dirZ) || 1;
@@ -512,8 +499,7 @@ export class SkillManager {
       }
 
       case SkillType.ShrinkZap: {
-        // Shrink nearest enemy
-        let bestDist2 = 12;
+        let bestDist2 = 14;
         let bestSlotIdx = -1;
         let bestEnt: Entity | null = null;
         for (let j = 0; j < entities.length; j++) {
@@ -531,6 +517,8 @@ export class SkillManager {
         if (bestSlotIdx >= 0 && bestEnt) {
           skillSlots[bestSlotIdx].shrinkTimer = SHRINK_DURATION;
           skillSlots[bestSlotIdx].shrinkScale = SHRINK_SCALE;
+          // Spawn 3D Neon Laser Beam connecting user to target!
+          this.spawnShrinkLaserFX(user, bestEnt);
           if (eventFn) eventFn("shrink", { x: bestEnt.x, z: bestEnt.z });
         }
         break;
@@ -538,14 +526,451 @@ export class SkillManager {
     }
   }
 
-  // Update all active effects per frame
+  // ═══════════════════════════════════════════
+  //  3D SKILL VISUAL EFFECTS
+  // ═══════════════════════════════════════════
+
+  // 1. 🥊 Giga Fist: 3D Giant Spring Boxing Glove
+  private spawnGigaFistFX(user: Entity, target?: Entity | null) {
+    const fistGroup = new THREE.Group();
+    const fistMat = new THREE.MeshStandardMaterial({
+      color: 0xef4444,
+      emissive: 0x991b1b,
+      roughness: 0.2,
+      metalness: 0.3,
+    });
+    const goldMat = new THREE.MeshStandardMaterial({
+      color: 0xf59e0b,
+      metalness: 0.85,
+      roughness: 0.2,
+    });
+
+    // Main boxing glove head
+    const glove = new THREE.Mesh(new THREE.SphereGeometry(0.52, 16, 14), fistMat);
+    glove.scale.set(1.0, 1.25, 1.35);
+    fistGroup.add(glove);
+
+    // 4 Brass knuckles
+    for (let k = -1.5; k <= 1.5; k += 1.0) {
+      const knuckle = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.18, 8), goldMat);
+      knuckle.rotation.x = Math.PI / 2;
+      knuckle.position.set(k * 0.22, 0.12, 0.65);
+      fistGroup.add(knuckle);
+    }
+
+    // Glove cuff
+    const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.44, 0.32, 16), goldMat);
+    cuff.rotation.x = Math.PI / 2;
+    cuff.position.z = -0.55;
+    fistGroup.add(cuff);
+
+    // Accordion spring arm
+    const spring = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.16, 0.16, 1.0, 10),
+      new THREE.MeshStandardMaterial({ color: 0xd97706, metalness: 0.9 })
+    );
+    spring.rotation.x = Math.PI / 2;
+    spring.position.z = -1.1;
+    fistGroup.add(spring);
+
+    fistGroup.position.set(user.x, 1.1, user.z);
+
+    // Target direction
+    let dir = new THREE.Vector3(0, 0, 1);
+    if (target) {
+      dir.set(target.x - user.x, 0, target.z - user.z).normalize();
+    } else if (user.vx !== 0 || user.vz !== 0) {
+      dir.set(user.vx, 0, user.vz).normalize();
+    }
+    fistGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir);
+
+    this.fxGroup.add(fistGroup);
+
+    let age = 0;
+    const maxAge = 0.32;
+    const maxPunchDist = 3.6;
+
+    this.activeFX.push({
+      update: (dt: number) => {
+        age += dt;
+        const t = age / maxAge;
+        if (t >= 1.0) return true;
+
+        // Fast extend out, snappy retract
+        const punchDist = Math.sin(t * Math.PI) * maxPunchDist;
+        fistGroup.position.set(
+          user.x + dir.x * punchDist,
+          1.1,
+          user.z + dir.z * punchDist
+        );
+        spring.scale.y = Math.max(0.2, punchDist * 1.5);
+        spring.position.z = -punchDist * 0.5 - 0.5;
+        return false;
+      },
+      dispose: () => {
+        this.fxGroup.remove(fistGroup);
+      },
+    });
+  }
+
+  // 2. 🚀 Rocket Boost: Twin Jet Turbines & Trailing Flame Plumes
+  private spawnRocketThrusterFX(user: Entity, slot: SkillSlot) {
+    const thrusterGroup = new THREE.Group();
+    const chromeMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9, roughness: 0.2 });
+    const nozzleMat = new THREE.MeshBasicMaterial({ color: 0xff0044 });
+
+    for (const side of [-0.32, 0.32]) {
+      const tub = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.16, 0.65, 12), chromeMat);
+      tub.rotation.x = Math.PI / 2;
+      tub.position.set(side, 0.75, -0.42);
+      thrusterGroup.add(tub);
+
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.03, 8, 16), nozzleMat);
+      ring.position.set(side, 0.75, -0.74);
+      thrusterGroup.add(ring);
+    }
+
+    this.fxGroup.add(thrusterGroup);
+
+    // Particle flame trail
+    const flameMat = new THREE.MeshBasicMaterial({
+      color: 0xffaa00,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending,
+    });
+    const trailPuffs: { mesh: THREE.Mesh; life: number; maxLife: number }[] = [];
+
+    this.activeFX.push({
+      update: (dt: number) => {
+        if (slot.rocketTimer <= 0) return true;
+
+        // Position thrusters with user
+        thrusterGroup.position.set(user.x, 0, user.z);
+        if (Math.hypot(user.vx, user.vz) > 0.4) {
+          thrusterGroup.rotation.y = Math.atan2(user.vx, user.vz);
+        }
+
+        // Spawn trailing fire particles
+        if (Math.random() < 0.65) {
+          const puff = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 8), flameMat);
+          puff.position.set(
+            user.x + (Math.random() - 0.5) * 0.4,
+            0.8 + (Math.random() - 0.5) * 0.2,
+            user.z + (Math.random() - 0.5) * 0.4
+          );
+          this.fxGroup.add(puff);
+          trailPuffs.push({ mesh: puff, life: 0.25, maxLife: 0.25 });
+        }
+
+        // Animate trail puffs
+        for (let p = trailPuffs.length - 1; p >= 0; p--) {
+          const puff = trailPuffs[p];
+          puff.life -= dt;
+          if (puff.life <= 0) {
+            this.fxGroup.remove(puff.mesh);
+            trailPuffs.splice(p, 1);
+            continue;
+          }
+          const s = (1.0 - puff.life / puff.maxLife) * 1.8 + 0.5;
+          puff.mesh.scale.set(s, s, s);
+        }
+
+        return false;
+      },
+      dispose: () => {
+        this.fxGroup.remove(thrusterGroup);
+        for (const p of trailPuffs) {
+          this.fxGroup.remove(p.mesh);
+        }
+      },
+    });
+  }
+
+  // 3. 🧲 Giga Magnet: Floating Horseshoe Magnet + Electric Tethers
+  private spawnMagnetFieldFX(user: Entity, victims: Entity[]) {
+    const magnetGroup = new THREE.Group();
+
+    // 3D Horseshoe Magnet Mesh
+    const magHalf = new THREE.Mesh(
+      new THREE.TorusGeometry(0.5, 0.12, 10, 20, Math.PI),
+      new THREE.MeshStandardMaterial({ color: 0xef4444, metalness: 0.6, roughness: 0.3 })
+    );
+    magHalf.rotation.z = Math.PI;
+    magHalf.position.y = 2.4;
+    magnetGroup.add(magHalf);
+
+    // Silver tips
+    const tipMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.8, roughness: 0.2 });
+    for (const tx of [-0.5, 0.5]) {
+      const tip = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.22, 0.26), tipMat);
+      tip.position.set(tx, 2.4, 0);
+      magnetGroup.add(tip);
+    }
+
+    // Concentric Forcefield Rings
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0x00f0ff,
+      transparent: true,
+      opacity: 0.8,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+    });
+    const forceRing = new THREE.Mesh(new THREE.RingGeometry(0.4, 0.9, 32), ringMat);
+    forceRing.rotation.x = -Math.PI / 2;
+    forceRing.position.y = 0.15;
+    magnetGroup.add(forceRing);
+
+    magnetGroup.position.set(user.x, 0, user.z);
+    this.fxGroup.add(magnetGroup);
+
+    // Tether lightning arcs
+    const tetherLines: THREE.Line[] = [];
+    for (const v of victims) {
+      const pts = [
+        new THREE.Vector3(user.x, 1.8, user.z),
+        new THREE.Vector3((user.x + v.x) / 2, 2.2, (user.z + v.z) / 2),
+        new THREE.Vector3(v.x, 1.0, v.z),
+      ];
+      const geom = new THREE.BufferGeometry().setFromPoints(pts);
+      const line = new THREE.Line(
+        geom,
+        new THREE.LineBasicMaterial({ color: 0x00ffff, linewidth: 3 })
+      );
+      this.fxGroup.add(line);
+      tetherLines.push(line);
+    }
+
+    let age = 0;
+    const maxAge = 0.55;
+
+    this.activeFX.push({
+      update: (dt: number) => {
+        age += dt;
+        if (age >= maxAge) return true;
+
+        magnetGroup.position.set(user.x, 0, user.z);
+        magHalf.rotation.y += dt * 14;
+
+        // Expanding force ring
+        const s = (age / maxAge) * 12.0;
+        forceRing.scale.set(s, s, s);
+        ringMat.opacity = (1.0 - age / maxAge) * 0.85;
+
+        // Update tether lines
+        for (let i = 0; i < victims.length; i++) {
+          const v = victims[i];
+          const l = tetherLines[i];
+          if (!l) continue;
+          const posAttr = l.geometry.attributes.position;
+          posAttr.setXYZ(0, user.x, 1.8, user.z);
+          posAttr.setXYZ(
+            1,
+            (user.x + v.x) / 2 + (Math.random() - 0.5) * 0.6,
+            1.8 + Math.random() * 0.5,
+            (user.z + v.z) / 2 + (Math.random() - 0.5) * 0.6
+          );
+          posAttr.setXYZ(2, v.x, 1.0, v.z);
+          posAttr.needsUpdate = true;
+        }
+        return false;
+      },
+      dispose: () => {
+        this.fxGroup.remove(magnetGroup);
+        for (const l of tetherLines) {
+          this.fxGroup.remove(l);
+        }
+      },
+    });
+  }
+
+  // 4. 💣 Bounce Bomb: Monumental 3D Fireball Explosion Sphere
+  private spawnBombExplosionFX(x: number, z: number) {
+    // 1. Expanding fireball dome
+    const fireGeo = new THREE.SphereGeometry(1.0, 16, 12);
+    const fireMat = new THREE.MeshBasicMaterial({
+      color: 0xff3300,
+      transparent: true,
+      opacity: 0.95,
+      blending: THREE.AdditiveBlending,
+    });
+    const fireball = new THREE.Mesh(fireGeo, fireMat);
+    fireball.position.set(x, 1.2, z);
+    this.fxGroup.add(fireball);
+
+    // 2. Ground blast shockwave
+    const shockMat = new THREE.MeshBasicMaterial({
+      color: 0xffcc00,
+      transparent: true,
+      opacity: 0.9,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+    });
+    const shock = new THREE.Mesh(new THREE.RingGeometry(0.5, 1.2, 32), shockMat);
+    shock.rotation.x = -Math.PI / 2;
+    shock.position.set(x, 0.08, z);
+    this.fxGroup.add(shock);
+
+    // 3. Ground Scorch Decal
+    const scorchMat = new THREE.MeshBasicMaterial({
+      color: 0x1c1917,
+      transparent: true,
+      opacity: 0.7,
+      side: THREE.DoubleSide,
+    });
+    const scorch = new THREE.Mesh(new THREE.CircleGeometry(2.4, 20), scorchMat);
+    scorch.rotation.x = -Math.PI / 2;
+    scorch.position.set(x, 0.04, z);
+    this.fxGroup.add(scorch);
+
+    let age = 0;
+    const maxAge = 0.55;
+
+    this.activeFX.push({
+      update: (dt: number) => {
+        age += dt;
+        if (age >= maxAge) return true;
+
+        const t = age / maxAge;
+        // Expand fireball from 1 to 6.8m
+        const fbScale = 1.0 + t * 5.8;
+        fireball.scale.set(fbScale, fbScale * 0.85, fbScale);
+        fireMat.opacity = Math.max(0, 1.0 - t * 1.3);
+
+        // Expand ground shock
+        const swScale = 1.0 + t * 7.5;
+        shock.scale.set(swScale, swScale, swScale);
+        shockMat.opacity = Math.max(0, 1.0 - t);
+
+        return false;
+      },
+      dispose: () => {
+        this.fxGroup.remove(fireball);
+        this.fxGroup.remove(shock);
+        // Scorch stays for a bit or cleans up
+        setTimeout(() => {
+          this.fxGroup.remove(scorch);
+        }, 4000);
+      },
+    });
+  }
+
+  // 5. 🩳 Shrink Zap: High-Energy Neon Laser Beam + Quantum Rings
+  private spawnShrinkLaserFX(user: Entity, target: Entity) {
+    const dist = Math.hypot(target.x - user.x, target.z - user.z) || 1.0;
+    const beamGeo = new THREE.CylinderGeometry(0.12, 0.12, dist, 12);
+    beamGeo.translate(0, dist / 2, 0);
+    beamGeo.rotateX(Math.PI / 2);
+
+    const beamMat = new THREE.MeshBasicMaterial({
+      color: 0x00f0ff,
+      transparent: true,
+      opacity: 0.9,
+      blending: THREE.AdditiveBlending,
+    });
+    const beam = new THREE.Mesh(beamGeo, beamMat);
+    beam.position.set(user.x, 1.0, user.z);
+    beam.lookAt(target.x, 1.0, target.z);
+    this.fxGroup.add(beam);
+
+    // Collapsing quantum rings around target
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0xa855f7,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+    });
+    const qRing = new THREE.Mesh(new THREE.RingGeometry(0.2, 0.45, 24), ringMat);
+    qRing.rotation.x = -Math.PI / 2;
+    qRing.position.set(target.x, 1.0, target.z);
+    this.fxGroup.add(qRing);
+
+    let age = 0;
+    const maxAge = 0.42;
+
+    this.activeFX.push({
+      update: (dt: number) => {
+        age += dt;
+        if (age >= maxAge) return true;
+
+        const alpha = 1.0 - age / maxAge;
+        beamMat.opacity = alpha * 0.95;
+        // Ring compresses down as target shrinks
+        const rs = Math.max(0.2, alpha * 2.2);
+        qRing.scale.set(rs, rs, rs);
+        qRing.position.set(target.x, 1.0 - (1 - alpha) * 0.5, target.z);
+        return false;
+      },
+      dispose: () => {
+        this.fxGroup.remove(beam);
+        this.fxGroup.remove(qRing);
+      },
+    });
+  }
+
+  // 6. 🍌 Banana Slip: 3 Orbiting Cartoon Halo Stars
+  private spawnBananaSlipFX(victim: Entity) {
+    const haloGroup = new THREE.Group();
+    haloGroup.position.set(victim.x, 1.8, victim.z);
+
+    const starGeo = new THREE.OctahedronGeometry(0.12, 0);
+    const starMat = new THREE.MeshStandardMaterial({
+      color: 0xffd700,
+      emissive: 0xf59e0b,
+      metalness: 0.8,
+    });
+
+    const stars: THREE.Mesh[] = [];
+    for (let i = 0; i < 3; i++) {
+      const sMesh = new THREE.Mesh(starGeo, starMat);
+      haloGroup.add(sMesh);
+      stars.push(sMesh);
+    }
+
+    this.fxGroup.add(haloGroup);
+
+    let age = 0;
+    const maxAge = BANANA_SLIP_DURATION;
+
+    this.activeFX.push({
+      update: (dt: number) => {
+        age += dt;
+        if (age >= maxAge) return true;
+
+        haloGroup.position.set(victim.x, 1.8, victim.z);
+        const rot = age * 10;
+        for (let i = 0; i < 3; i++) {
+          const a = rot + (i / 3) * Math.PI * 2;
+          stars[i].position.set(Math.cos(a) * 0.5, Math.sin(age * 8 + i) * 0.08, Math.sin(a) * 0.5);
+          stars[i].rotation.y += dt * 12;
+        }
+        return false;
+      },
+      dispose: () => {
+        this.fxGroup.remove(haloGroup);
+      },
+    });
+  }
+
+  // ─── Main Update Loop ───
   update(
     entities: Entity[],
     skillSlots: SkillSlot[],
     dt: number,
     eventFn?: SkillEventFn
   ) {
-    // ─── Mystery Box respawn timers ───
+    // 1. Update Active Skill FX
+    for (let f = this.activeFX.length - 1; f >= 0; f--) {
+      const fx = this.activeFX[f];
+      const isDone = fx.update(dt);
+      if (isDone) {
+        fx.dispose();
+        this.activeFX.splice(f, 1);
+      }
+    }
+
+    // 2. Mystery Box respawn timers
     for (const box of this.boxes) {
       if (!box.active) {
         box.respawnTimer -= dt;
@@ -556,7 +981,7 @@ export class SkillManager {
       }
     }
 
-    // ─── Animate active boxes (spin + bob) ───
+    // 3. Animate active boxes (spin + bob)
     const now = performance.now() * 0.001;
     for (const box of this.boxes) {
       if (!box.active) continue;
@@ -564,19 +989,18 @@ export class SkillManager {
       box.mesh.position.y = BOX_FLOAT_HEIGHT + Math.sin(now * 2 + box.x) * 0.3;
     }
 
-    // ─── Rocket Boost ───
+    // 4. Rocket Boost active state
     for (let i = 0; i < skillSlots.length && i < entities.length; i++) {
       const slot = skillSlots[i];
       const ent = entities[i];
       if (slot.rocketTimer > 0) {
         slot.rocketTimer -= dt;
-        // Override speed: bulldozer mode
         const spd = Math.sqrt(ent.vx * ent.vx + ent.vz * ent.vz);
         if (spd > 0.1) {
           ent.vx = (ent.vx / spd) * ROCKET_SPEED;
           ent.vz = (ent.vz / spd) * ROCKET_SPEED;
         }
-        // Bulldoze: knock away enemies in path
+        // Bulldoze enemies
         for (let j = 0; j < entities.length; j++) {
           if (j === i) continue;
           const e = entities[j];
@@ -585,7 +1009,6 @@ export class SkillManager {
           const dz = e.z - ent.z;
           const d = Math.sqrt(dx * dx + dz * dz);
           if (d < ent.radius + e.radius + 0.3) {
-            // Bulldoze hit
             const nd = d || 0.01;
             e.vx = (dx / nd) * 18;
             e.vz = (dz / nd) * 18;
@@ -602,7 +1025,7 @@ export class SkillManager {
       }
     }
 
-    // ─── Shrink Effect ───
+    // 5. Shrink Effect countdown
     for (let i = 0; i < skillSlots.length && i < entities.length; i++) {
       const slot = skillSlots[i];
       if (slot.shrinkTimer > 0) {
@@ -614,7 +1037,7 @@ export class SkillManager {
       }
     }
 
-    // ─── Banana Slip Check ───
+    // 6. Banana Slip Check
     for (let bi = this.bananas.length - 1; bi >= 0; bi--) {
       const banana = this.bananas[bi];
       banana.timer -= dt;
@@ -623,11 +1046,10 @@ export class SkillManager {
         this.bananas.splice(bi, 1);
         continue;
       }
-      // Check entity collisions
       for (let i = 0; i < entities.length; i++) {
         const ent = entities[i];
         const slot = skillSlots[i];
-        if (slot.slipTimer > 0) continue; // already slipping
+        if (slot.slipTimer > 0) continue;
         const dx = ent.x - banana.x;
         const dz = ent.z - banana.z;
         const d = Math.sqrt(dx * dx + dz * dz);
@@ -639,22 +1061,24 @@ export class SkillManager {
           ent.vz = 0;
           this.scene.remove(banana.mesh);
           this.bananas.splice(bi, 1);
+          // Spawn orbiting halo stars!
+          this.spawnBananaSlipFX(ent);
           if (eventFn) eventFn("banana_slip", { entityIdx: i, x: ent.x, z: ent.z });
           break;
         }
       }
     }
 
-    // ─── Slip Spin Visual ───
+    // 7. Banana Slip Spin
     for (let i = 0; i < skillSlots.length && i < entities.length; i++) {
       const slot = skillSlots[i];
       if (slot.slipTimer > 0) {
         slot.slipTimer -= dt;
-        slot.slipSpinAngle += dt * 12; // fast spin
+        slot.slipSpinAngle += dt * 24; // Fast cartoon spin!
       }
     }
 
-    // ─── Bomb Physics ───
+    // 8. Bomb Physics & Blast
     const halfW = C.ARENA_W * 0.5;
     const halfL = C.ARENA_L * 0.5;
     for (let bi = this.bombs.length - 1; bi >= 0; bi--) {
@@ -663,7 +1087,6 @@ export class SkillManager {
       bomb.x += bomb.vx * dt;
       bomb.z += bomb.vz * dt;
 
-      // Wall bounce
       if (bomb.x < -halfW || bomb.x > halfW) {
         bomb.vx *= -0.9;
         bomb.x = Math.max(-halfW, Math.min(halfW, bomb.x));
@@ -673,17 +1096,18 @@ export class SkillManager {
         bomb.z = Math.max(-halfL, Math.min(halfL, bomb.z));
       }
 
-      // Friction
       bomb.vx *= 0.995;
       bomb.vz *= 0.995;
 
-      // Update mesh
       bomb.mesh.position.set(bomb.x, 0.5, bomb.z);
-      bomb.mesh.rotation.x += dt * 5;
+      bomb.mesh.rotation.x += dt * 6;
 
-      // Detonate on timer
+      // Pulse red as countdown nears 0
+      const pulseSpeed = 10 + (1 - bomb.timer / BOMB_LIFETIME) * 20;
+      this.bombMat.emissiveIntensity = 0.4 + Math.sin(now * pulseSpeed) * 0.5;
+
       if (bomb.timer <= 0) {
-        // Blast: push all entities in radius
+        // Blast push
         for (let i = 0; i < entities.length; i++) {
           const ent = entities[i];
           const dx = ent.x - bomb.x;
@@ -696,9 +1120,12 @@ export class SkillManager {
             ent.vz += (dz / nd) * power;
             ent.launched = true;
             ent.launchSpeed = power;
-            ent.stunTimer = 0.4;
+            ent.stunTimer = 0.45;
           }
         }
+        // Spawn 3D Cartoon Fireball Dome & Scorch Mark!
+        this.spawnBombExplosionFX(bomb.x, bomb.z);
+
         this.scene.remove(bomb.mesh);
         this.bombs.splice(bi, 1);
         if (eventFn) eventFn("bomb_explode", { x: bomb.x, z: bomb.z });
@@ -707,6 +1134,12 @@ export class SkillManager {
   }
 
   destroy() {
+    for (const fx of this.activeFX) {
+      fx.dispose();
+    }
+    this.activeFX = [];
+    this.scene.remove(this.fxGroup);
+
     for (const box of this.boxes) {
       this.scene.remove(box.mesh);
     }

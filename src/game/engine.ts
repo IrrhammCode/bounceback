@@ -602,7 +602,15 @@ export class BouncebackEngine {
 
     // Hit-stop: skip physics when frozen
     if (!this.juice.isHitStopped()) {
-      // Player input
+      // Player input with camera orientation awareness
+      const isFirstPerson = this.cameraMode === "first_person";
+      let camAngle = 0;
+      if (this.camera) {
+        const camDir = new THREE.Vector3();
+        this.camera.getWorldDirection(camDir);
+        camAngle = Math.atan2(camDir.x, camDir.z);
+      }
+
       this.player.update(
         this.entities[0],
         this.entities,
@@ -625,7 +633,9 @@ export class BouncebackEngine {
           } else {
             this.juice.trigger(type, data);
           }
-        }
+        },
+        camAngle,
+        isFirstPerson
       );
 
       // Player skill activation
@@ -764,9 +774,23 @@ export class BouncebackEngine {
           }
         }
 
-        // Face movement direction
-        if (Math.abs(ent.vx) > 0.5 || Math.abs(ent.vz) > 0.5) {
-          ent.mesh.rotation.y = Math.atan2(ent.vx, ent.vz);
+        // Face movement direction with smooth turning & dynamic lean banking
+        if (Math.abs(ent.vx) > 0.35 || Math.abs(ent.vz) > 0.35) {
+          const targetRotY = Math.atan2(ent.vx, ent.vz);
+          let diffY = targetRotY - ent.mesh.rotation.y;
+          while (diffY < -Math.PI) diffY += Math.PI * 2;
+          while (diffY > Math.PI) diffY -= Math.PI * 2;
+
+          // Snappy turning lerp
+          ent.mesh.rotation.y += diffY * Math.min(1.0, 16.0 * dt);
+
+          // Dynamic banking lean into turn
+          if (!ent.launched && !ent.stunTimer) {
+            const leanZ = -diffY * 0.35;
+            ent.mesh.rotation.z += (leanZ - ent.mesh.rotation.z) * Math.min(1.0, 12.0 * dt);
+          }
+        } else if (!ent.launched && !ent.stunTimer) {
+          ent.mesh.rotation.z += (0 - ent.mesh.rotation.z) * Math.min(1.0, 10.0 * dt);
         }
 
         // Scale effects & Stun wobble
