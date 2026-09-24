@@ -60,3 +60,102 @@ export const BOT_PUNCH_RANGE = 1.8;
 // Combo
 export const COMBO_WINDOW = 3.0;
 export const COMBO_DECAY = 0.5;
+
+// ─── 3VS3 Roster Profiles for TV Broadcast Showcase ───
+export interface FighterProfile {
+  id: string;
+  name: string;
+  number: number;
+  team: number;
+  costume: string;
+  title: string;
+  avatarIcon: string;
+  quote: string;
+  statPunch: number; // 1 to 5
+  statSpeed: number;
+  statChaos: number;
+}
+
+export const ROSTER_CYAN: FighterProfile[] = [
+  {
+    id: "cyan_player",
+    name: "YOU",
+    number: 7,
+    team: 0,
+    costume: "crown",
+    title: "👑 The Punch Prodigy",
+    avatarIcon: "👑",
+    quote: "Nonjok orang sampe tembus atmosfer adalah hobiku!",
+    statPunch: 5,
+    statSpeed: 4,
+    statChaos: 5,
+  },
+  {
+    id: "cyan_dj",
+    name: "DJ BOUNCE",
+    number: 1,
+    team: 0,
+    costume: "dj_headphones",
+    title: "🎧 Beat Striker",
+    avatarIcon: "🎧",
+    quote: "Drop the beat, drop the enemy!",
+    statPunch: 3,
+    statSpeed: 5,
+    statChaos: 4,
+  },
+  {
+    id: "cyan_ninja",
+    name: "NINJA BEAN",
+    number: 2,
+    team: 0,
+    costume: "ninja_headband",
+    title: "🥷 Shadow Dasher",
+    avatarIcon: "🥷",
+    quote: "Kedip sekali, langsung melayang ke gong!",
+    statPunch: 4,
+    statSpeed: 5,
+    statChaos: 3,
+  },
+];
+
+export const ROSTER_CORAL: FighterProfile[] = [
+  {
+    id: "coral_rex",
+    name: "REX CRUSH",
+    number: 1,
+    team: 1,
+    costume: "dino_crest",
+    title: "🦖 Dino Destroyer",
+    avatarIcon: "🦖",
+    quote: "RAAAWR! Siap-siap terlempar ke langit!",
+    statPunch: 5,
+    statSpeed: 3,
+    statChaos: 5,
+  },
+  {
+    id: "coral_hopper",
+    name: "HOPPER MAD",
+    number: 2,
+    team: 1,
+    costume: "bunny_ears",
+    title: "🐰 Bouncing Menace",
+    avatarIcon: "🐰",
+    quote: "Lompat sana-sini sampai lawan pusing!",
+    statPunch: 3,
+    statSpeed: 5,
+    statChaos: 5,
+  },
+  {
+    id: "coral_shady",
+    name: "SHADY VIP",
+    number: 3,
+    team: 1,
+    costume: "pro_shades",
+    title: "🕶️ The Iron Wall",
+    avatarIcon: "🕶️",
+    quote: "Gong ini tidak akan pernah kalian sentuh!",
+    statPunch: 4,
+    statSpeed: 3,
+    statChaos: 3,
+  },
+];

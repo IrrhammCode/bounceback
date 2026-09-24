@@ -698,3 +698,51 @@ export function sfxOnePunch() {
   // Stadium crowd roar
   sfxCrowdCheer(1.5);
 }
+
+// ─── TV Game Show & Tournament Broadcast SFX ───
+export function sfxTVOpener() {
+  if (!ctx || !sfxGain || muted) return;
+  // Retro TV static zap
+  playNoise(0.08, 0.25, 3400);
+  // Tournament fanfare brass chords
+  playTone(392.0, 0.25, "sawtooth", 0.35); // G4
+  setTimeout(() => playTone(523.25, 0.3, "sawtooth", 0.38), 120); // C5
+  setTimeout(() => playTone(659.25, 0.3, "sawtooth", 0.35), 240); // E5
+  setTimeout(() => {
+    playTone(783.99, 0.6, "sawtooth", 0.45); // G5
+    playTone(1046.5, 0.6, "sawtooth", 0.35); // C6
+    sfxCrowdCheer(1.1);
+  }, 380);
+}
+
+export function sfxTVCountdown(step: number) {
+  if (!ctx || !sfxGain || muted) return;
+  if (step > 0) {
+    // 3, 2, 1 arcade rising beeps
+    const f = 440 + (3 - step) * 110;
+    playTone(f, 0.12, "sine", 0.45);
+    playTone(f * 2, 0.08, "triangle", 0.25);
+  } else {
+    // 0 = GO / BOUNCE!!
+    sfxBoxingBell();
+    playTone(1046.5, 0.45, "sawtooth", 0.45);
+    sfxCrowdCheer(1.3);
+  }
+}
+
+export function sfxBoxingBell() {
+  if (!ctx || !sfxGain || muted) return;
+  // High resonant brass ring bell
+  playTone(2093, 0.35, "sine", 0.35);
+  setTimeout(() => playTone(2093, 0.35, "sine", 0.35), 110);
+  setTimeout(() => playTone(2093, 0.55, "sine", 0.4), 220);
+}
+
+export function sfxCommentatorGasp() {
+  if (!ctx || !sfxGain || muted) return;
+  // Humorous commentator mic pop & gasp
+  playNoise(0.06, 0.22, 1800);
+  playTone(580, 0.12, "square", 0.2);
+  setTimeout(() => playTone(820, 0.18, "sawtooth", 0.25), 50);
+}
+

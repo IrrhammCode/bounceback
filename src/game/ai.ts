@@ -9,14 +9,17 @@ import type { JuiceFn } from "./player";
 const ROLES = ["setter", "guard", "flanker", "finisher"] as const;
 
 export function assignRoles(entities: Entity[]) {
-  for (let team = 0; team < 2; team++) {
-    const start = team === 0 ? 1 : 5;
-    const count = team === 0 ? 4 : 5;
-    for (let i = 0; i < count; i++) {
-      const idx = start + i;
-      if (idx < entities.length) {
-        entities[idx].role = ROLES[i % ROLES.length];
-      }
+  let team0Idx = 0;
+  let team1Idx = 0;
+  for (let i = 0; i < entities.length; i++) {
+    const e = entities[i];
+    if (e.isPlayer) continue;
+    if (e.team === 0) {
+      e.role = ROLES[team0Idx % ROLES.length];
+      team0Idx++;
+    } else {
+      e.role = ROLES[team1Idx % ROLES.length];
+      team1Idx++;
     }
   }
 }

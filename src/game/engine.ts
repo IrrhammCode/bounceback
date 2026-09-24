@@ -69,6 +69,10 @@ export interface GameState {
   playerSkillName: string;
   playerSkillIcon: string;
   cameraMode: "third_wide" | "third_close" | "first_person";
+  // TV Game Show Commentary & Dynamic Hype Meter
+  hypeMeter: number;
+  commentaryText: string;
+  commentaryMood: "normal" | "excited" | "shocked" | "crazy";
 }
 
 export type GameStateCallback = (state: GameState) => void;
@@ -100,6 +104,22 @@ export class BouncebackEngine {
 
   private announcement = "";
   private announcementTimer = 0;
+
+  // TV Broadcast Commentary & Dynamic Hype Meter
+  public hypeMeter = 20;
+  public commentaryText = "Selamat datang di BOUNCE TV 3v3 ARENA! Hajar gong lawan sekarang!";
+  public commentaryMood: "normal" | "excited" | "shocked" | "crazy" = "normal";
+  private commentaryTimer = 4.0;
+
+  private idleCommentaryList = [
+    { text: "Bobby: 'Kedua tim saling tatap mata! Tensi di arena makin memanas!'", mood: "excited" as const },
+    { text: "Prof. Clang: 'Sensor seismik mendeteksi getaran pukulan luar biasa!'", mood: "normal" as const },
+    { text: "Bobby: 'Satu pukulan telak bisa langsung melempar lawan ke gong!'", mood: "excited" as const },
+    { text: "Prof. Clang: 'Hati-hati dengan Sweeper Arm di tengah! Putarannya berbahaya!'", mood: "normal" as const },
+    { text: "Bobby: 'Ayo jangan cuma lari-lari, nonjok dong!!'", mood: "excited" as const },
+    { text: "Prof. Clang: 'Gong lawan terbuka lebar! Ini saatnya menyerang!'", mood: "excited" as const },
+    { text: "Bobby: 'Suasana di studio BOUNCE TV semakin riuh penonton!'", mood: "excited" as const },
+  ];
 
   // Camera follow state (starts behind Cyan player at z=-17, looking downfield toward Coral at +Z)
   private camTargetPos = new THREE.Vector3(0, 8.5, -31.0);
@@ -186,13 +206,24 @@ export class BouncebackEngine {
       if (bounces >= 2) txt += ` ${bounces}x BOUNCE!`;
       if (combo > 1) txt += ` COMBO x${combo}!`;
       this.showAnnouncement(txt);
+
+      const gongPhrases = [
+        `GOOOONG!! CETARRR! ${teamName} mencetak poin emas!`,
+        `GONGNYA JEBOL! 1000 DECIBEL OF PURE DESTRUCTION!`,
+        `GONG SLAM SPECTACULAR! Suaranya sampai ke luar angkasa!`,
+        `BOOM! Lawan terhempas telak menghantam gong!`,
+      ];
+      const phrase = gongPhrases[Math.floor(Math.random() * gongPhrases.length)];
+      this.triggerCommentary(phrase, "crazy", 32);
     };
     this.match.onPhaseChange = (phase) => {
       if (phase === 2) {
         this.showAnnouncement("⚡ PHASE 2 — DOUBLE GONG VALUE!");
+        this.triggerCommentary("PHASE 2 DIMULAI! NILAI GONG BERLIPAT GANDA!", "excited", 20);
         this.activatePhase2();
       } else if (phase === 3) {
         this.showAnnouncement("🔥 OVERDRIVE — TRIPLE GONG!");
+        this.triggerCommentary("🔥 OVERDRIVE SHOWTIME! SEMUA POIN GONG DILIPAT TIGA!", "crazy", 35);
       }
     };
     this.match.onOverdrive = () => {
@@ -203,6 +234,8 @@ export class BouncebackEngine {
     this.match.onMatchEnd = (winner, scores) => {
       sfxGameOver();
       this.running = false;
+      const winTeam = winner === 0 ? "TEAM CYAN" : "TEAM CORAL";
+      this.triggerCommentary(`PELUIT AKHIR BERBUNYI! ${winTeam} KELUAR SEBAGAI JUARA!`, "crazy", 25);
       if (this.onMatchEnd) this.onMatchEnd(winner, scores);
     };
 
@@ -265,19 +298,58 @@ export class BouncebackEngine {
 
   private spawnEntities() {
     const halfL = C.ARENA_L * 0.5;
+    // 3v3 Official TV Broadcast Match Roster: 3 Cyan vs 3 Coral
     const spawnPositions = [
-      // Team 0 (cyan) — player + 4 bots (spacious spread across 28m width)
-      { x: 0, z: -halfL * 0.62, team: 0, isPlayer: true },
-      { x: -6.0, z: -halfL * 0.38, team: 0 },
-      { x: 6.0, z: -halfL * 0.38, team: 0 },
-      { x: -4.5, z: -halfL * 0.82, team: 0 },
-      { x: 4.5, z: -halfL * 0.82, team: 0 },
-      // Team 1 (coral) — 5 bots
-      { x: 0, z: halfL * 0.62, team: 1 },
-      { x: -6.0, z: halfL * 0.38, team: 1 },
-      { x: 6.0, z: halfL * 0.38, team: 1 },
-      { x: -4.5, z: halfL * 0.82, team: 1 },
-      { x: 4.5, z: halfL * 0.82, team: 1 },
+      // Team 0 (Cyan): YOU (#7), DJ BOUNCE (#1), NINJA BEAN (#2)
+      {
+        x: 0,
+        z: -halfL * 0.62,
+        team: 0,
+        isPlayer: true,
+        number: C.ROSTER_CYAN[0].number,
+        costume: C.ROSTER_CYAN[0].costume,
+      },
+      {
+        x: -6.5,
+        z: -halfL * 0.44,
+        team: 0,
+        isPlayer: false,
+        number: C.ROSTER_CYAN[1].number,
+        costume: C.ROSTER_CYAN[1].costume,
+      },
+      {
+        x: 6.5,
+        z: -halfL * 0.44,
+        team: 0,
+        isPlayer: false,
+        number: C.ROSTER_CYAN[2].number,
+        costume: C.ROSTER_CYAN[2].costume,
+      },
+      // Team 1 (Coral): REX CRUSH (#1), HOPPER MAD (#2), SHADY VIP (#3)
+      {
+        x: 0,
+        z: halfL * 0.62,
+        team: 1,
+        isPlayer: false,
+        number: C.ROSTER_CORAL[0].number,
+        costume: C.ROSTER_CORAL[0].costume,
+      },
+      {
+        x: -6.5,
+        z: halfL * 0.44,
+        team: 1,
+        isPlayer: false,
+        number: C.ROSTER_CORAL[1].number,
+        costume: C.ROSTER_CORAL[1].costume,
+      },
+      {
+        x: 6.5,
+        z: halfL * 0.44,
+        team: 1,
+        isPlayer: false,
+        number: C.ROSTER_CORAL[2].number,
+        costume: C.ROSTER_CORAL[2].costume,
+      },
     ];
 
     for (let i = 0; i < spawnPositions.length; i++) {
@@ -285,27 +357,11 @@ export class BouncebackEngine {
       const ent = new Entity(sp.x, sp.z, sp.team, sp.isPlayer || false);
       this.entities.push(ent);
 
-      // Create Fall Guy capsule mecha with team jersey & number
-      const squadNum = sp.isPlayer ? 7 : (sp.team === 0 ? i + 1 : i - 4);
-      const botCostumes = [
-        "crown",          // Player (Team 0 #7)
-        "dj_headphones",  // Team 0 #1
-        "pro_shades",     // Team 0 #2
-        "ninja_headband", // Team 0 #3
-        "propeller_hat",  // Team 0 #4
-        "dino_crest",     // Team 1 #1
-        "bunny_ears",     // Team 1 #2
-        "party_hat",      // Team 1 #3
-        "pro_shades",     // Team 1 #4
-        "dj_headphones",  // Team 1 #5
-      ];
-      const assignedCostume = sp.isPlayer ? "crown" : botCostumes[i % botCostumes.length];
-
       const mecha = generateMecha(THREE, {
         team: sp.team,
         isPlayer: !!sp.isPlayer,
-        number: squadNum,
-        costume: assignedCostume,
+        number: sp.number,
+        costume: sp.costume,
       });
 
       const desiredHeight = 1.6;
@@ -416,13 +472,30 @@ export class BouncebackEngine {
     this.announcementTimer = 2.5;
   }
 
+  public triggerCommentary(
+    text: string,
+    mood: "normal" | "excited" | "shocked" | "crazy" = "excited",
+    hypeDelta = 10
+  ) {
+    this.commentaryText = text;
+    this.commentaryMood = mood;
+    this.commentaryTimer = 3.8;
+    this.hypeMeter = Math.min(100, Math.max(5, this.hypeMeter + hypeDelta));
+  }
+
   startMatch() {
+    if (this.running) return;
     resumeAudio();
     sfxMatchStart();
     startBGM();
     this.match.start();
     this.running = true;
     this.lastTime = performance.now();
+    this.triggerCommentary(
+      "PERTANDINGAN 3v3 RESMI DIMULAI! HAJAR MEREKA KE GONG!",
+      "excited",
+      15
+    );
     this.loop(this.lastTime);
   }
 
@@ -588,16 +661,25 @@ export class BouncebackEngine {
         sfxBombExplode();
         this.juice.trigger("bomb_explode");
         this.showAnnouncement("💣 BOOOM!");
+        this.triggerCommentary("LEDAKAN BOM SUPER! SELURUH ARENA BERGONCANG!", "shocked", 18);
+        break;
+      case "banana_slip":
+        sfxBananaSlip();
+        this.juice.trigger("banana_slip");
+        this.showAnnouncement("🍌 SLIP!");
+        this.triggerCommentary("TERPELESET PISANG! KOCAK BANGET JATUHNYA!", "normal", 8);
         break;
       case "shrink":
         sfxShrink();
         this.juice.trigger("shrink");
         this.showAnnouncement("🩳 SHRINK!");
+        this.triggerCommentary("BADANNYA MENGECIL SEPERTI SEMUT! TARGET EMPUK!", "excited", 12);
         break;
       case "onepunch":
         sfxOnePunch();
         this.juice.trigger("onepunch", data);
         this.showAnnouncement("💥 ONE PUNCH!!");
+        this.triggerCommentary("JURUS SATU PUKULAN AKTIF! HANCUR SUDAH SEMUANYA!!", "crazy", 45);
         break;
       case "whiff":
         sfxWhiff();
@@ -633,6 +715,17 @@ export class BouncebackEngine {
           const d = data as any;
           if (type === "punch") {
             sfxPunch();
+            const punchPhrases = [
+              "PUKULAN MAUT! Lawan terpental jauh!",
+              "ADUHAI! Bunyi gubraknya terdengar sampai ke ruang juri!",
+              "HOOK TELAK! Bobby sampai loncat dari kursi!",
+              "BOOOM! Tembakan pukulan meluncur deras!",
+            ];
+            this.triggerCommentary(
+              punchPhrases[Math.floor(Math.random() * punchPhrases.length)],
+              "excited",
+              8
+            );
             this.juice.trigger("punch", {
               x: d?.x ?? this.entities[0].x,
               y: 1.2,
@@ -764,6 +857,9 @@ export class BouncebackEngine {
                   z: ent.z,
                   text: "BOING!",
                 });
+                if (Math.random() < 0.45) {
+                  this.triggerCommentary("TERPENTAL SWEEPER ARM! Dia melayang bebas tanpa tiket!", "shocked", 12);
+                }
               }
             }
           }
@@ -1035,7 +1131,23 @@ export class BouncebackEngine {
       }
     }
 
-    // Push game state to React (including player skill)
+    // Dynamic Hype Meter decay and idle commentary cycling
+    const totalScore = this.match.scores[0] + this.match.scores[1];
+    const minHype = Math.min(85, 15 + totalScore * 12);
+    if (this.hypeMeter > minHype) {
+      this.hypeMeter = Math.max(minHype, this.hypeMeter - dt * 2.2);
+    } else if (this.hypeMeter < minHype) {
+      this.hypeMeter = Math.min(minHype, this.hypeMeter + dt * 4.5);
+    }
+
+    this.commentaryTimer -= dt;
+    if (this.commentaryTimer <= 0) {
+      this.commentaryTimer = 4.5 + Math.random() * 3.5;
+      const idle = this.idleCommentaryList[Math.floor(Math.random() * this.idleCommentaryList.length)];
+      this.triggerCommentary(idle.text, idle.mood, 0);
+    }
+
+    // Push game state to React (including player skill & TV commentary)
     const pSlot = this.skillSlots[0];
     this.onStateChange({
       timer: this.match.getTimerDisplay(),
@@ -1050,6 +1162,9 @@ export class BouncebackEngine {
       playerSkillName: pSlot ? SKILL_NAMES[pSlot.type] : "",
       playerSkillIcon: pSlot ? SKILL_ICONS[pSlot.type] : "",
       cameraMode: this.cameraMode,
+      hypeMeter: this.hypeMeter,
+      commentaryText: this.commentaryText,
+      commentaryMood: this.commentaryMood,
     });
 
     this.renderer.render(this.scene, this.camera);

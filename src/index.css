@@ -723,7 +723,7 @@ body,
 /* ─── Skill Slot HUD ─── */
 .skill-slot {
   position: absolute;
-  top: 72px;
+  top: 195px;
   right: 16px;
   display: flex;
   flex-direction: column;
@@ -850,9 +850,9 @@ body,
 .cam-toggle-btn {
   position: absolute;
   top: 14px;
-  right: 14px;
+  left: 58px;
   z-index: 30;
-  padding: 6px 14px;
+  padding: 6px 12px;
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.25);
   background: rgba(15, 23, 42, 0.75);
@@ -860,12 +860,12 @@ body,
   color: #f8fafc;
   font-family: var(--font-head);
   font-weight: 800;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   letter-spacing: 0.05em;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   transition: all 0.2s ease;
 }
@@ -876,6 +876,38 @@ body,
   transform: translateY(-1px);
 }
 .cam-toggle-btn:active {
+  transform: scale(0.96);
+}
+
+/* ─── TV Roster Toggle Button ─── */
+.roster-toggle-btn {
+  position: absolute;
+  top: 14px;
+  left: 178px;
+  z-index: 30;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 209, 102, 0.4);
+  background: rgba(255, 209, 102, 0.15);
+  backdrop-filter: blur(8px);
+  color: #ffd166;
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 0.76rem;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+.roster-toggle-btn:hover {
+  background: rgba(255, 209, 102, 0.28);
+  border-color: #ffd166;
+  transform: translateY(-1px);
+}
+.roster-toggle-btn:active {
   transform: scale(0.96);
 }
 
@@ -1084,5 +1116,867 @@ body,
 @media (hover: none) {
   .kb-hints {
     display: none;
+  }
+}
+
+/* ════════════════════════════════════════════
+   BOUNCE TV — 3v3 BROADCAST INTRO CUTSCENE
+   ════════════════════════════════════════════ */
+.tv-intro-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  background: radial-gradient(circle at center, rgba(17, 24, 39, 0.88) 0%, rgba(5, 8, 16, 0.98) 100%);
+  overflow: hidden;
+  user-select: none;
+  animation: tvFadeIn 0.3s ease-out;
+}
+
+/* CRT Scanlines & Vignette */
+.tv-scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.22) 0px,
+    rgba(0, 0, 0, 0.22) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  z-index: 2;
+  opacity: 0.65;
+}
+
+.tv-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.9), inset 0 0 40px rgba(39, 229, 255, 0.15);
+  z-index: 2;
+}
+
+/* TV Broadcast Header Bar */
+.tv-header-bar {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  background: linear-gradient(180deg, rgba(10, 14, 26, 0.95) 0%, rgba(10, 14, 26, 0.4) 100%);
+  border-bottom: 2px solid rgba(255, 209, 102, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.tv-live-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 0, 85, 0.2);
+  border: 1.5px solid #ff0055;
+  padding: 4px 12px;
+  border-radius: 20px;
+  box-shadow: 0 0 14px rgba(255, 0, 85, 0.4);
+}
+
+.tv-live-badge .live-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ff0055;
+  box-shadow: 0 0 10px #ff0055;
+  animation: pulse-live 1s infinite alternate;
+}
+
+.tv-live-badge .live-text {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  color: #fff;
+}
+
+.tv-channel-title {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 1.05rem;
+  letter-spacing: 0.06em;
+  color: #ffd166;
+  text-shadow: 0 0 12px rgba(255, 209, 102, 0.6);
+  text-transform: uppercase;
+}
+
+.tv-skip-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  padding: 6px 14px;
+  border-radius: 20px;
+  color: #fff;
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tv-skip-btn:hover {
+  background: #ffd166;
+  color: #111;
+  border-color: #ffd166;
+  box-shadow: 0 0 16px rgba(255, 209, 102, 0.7);
+  transform: translateY(-1px);
+}
+.tv-skip-btn .key-hint {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
+/* Phase 1: Opener Card */
+.tv-opener-banner {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  margin: auto 0;
+  max-width: 600px;
+  padding: 24px;
+}
+
+.tv-badge-pill {
+  display: inline-block;
+  padding: 4px 16px;
+  background: rgba(255, 209, 102, 0.2);
+  border: 1px solid #ffd166;
+  color: #ffd166;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  border-radius: 30px;
+  margin-bottom: 12px;
+}
+
+.tv-hero-title {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  line-height: 1.1;
+  color: #fff;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), 0 0 30px rgba(39, 229, 255, 0.4);
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.tv-hero-subtitle {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: clamp(0.9rem, 2.2vw, 1.25rem);
+  color: #38bdf8;
+  letter-spacing: 0.1em;
+  margin-top: 8px;
+}
+
+/* Phase 2 & 4: Roster Showcase */
+.tv-roster-showcase {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 1000px;
+  margin: auto 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 0 20px;
+}
+
+.team-banner {
+  text-align: center;
+  padding: 8px 24px;
+  border-radius: 12px;
+}
+.team-banner.cyan {
+  background: linear-gradient(135deg, rgba(39, 229, 255, 0.2) 0%, rgba(39, 229, 255, 0.04) 100%);
+  border: 1.5px solid rgba(39, 229, 255, 0.5);
+  box-shadow: 0 0 30px rgba(39, 229, 255, 0.25);
+}
+.team-banner.coral {
+  background: linear-gradient(135deg, rgba(255, 82, 104, 0.2) 0%, rgba(255, 82, 104, 0.04) 100%);
+  border: 1.5px solid rgba(255, 82, 104, 0.5);
+  box-shadow: 0 0 30px rgba(255, 82, 104, 0.25);
+}
+
+.team-banner .team-tag {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.team-banner.cyan .team-tag {
+  color: #27e5ff;
+}
+.team-banner.coral .team-tag {
+  color: #ff5268;
+}
+
+.team-banner .team-name {
+  font-family: var(--font-head);
+  font-size: clamp(1.4rem, 3.2vw, 2.2rem);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  margin: 2px 0 0;
+  color: #fff;
+}
+.team-banner .team-slogan {
+  font-size: 0.84rem;
+  color: var(--color-bb-muted);
+  margin-top: 2px;
+}
+
+.fighter-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  width: 100%;
+}
+
+.fighter-card {
+  position: relative;
+  background: rgba(15, 23, 42, 0.85);
+  border-radius: 16px;
+  padding: 16px;
+  border: 2px solid;
+  backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s;
+}
+.fighter-card.cyan {
+  border-color: rgba(39, 229, 255, 0.6);
+  box-shadow: 0 0 25px rgba(39, 229, 255, 0.25);
+}
+.fighter-card.coral {
+  border-color: rgba(255, 82, 104, 0.6);
+  box-shadow: 0 0 25px rgba(255, 82, 104, 0.25);
+}
+
+.fighter-card .card-top {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+.fighter-card.cyan .fighter-jersey {
+  color: #27e5ff;
+}
+.fighter-card.coral .fighter-jersey {
+  color: #ff5268;
+}
+.fighter-card .fighter-badge {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 8px;
+  border-radius: 10px;
+  color: #ffd166;
+}
+
+.card-avatar-wrap {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 4px 0 10px;
+}
+.card-avatar-halo {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  filter: blur(8px);
+}
+.fighter-card.cyan .card-avatar-halo {
+  background: rgba(39, 229, 255, 0.4);
+}
+.fighter-card.coral .card-avatar-halo {
+  background: rgba(255, 82, 104, 0.4);
+}
+.card-avatar-icon {
+  position: relative;
+  font-size: 2.8rem;
+  z-index: 2;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+}
+
+.card-info {
+  width: 100%;
+  margin-bottom: 12px;
+}
+.card-name {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 1.15rem;
+  color: #fff;
+  margin: 0;
+}
+.card-title {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  margin: 2px 0 6px;
+}
+.card-quote {
+  font-size: 0.75rem;
+  font-style: italic;
+  color: #ffd166;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 6px 8px;
+  border-radius: 8px;
+  line-height: 1.3;
+}
+
+.card-stats {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 6px 8px;
+  border-radius: 8px;
+}
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #cbd5e1;
+}
+.stat-row .stars {
+  color: #ffd166;
+  letter-spacing: 2px;
+}
+
+/* Phase 3: VS Clash */
+.tv-vs-clash {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: auto 0;
+}
+.vs-emblem-wrap {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.vs-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 8px dashed #ffd166;
+  animation: spinSlow 6s linear infinite;
+  box-shadow: 0 0 60px rgba(255, 209, 102, 0.6), inset 0 0 40px rgba(255, 82, 104, 0.5);
+}
+.vs-text {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 6rem;
+  line-height: 1;
+  margin: 0;
+  background: linear-gradient(180deg, #fff 0%, #ffd166 40%, #ff5268 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 25px rgba(255, 82, 104, 0.8));
+  letter-spacing: 0.05em;
+}
+.vs-caption {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 1.3rem;
+  letter-spacing: 0.12em;
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+  margin-top: 14px;
+}
+
+/* Phase 5: Dramatic Countdown */
+.tv-countdown-wrap {
+  position: relative;
+  z-index: 10;
+  margin: auto 0;
+  text-align: center;
+}
+.countdown-number {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.countdown-number .num {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: clamp(7rem, 18vw, 13rem);
+  line-height: 0.9;
+  color: #ffd166;
+  text-shadow: 0 0 50px rgba(255, 209, 102, 0.8), 0 0 90px rgba(255, 82, 104, 0.6);
+}
+.countdown-number .sub {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  letter-spacing: 0.1em;
+  color: #fff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
+  margin-top: 8px;
+}
+.countdown-go {
+  text-align: center;
+}
+.countdown-go .go-text {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: clamp(2.5rem, 6.5vw, 5.5rem);
+  color: #06d6a0;
+  text-shadow: 0 0 40px rgba(6, 214, 160, 0.8), 0 0 80px rgba(39, 229, 255, 0.6);
+  letter-spacing: 0.04em;
+}
+
+/* TV Ticker Bar */
+.tv-ticker-bar {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  background: rgba(10, 14, 26, 0.95);
+  border-top: 2px solid rgba(39, 229, 255, 0.3);
+  padding: 8px 16px;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  backdrop-filter: blur(10px);
+}
+.ticker-label {
+  background: #ff0055;
+  color: #fff;
+  font-weight: 900;
+  padding: 3px 10px;
+  border-radius: 4px;
+  margin-right: 14px;
+  white-space: nowrap;
+}
+.ticker-content {
+  overflow: hidden;
+  white-space: nowrap;
+  width: 100%;
+}
+.ticker-content span {
+  display: inline-block;
+  animation: tickerScroll 24s linear infinite;
+  color: #cbd5e1;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+/* ════════════════════════════════════════════
+   BOUNCE TV — LIVE COMMENTARY DESK & HYPE METER
+   ════════════════════════════════════════════ */
+.tv-commentary-desk {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 28;
+  width: 310px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(10, 14, 26, 0.95) 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: 10px 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  user-select: none;
+  transition: all 0.25s ease;
+}
+
+.tv-commentary-desk.tier-low {
+  border-color: rgba(6, 214, 160, 0.4);
+}
+.tv-commentary-desk.tier-mid {
+  border-color: rgba(255, 209, 102, 0.6);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 209, 102, 0.2);
+}
+.tv-commentary-desk.tier-high {
+  border-color: rgba(255, 119, 0, 0.7);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 25px rgba(255, 119, 0, 0.35);
+}
+.tv-commentary-desk.tier-max {
+  border-color: #ff0055;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 35px rgba(255, 0, 85, 0.5);
+  animation: desk-glow 0.8s ease-in-out infinite alternate;
+}
+.tv-commentary-desk.crazy-mode {
+  animation: desk-vibrate 0.18s ease-in-out infinite alternate;
+}
+
+.desk-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.on-air-pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 0, 85, 0.18);
+  border: 1px solid #ff0055;
+  padding: 2px 7px;
+  border-radius: 12px;
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 0.64rem;
+  letter-spacing: 0.06em;
+  color: #fff;
+}
+.on-air-lamp {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ff0055;
+  box-shadow: 0 0 8px #ff0055;
+  animation: pulse-live 0.8s infinite alternate;
+}
+.hype-tier-tag {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 8px currentColor;
+}
+
+/* Hype Meter Bar */
+.hype-meter-wrap {
+  margin-bottom: 8px;
+}
+.hype-meter-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  color: #94a3b8;
+  margin-bottom: 3px;
+  font-weight: 700;
+}
+.hype-value {
+  color: #fff;
+  font-weight: 800;
+}
+.hype-meter-track {
+  width: 100%;
+  height: 9px;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1px;
+}
+.hype-meter-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.3s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+.hype-stripes {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 6px,
+    rgba(255, 255, 255, 0.3) 6px,
+    rgba(255, 255, 255, 0.3) 12px
+  );
+  animation: stripes-move 1s linear infinite;
+}
+
+/* Desk Body: Avatars + Live Speech Bubble */
+.desk-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.commentator-avatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 52px;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.commentator-avatar.speaking {
+  transform: scale(1.08);
+}
+.commentator-avatar.mood-crazy {
+  animation: commentator-jump 0.3s ease-in-out infinite alternate;
+}
+
+.avatar-frame {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(30, 41, 59, 0.8);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+.commentator-avatar.bobby .avatar-frame {
+  border-color: #ffd166;
+}
+.commentator-avatar.clang .avatar-frame {
+  border-color: #8338ec;
+}
+.avatar-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.mic-prop,
+.note-prop {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  font-size: 0.9rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+.commentator-name {
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 0.56rem;
+  letter-spacing: 0.05em;
+  color: #cbd5e1;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+/* Speech Bubble */
+.commentary-bubble-wrap {
+  flex: 1;
+  min-width: 0;
+}
+.speech-bubble {
+  position: relative;
+  background: rgba(248, 250, 252, 0.96);
+  color: #0f172a;
+  border-radius: 10px;
+  padding: 6px 9px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: pop-bubble 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.speech-bubble.speaker-bobby {
+  border-left: 3px solid #ffd166;
+}
+.speech-bubble.speaker-clang {
+  border-right: 3px solid #8338ec;
+}
+
+.bubble-speaker-tag {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 0.62rem;
+  letter-spacing: 0.05em;
+  color: #0284c7;
+  margin-bottom: 2px;
+}
+.bubble-text {
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 0;
+  color: #0f172a;
+  word-break: break-word;
+}
+
+/* ════════════════════════════════════════════
+   TV BROADCAST ANIMATION KEYFRAMES
+   ════════════════════════════════════════════ */
+@keyframes tvFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-live {
+  0% {
+    opacity: 0.4;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes tickerScroll {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes pop-bubble {
+  0% {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes card-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes zoom-beat {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes scale-bang {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes desk-vibrate {
+  0% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(-1.5px, 1px);
+  }
+  50% {
+    transform: translate(1px, -1px);
+  }
+  75% {
+    transform: translate(-1px, -0.5px);
+  }
+  100% {
+    transform: translate(1.5px, 0.5px);
+  }
+}
+
+@keyframes desk-glow {
+  0% {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 0, 85, 0.3);
+  }
+  100% {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 45px rgba(255, 0, 85, 0.7);
+  }
+}
+
+@keyframes commentator-jump {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes stripes-move {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 24px 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .fighter-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    max-height: 52vh;
+    overflow-y: auto;
+  }
+  .tv-commentary-desk {
+    width: 250px;
+    top: 60px;
+    right: 10px;
+    padding: 8px 10px;
+  }
+  .commentator-avatar {
+    width: 42px;
+  }
+  .avatar-frame {
+    width: 38px;
+    height: 38px;
+  }
+  .bubble-text {
+    font-size: 0.66rem;
+  }
+  .skill-slot {
+    top: auto;
+    bottom: 85px;
+    right: 14px;
   }
 }

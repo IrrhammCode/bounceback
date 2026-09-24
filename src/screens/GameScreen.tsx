@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { BouncebackEngine, type GameState } from "../game/engine";
 import { SkillType } from "../game/skills";
+import TVIntroOverlay from "../components/TVIntroOverlay";
+import TVCommentaryBox from "../components/TVCommentaryBox";
 
 interface GameScreenProps {
   onMatchEnd: (winner: number, scores: [number, number]) => void;
@@ -20,15 +22,24 @@ const initialState: GameState = {
   playerSkillName: "",
   playerSkillIcon: "",
   cameraMode: "third_wide",
+  hypeMeter: 20,
+  commentaryText: "Selamat datang di BOUNCE TV 3v3 ARENA! Hajar gong lawan sekarang!",
+  commentaryMood: "normal",
 };
 
 export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<BouncebackEngine | null>(null);
   const [gameState, setGameState] = useState<GameState>(initialState);
+  const [showIntro, setShowIntro] = useState(true);
 
   const handleStateChange = useCallback((state: GameState) => {
     setGameState(state);
+  }, []);
+
+  const handleIntroDone = useCallback(() => {
+    setShowIntro(false);
+    engineRef.current?.startMatch();
   }, []);
 
   useEffect(() => {
@@ -42,9 +53,6 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
     engineRef.current = engine;
 
     engine.init();
-    // Auto-start match immediately — no second overlay.
-    // jam.mjs expects #startb to disappear after tap and gameplay to begin.
-    engine.startMatch();
 
     return () => {
       engine.destroy();
@@ -71,6 +79,14 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
       {/* Three.js Canvas */}
       <canvas ref={canvasRef} className="game-canvas" />
 
+      {/* 3v3 TV Broadcast Match Intro Cutscene Overlay */}
+      {showIntro && (
+        <TVIntroOverlay
+          onComplete={handleIntroDone}
+          onSkip={handleIntroDone}
+        />
+      )}
+
       {/* HUD Overlay — always visible during match */}
       <div className="hud">
         {/* Exit button */}
@@ -90,6 +106,25 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
               ? "🎥 3RD CLOSE"
               : "🎥 3RD WIDE"}
         </button>
+
+        {/* TV Roster Showcase button */}
+        <button
+          className="roster-toggle-btn"
+          onClick={() => setShowIntro(true)}
+          title="Show 3v3 TV Roster Intro"
+        >
+          📺 ROSTER
+        </button>
+
+        {/* TV Game Show Live Commentary & Hype Meter Desk */}
+        {!showIntro && (
+          <TVCommentaryBox
+            hypeMeter={gameState.hypeMeter}
+            commentaryText={gameState.commentaryText}
+            commentaryMood={gameState.commentaryMood}
+            scores={gameState.scores}
+          />
+        )}
 
         {/* Top Bar: Scoreboard + Timer */}
         <div className="hud-top">
