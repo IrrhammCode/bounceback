@@ -736,18 +736,26 @@ export class BouncebackEngine {
               const threshold = arm.armRadius + ent.radius;
 
               if (Math.abs(perp) < threshold) {
-                const sign = perp >= 0 ? 1 : -1;
-                ent.x = arm.center.x + proj * cosA + nx * sign * (threshold + 0.05);
-                ent.z = arm.center.z + proj * sinA + nz * sign * (threshold + 0.05);
+                if (ent.immuneTimer > 0) continue; // Respect immunity window!
+
+                // Calculate outward direction away from sweeper hub so player escapes!
+                const outDist = Math.hypot(dx, dz) || 1;
+                const outNx = dx / outDist;
+                const outNz = dz / outDist;
 
                 const armLinearSpeed = Math.abs(arm.rotSpeed) * Math.max(0.6, Math.abs(proj));
-                const pushSpeed = Math.max(13.0, armLinearSpeed * 2.4);
+                const pushSpeed = Math.max(16.0, armLinearSpeed * 2.8);
 
-                ent.vx = nx * (arm.rotSpeed > 0 ? 1 : -1) * pushSpeed * (proj >= 0 ? 1 : -1);
-                ent.vz = nz * (arm.rotSpeed > 0 ? 1 : -1) * pushSpeed * (proj >= 0 ? 1 : -1);
+                ent.vx = (nx * (arm.rotSpeed > 0 ? 1 : -1) * 0.6 + outNx * 0.8) * pushSpeed;
+                ent.vz = (nz * (arm.rotSpeed > 0 ? 1 : -1) * 0.6 + outNz * 0.8) * pushSpeed;
+                ent.x += outNx * 0.8;
+                ent.z += outNz * 0.8;
+
                 ent.launched = true;
+                ent.launchTimer = 0; // Fresh launch timer
                 ent.launchSpeed = Math.sqrt(ent.vx * ent.vx + ent.vz * ent.vz);
-                ent.bounceCount++;
+                ent.bounceCount = 1;
+                ent.immuneTimer = 1.4; // 1.4s immunity prevents sweeper multi-hit juggle!
 
                 sfxBoing();
                 this.juice.trigger("bumper", {
@@ -804,10 +812,10 @@ export class BouncebackEngine {
 
         // Visual bounce & comedic tumble on Y when launched
         if (ent.launched) {
-          // High dramatic over-the-top parabolic flight arc (soaring 3.2m - 4.5m in the sky straight to the gong!)
-          const launchDuration = 1.35;
+          // High dramatic over-the-top parabolic flight arc (lasts ~2.4s, hard cap 3.0s max)
+          const launchDuration = 2.4;
           const tProgress = Math.min(1.0, (ent.launchTimer || 0) / launchDuration);
-          const flightArc = Math.sin(tProgress * Math.PI) * (3.2 + Math.min((ent.bounceCount || 0) * 0.5, 1.8));
+          const flightArc = Math.sin(tProgress * Math.PI) * (3.0 + Math.min((ent.bounceCount || 0) * 0.4, 1.2));
           ent.mesh.position.y = groundH + footOffset + flightArc;
 
           // Over-the-top wild 360° backflips & cartwheels (pure cartoon comedy!)

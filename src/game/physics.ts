@@ -107,20 +107,21 @@ export function updatePhysics(
     e.x += e.vx * dt;
     e.z += e.vz * dt;
 
-    // Friction & Launch Auto-Recovery (Soar long distance towards the Giant Gong!)
+    // Friction & Launch Auto-Recovery (Strictly capped at max 3.0 seconds!)
     if (e.launched) {
       e.launchTimer = (e.launchTimer || 0) + dt;
       const decay = Math.pow(C.LAUNCH_FRICTION, dt * 60);
       e.vx *= decay;
       e.vz *= decay;
       const spd = Math.sqrt(e.vx * e.vx + e.vz * e.vz);
-      // Auto-recover after max 1.35s or when speed drops below threshold
-      if (spd < C.LAUNCH_THRESHOLD || e.launchTimer > 1.35) {
+      // Auto-recover after max 3.0s, or when speed drops below threshold after 0.8s
+      if (e.launchTimer >= 3.0 || (e.launchTimer > 0.8 && spd < C.LAUNCH_THRESHOLD)) {
         e.launched = false;
         e.bounceCount = 0;
         e.launchSpeed = 0;
         e.launchTimer = 0;
         e.stunTimer = 0;
+        e.immuneTimer = 0.8; // Brief landing grace period
       }
     } else {
       e.launchTimer = 0;
@@ -151,6 +152,7 @@ export function updatePhysics(
 
     // Bumper collisions
     for (const b of bumpers) {
+      if (e.immuneTimer > 0) continue; // Respect immunity window
       const bx = b.x,
         bz = b.z,
         br = C.BUMPER_RADIUS + e.radius;
@@ -161,18 +163,14 @@ export function updatePhysics(
         const d = Math.sqrt(d2);
         const bnx = ddx / d,
           bnz = ddz / d;
-        e.x = bx + bnx * br;
-        e.z = bz + bnz * br;
+        e.x = bx + bnx * (br + 0.1);
+        e.z = bz + bnz * (br + 0.1);
         const dot = e.vx * bnx + e.vz * bnz;
         e.vx = (e.vx - 2 * dot * bnx) * C.BUMPER_MULT;
         e.vz = (e.vz - 2 * dot * bnz) * C.BUMPER_MULT;
-        if (e.launched) {
-          e.bounceCount++;
-          if (e.bounceCount >= 3 && e.immuneTimer <= 0) {
-            e.immuneTimer = C.IMMUNITY_DUR;
-          }
-          b.hitFlash = 1.0;
-        }
+        e.bounceCount = Math.min((e.bounceCount || 0) + 1, 3);
+        e.immuneTimer = 0.45; // 0.45s immunity so adjacent bumpers don't ping-pong every frame
+        b.hitFlash = 1.0;
       }
     }
 

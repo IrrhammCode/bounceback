@@ -71,6 +71,8 @@ export class JuiceSystem {
   private shockwaves: ShockwaveRing3D[] = [];
   private sparks: Spark3D[] = [];
   private customFX: { update: (dt: number) => boolean; dispose: () => void }[] = [];
+  private lastPopupTimes = new Map<string, number>();
+  private lastShockwaveTimes = new Map<string, number>();
 
   // Canvas Texture Cache
   private textureCache = new Map<string, THREE.CanvasTexture>();
@@ -287,6 +289,13 @@ export class JuiceSystem {
   spawnComicPopup(text: string, x: number, y: number, z: number, style: string = "gold") {
     if (!this.scene) return;
 
+    // Debounce to prevent crazy 30x spam stacking at the exact same location
+    const now = performance.now();
+    const cellKey = `${text}_${Math.round(x / 2.5)}_${Math.round(z / 2.5)}`;
+    const lastT = this.lastPopupTimes.get(cellKey) || 0;
+    if (now - lastT < 320) return;
+    this.lastPopupTimes.set(cellKey, now);
+
     const cacheKey = `${text}_${style}`;
     let tex = this.textureCache.get(cacheKey);
     if (!tex) {
@@ -415,6 +424,13 @@ export class JuiceSystem {
   // ─── Expanding Holographic Shockwave Rings ───
   spawnShockwave(x: number, y: number, z: number, color = 0x38bdf8, maxScale = 2.5) {
     if (!this.scene) return;
+
+    // Debounce overlapping shockwaves at same location
+    const now = performance.now();
+    const cellKey = `${Math.round(x / 2.5)}_${Math.round(z / 2.5)}`;
+    const lastT = this.lastShockwaveTimes.get(cellKey) || 0;
+    if (now - lastT < 220) return;
+    this.lastShockwaveTimes.set(cellKey, now);
 
     const mat = new THREE.MeshBasicMaterial({
       color,
@@ -893,6 +909,8 @@ export class JuiceSystem {
     this.shockwaves = [];
     this.sparks = [];
     this.customFX = [];
+    this.lastPopupTimes.clear();
+    this.lastShockwaveTimes.clear();
     this.textureCache.forEach((tex) => tex.dispose());
     this.textureCache.clear();
     this.ringGeo.dispose();
