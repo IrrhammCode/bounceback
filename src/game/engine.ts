@@ -51,8 +51,7 @@ import {
 import generateMecha from "../assets/toy_mecha.js";
 // @ts-ignore
 import generateBumper from "../assets/pinball_bumper.js";
-// @ts-ignore
-import generateGate from "../assets/energy_gate.js";
+import { createGiantGong, type GongController } from "./gong";
 import { createFallGuysArena, type ArenaController } from "./fallguysArena";
 import { getArenaHeight, getArenaSlope } from "./arenaHeight";
 
@@ -84,6 +83,7 @@ export class BouncebackEngine {
   private gates: GateData[] = [];
   private bumperMeshes: THREE.Object3D[] = [];
   private gateMeshes: THREE.Object3D[] = [];
+  private gongs: GongController[] = [];
   private player!: PlayerController;
   private juice!: JuiceSystem;
   private match!: Match;
@@ -173,21 +173,26 @@ export class BouncebackEngine {
     this.match.onGoal = (team, points, combo, bounces) => {
       sfxGoal();
       if (combo > 1) sfxCombo(combo);
-      const goalZ = team === 0 ? C.ARENA_L * 0.5 : -C.ARENA_L * 0.5;
-      this.juice.trigger("goal", { team, x: 0, y: 1.5, z: goalZ });
+      const defTeam = 1 - team;
+      // Trigger violent cartoon pendulum swing on the defending team's gong that got struck!
+      const struckGong = this.gongs.find((g) => g.team === defTeam);
+      if (struckGong) struckGong.hit();
+
+      const goalZ = defTeam === 0 ? -C.ARENA_L * 0.5 + 2.2 : C.ARENA_L * 0.5 - 2.2;
+      this.juice.trigger("gong", { team, x: 0, y: 3.0, z: goalZ });
       this.arenaController?.onGoalCelebration(team);
       const teamName = team === 0 ? "CYAN" : "CORAL";
-      let txt = `${teamName} +${points}!`;
+      let txt = `🔔 ${teamName} GONG SCORE +${points}!`;
       if (bounces >= 2) txt += ` ${bounces}x BOUNCE!`;
       if (combo > 1) txt += ` COMBO x${combo}!`;
       this.showAnnouncement(txt);
     };
     this.match.onPhaseChange = (phase) => {
       if (phase === 2) {
-        this.showAnnouncement("⚡ PHASE 2 — DOUBLE GATE!");
+        this.showAnnouncement("⚡ PHASE 2 — DOUBLE GONG VALUE!");
         this.activatePhase2();
       } else if (phase === 3) {
-        this.showAnnouncement("🔥 OVERDRIVE!");
+        this.showAnnouncement("🔥 OVERDRIVE — TRIPLE GONG!");
       }
     };
     this.match.onOverdrive = () => {
@@ -362,55 +367,36 @@ export class BouncebackEngine {
 
   private spawnGates() {
     const halfL = C.ARENA_L * 0.5;
-    // 4 gates: 2 per team (on opposite ends of spacious 54m court)
-    const gateConfigs = [
-      // Team 0 gates (coral scores here — at cyan end)
-      { x: -6.5, z: -halfL + 1.2, team: 0, axis: "z" as const, mult: 1 },
-      { x: 6.5, z: -halfL + 1.2, team: 0, axis: "z" as const, mult: 1 },
-      // Team 1 gates (cyan scores here — at coral end)
-      { x: -6.5, z: halfL - 1.2, team: 1, axis: "z" as const, mult: 1 },
-      { x: 6.5, z: halfL - 1.2, team: 1, axis: "z" as const, mult: 1 },
+    // 2 Monumental Battle Gongs at the center of each goal end zone
+    const gongConfigs = [
+      // Team 0 Gong (Cyan defending — coral scores here)
+      { x: 0, z: -halfL + 2.2, team: 0, mult: 1 },
+      // Team 1 Gong (Coral defending — cyan scores here)
+      { x: 0, z: halfL - 2.2, team: 1, mult: 1 },
     ];
 
-    for (const gc of gateConfigs) {
+    for (const gc of gongConfigs) {
       const gData: GateData = {
         x: gc.x,
         z: gc.z,
         team: gc.team,
-        axis: gc.axis,
+        axis: "z",
         multiplier: gc.mult,
         active: true,
       };
       this.gates.push(gData);
 
-      const mesh = generateGate(THREE);
-      const desiredH = 4.0;
-      const box = new THREE.Box3().setFromObject(mesh);
-      const h = box.max.y - box.min.y;
-      mesh.scale.setScalar(desiredH / (h || 1));
-      const gH = getArenaHeight(gc.x, gc.z);
-      mesh.position.set(gc.x, gH, gc.z);
-      // Color gate by defending team
-      mesh.traverse((child: THREE.Object3D) => {
-        const m = child as THREE.Mesh;
-        if (!m.isMesh) return;
-        const mat = m.material as any;
-        if (mat && mat.color && mat.color.getHex() === 0xffd166) {
-          m.material = mat.clone();
-          (m.material as any).color.setHex(
-            gc.team === 0 ? C.TEAM_CYAN : C.TEAM_CORAL
-          );
-        }
-      });
-      this.gateMeshes.push(mesh);
-      this.scene.add(mesh);
+      const gongCtrl = createGiantGong(THREE, gc.team, gc.x, gc.z);
+      this.gongs.push(gongCtrl);
+      this.gateMeshes.push(gongCtrl.mesh);
+      this.scene.add(gongCtrl.mesh);
     }
   }
 
   private activatePhase2() {
-    // Make one gate per team double-value
+    // Make gongs double-value
     if (this.gates[0]) this.gates[0].multiplier = C.GATE_SCORE_2X;
-    if (this.gates[2]) this.gates[2].multiplier = C.GATE_SCORE_2X;
+    if (this.gates[1]) this.gates[1].multiplier = C.GATE_SCORE_2X;
     // Move some bumpers
     if (this.bumpers[2]) {
       this.bumpers[2].x = -3;
@@ -419,7 +405,7 @@ export class BouncebackEngine {
   }
 
   private activateOverdrive() {
-    // All gates triple value
+    // All gongs triple value
     for (const g of this.gates) {
       g.multiplier = C.GATE_SCORE_3X;
     }
@@ -784,6 +770,11 @@ export class BouncebackEngine {
       this.match.update(dt);
     }
 
+    // Update Giant Battle Gongs (pendulum swing physics)
+    for (const gong of this.gongs) {
+      gong.update(dt);
+    }
+
     // Juice
     this.juice.update(dt);
 
@@ -813,10 +804,10 @@ export class BouncebackEngine {
 
         // Visual bounce & comedic tumble on Y when launched
         if (ent.launched) {
-          // High dramatic over-the-top parabolic flight arc (soaring 2.8m - 3.8m in the sky!)
-          const launchDuration = 0.95;
+          // High dramatic over-the-top parabolic flight arc (soaring 3.2m - 4.5m in the sky straight to the gong!)
+          const launchDuration = 1.35;
           const tProgress = Math.min(1.0, (ent.launchTimer || 0) / launchDuration);
-          const flightArc = Math.sin(tProgress * Math.PI) * (2.8 + Math.min((ent.bounceCount || 0) * 0.45, 1.4));
+          const flightArc = Math.sin(tProgress * Math.PI) * (3.2 + Math.min((ent.bounceCount || 0) * 0.5, 1.8));
           ent.mesh.position.y = groundH + footOffset + flightArc;
 
           // Over-the-top wild 360° backflips & cartwheels (pure cartoon comedy!)
@@ -1077,6 +1068,9 @@ export class BouncebackEngine {
     }
     this.player.destroy();
     this.skills.destroy();
+    for (const g of this.gongs) {
+      g.dispose();
+    }
     this.arenaController?.dispose();
     this.renderer.dispose();
     this.scene.clear();

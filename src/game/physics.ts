@@ -107,15 +107,15 @@ export function updatePhysics(
     e.x += e.vx * dt;
     e.z += e.vz * dt;
 
-    // Friction & Launch Auto-Recovery
+    // Friction & Launch Auto-Recovery (Soar long distance towards the Giant Gong!)
     if (e.launched) {
       e.launchTimer = (e.launchTimer || 0) + dt;
-      const decay = Math.pow(0.968, dt * 60);
+      const decay = Math.pow(C.LAUNCH_FRICTION, dt * 60);
       e.vx *= decay;
       e.vz *= decay;
       const spd = Math.sqrt(e.vx * e.vx + e.vz * e.vz);
-      // Auto-recover after max 0.95s or when speed drops below threshold
-      if (spd < C.LAUNCH_THRESHOLD || e.launchTimer > 0.95) {
+      // Auto-recover after max 1.35s or when speed drops below threshold
+      if (spd < C.LAUNCH_THRESHOLD || e.launchTimer > 1.35) {
         e.launched = false;
         e.bounceCount = 0;
         e.launchSpeed = 0;

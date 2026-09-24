@@ -193,11 +193,13 @@ export class JuiceSystem {
         this.spawnHitSparks(x, y + 0.6, z, 0xffd700, 42);
         break;
 
+      case "gong":
       case "goal":
-        this.addTrauma(0.85);
-        this.triggerSlowMo(0.7, 0.22);
-        this.spawnComicPopup("GOAL!!", x, y + 1.8, z, "rainbow");
-        this.spawnShockwave(x, 0.2, z, 0xffd700, 6.0);
+        this.addTrauma(0.95);
+        this.triggerSlowMo(0.75, 0.2);
+        this.spawnComicPopup("🔔 GONG!!", x, y + 2.0, z, "gold");
+        this.spawnShockwave(x, 0.2, z, 0xffd700, 7.5);
+        this.spawnHitSparks(x, y + 0.5, z, 0xffea00, 38);
         this.spawnGoalCelebration(d.team ?? 0, x, z);
         break;
 

@@ -23,14 +23,14 @@ export const PLAYER_SPEED = 8.0;
 export const DASH_SPEED = 18.0;
 export const DASH_DUR = 0.18;
 export const DASH_CD = 0.8;
-export const PUNCH_IMPULSE = 24.0;
-export const CHARGE_IMPULSE = 34.0;
+export const PUNCH_IMPULSE = 32.0;
+export const CHARGE_IMPULSE = 46.0;
 export const CHARGE_TIME = 0.55;
-export const PUNCH_RANGE = 2.5;
+export const PUNCH_RANGE = 2.6;
 export const PUNCH_CD = 0.28;
 
 // Launch/bounce physics
-export const LAUNCH_FRICTION = 0.985;
+export const LAUNCH_FRICTION = 0.988;
 export const GROUND_FRICTION = 0.88;
 export const BUMPER_MULT = 1.5;
 export const WALL_RESTITUTION = 0.9;
@@ -40,9 +40,9 @@ export const IMMUNITY_DUR = 1.2;
 // Bumper
 export const BUMPER_RADIUS = 0.9;
 
-// Gate
-export const GATE_WIDTH = 3.5;
-export const GATE_DEPTH = 0.6;
+// Giant Battle Gong (Replaces standard gates)
+export const GATE_WIDTH = 5.4;
+export const GATE_DEPTH = 1.2;
 
 // Match
 export const MATCH_DURATION = 100;

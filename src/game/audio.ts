@@ -426,9 +426,75 @@ export function sfxBumperHit(comboCount: number) {
   playTone(baseFreq * 1.25, 0.12, "triangle", 0.22);
 }
 
+// ─── Monumental Battle Gong ("DOOOOOOONNNNNGGGGGG!") ───
+export function sfxGongHit() {
+  if (!ctx || !sfxGain || muted) return;
+  try {
+    const now = ctx.currentTime;
+
+    // 1. Initial sharp metal mallet strike impact
+    playNoise(0.08, 0.5, 2400);
+
+    // 2. Heavy Gong Inharmonic Partials with shimmering beat frequencies
+    const partials = [
+      { f: 72, vol: 0.55, dur: 3.2, type: "sine" as OscillatorType },
+      { f: 76, vol: 0.45, dur: 3.0, type: "triangle" as OscillatorType },
+      { f: 118, vol: 0.38, dur: 2.8, type: "sine" as OscillatorType },
+      { f: 184, vol: 0.32, dur: 2.4, type: "triangle" as OscillatorType },
+      { f: 275, vol: 0.25, dur: 2.0, type: "sine" as OscillatorType },
+      { f: 432, vol: 0.18, dur: 1.6, type: "sine" as OscillatorType },
+      { f: 710, vol: 0.12, dur: 1.2, type: "sine" as OscillatorType },
+    ];
+
+    for (const p of partials) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = p.type;
+      osc.frequency.setValueAtTime(p.f, now);
+      osc.frequency.exponentialRampToValueAtTime(p.f * 0.98, now + p.dur);
+
+      gain.gain.setValueAtTime(0.01, now);
+      gain.gain.linearRampToValueAtTime(p.vol, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + p.dur);
+
+      osc.connect(gain);
+      gain.connect(sfxGain);
+      osc.start(now);
+      osc.stop(now + p.dur);
+    }
+
+    // 3. Resonant low-pass filter swell for deep floor-shaking hum
+    const subOsc = ctx.createOscillator();
+    const subGain = ctx.createGain();
+    subOsc.type = "sawtooth";
+    subOsc.frequency.setValueAtTime(54, now);
+    const lp = ctx.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.setValueAtTime(140, now);
+    lp.frequency.linearRampToValueAtTime(70, now + 2.5);
+
+    subGain.gain.setValueAtTime(0.35, now);
+    subGain.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
+
+    subOsc.connect(lp);
+    lp.connect(subGain);
+    subGain.connect(sfxGain);
+    subOsc.start(now);
+    subOsc.stop(now + 2.5);
+
+    // 4. Ecstatic stadium crowd roar + referee whistle + brass stabs
+    setTimeout(() => {
+      sfxCrowdCheer(1.4);
+      playTone(2200, 0.14, "sine", 0.25);
+      setTimeout(() => playTone(2800, 0.18, "sine", 0.3), 90);
+    }, 150);
+  } catch {}
+}
+
 export function sfxGoal() {
+  sfxGongHit();
   sfxStadiumAirhorn();
-  sfxCrowdCheer(1.3);
+  sfxCrowdCheer(1.4);
   playTone(220, 0.4, "sawtooth", 0.3, false);
   playTone(330, 0.4, "sawtooth", 0.2, false);
   playTone(440, 0.5, "sawtooth", 0.25);
