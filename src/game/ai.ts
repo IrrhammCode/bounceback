@@ -72,7 +72,19 @@ export function updateBots(
             const result = applyPunch(bot, t, false);
             t.lastHitBy = i;
             bot.punchCd = C.PUNCH_CD + 0.2;
-            if (juiceFn) juiceFn("botpunch", result);
+            if (juiceFn) {
+              juiceFn("botpunch", {
+                ...result,
+                originX: bot.x,
+                originZ: bot.z,
+                dirX: result.nx,
+                dirZ: result.nz,
+                x: t.x,
+                z: t.z,
+                team: bot.team,
+                isHit: true,
+              });
+            }
           }
         }
         break;
@@ -154,7 +166,19 @@ export function updateBots(
             const result = applyPunch(bot, t, false);
             t.lastHitBy = i;
             bot.punchCd = C.PUNCH_CD + 0.25;
-            if (juiceFn) juiceFn("botpunch", result);
+            if (juiceFn) {
+              juiceFn("botpunch", {
+                ...result,
+                originX: bot.x,
+                originZ: bot.z,
+                dirX: result.nx,
+                dirZ: result.nz,
+                x: t.x,
+                z: t.z,
+                team: bot.team,
+                isHit: true,
+              });
+            }
           }
         }
         break;
@@ -212,7 +236,19 @@ export function updateBots(
               const result = applyPunch(bot, t, false);
               t.lastHitBy = i;
               bot.punchCd = C.PUNCH_CD + 0.3;
-              if (juiceFn) juiceFn("botpunch", result);
+              if (juiceFn) {
+                juiceFn("botpunch", {
+                  ...result,
+                  originX: bot.x,
+                  originZ: bot.z,
+                  dirX: result.nx,
+                  dirZ: result.nz,
+                  x: t.x,
+                  z: t.z,
+                  team: bot.team,
+                  isHit: true,
+                });
+              }
             }
           }
         }

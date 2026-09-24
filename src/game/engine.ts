@@ -651,10 +651,25 @@ export class BouncebackEngine {
               x: d?.x ?? this.entities[0].x,
               y: 1.2,
               z: d?.z ?? this.entities[0].z,
-              text: "SMASH!",
+              originX: d?.originX ?? this.entities[0].x,
+              originZ: d?.originZ ?? this.entities[0].z,
+              dirX: d?.dirX ?? 0,
+              dirZ: d?.dirZ ?? 1,
+              team: d?.team ?? 0,
+              isHit: true,
             });
           } else if (type === "whiff") {
             sfxWhiff();
+            this.juice.trigger("whiff", {
+              x: d?.x ?? this.entities[0].x,
+              z: d?.z ?? this.entities[0].z,
+              originX: d?.originX ?? this.entities[0].x,
+              originZ: d?.originZ ?? this.entities[0].z,
+              dirX: d?.dirX ?? 0,
+              dirZ: d?.dirZ ?? 1,
+              team: d?.team ?? 0,
+              isHit: false,
+            });
           } else if (type === "dash") {
             sfxDash();
             this.juice.trigger("dash", { x: this.entities[0].x, z: this.entities[0].z });
@@ -694,6 +709,12 @@ export class BouncebackEngine {
             x: d?.x ?? 0,
             y: 1.2,
             z: d?.z ?? 0,
+            originX: d?.originX,
+            originZ: d?.originZ,
+            dirX: d?.dirX,
+            dirZ: d?.dirZ,
+            team: d?.team ?? 1,
+            isHit: true,
           });
         } else {
           this.juice.trigger(type, data);
@@ -792,20 +813,31 @@ export class BouncebackEngine {
 
         // Visual bounce & comedic tumble on Y when launched
         if (ent.launched) {
-          ent.mesh.position.y = groundH + footOffset + Math.abs(Math.sin(now * 0.015)) * 0.85 + 0.12;
-          if (u.torso) u.torso.rotation.x = Math.sin(now * 0.02) * 0.75;
-          ent.mesh.rotation.z += dt * 6.0;
-          // Keep rotation.z within [-PI, PI] to prevent huge unwinding delays
+          // High dramatic over-the-top parabolic flight arc (soaring 2.8m - 3.8m in the sky!)
+          const launchDuration = 0.95;
+          const tProgress = Math.min(1.0, (ent.launchTimer || 0) / launchDuration);
+          const flightArc = Math.sin(tProgress * Math.PI) * (2.8 + Math.min((ent.bounceCount || 0) * 0.45, 1.4));
+          ent.mesh.position.y = groundH + footOffset + flightArc;
+
+          // Over-the-top wild 360° backflips & cartwheels (pure cartoon comedy!)
+          ent.mesh.rotation.x += dt * 18.0;
+          ent.mesh.rotation.z += dt * 15.0;
+          while (ent.mesh.rotation.x > Math.PI) ent.mesh.rotation.x -= Math.PI * 2;
+          while (ent.mesh.rotation.x < -Math.PI) ent.mesh.rotation.x += Math.PI * 2;
           while (ent.mesh.rotation.z > Math.PI) ent.mesh.rotation.z -= Math.PI * 2;
           while (ent.mesh.rotation.z < -Math.PI) ent.mesh.rotation.z += Math.PI * 2;
 
+          // Panicked flailing arms & kicking legs
           if (u.leftArm && u.rightArm) {
-            u.leftArm.rotation.set(-2.2 + Math.sin(now * 0.025) * 0.6, 0, 1.2);
-            u.rightArm.rotation.set(-2.2 - Math.sin(now * 0.025) * 0.6, 0, -1.2);
+            u.leftArm.rotation.set(-2.6 + Math.sin(now * 0.035) * 1.5, Math.cos(now * 0.03) * 1.2, 1.4);
+            u.rightArm.rotation.set(-2.6 - Math.sin(now * 0.035) * 1.5, -Math.cos(now * 0.03) * 1.2, -1.4);
           }
           if (u.leftLeg && u.rightLeg) {
-            u.leftLeg.rotation.x = Math.sin(now * 0.035) * 0.85;
-            u.rightLeg.rotation.x = -Math.sin(now * 0.035) * 0.85;
+            u.leftLeg.rotation.x = Math.sin(now * 0.045) * 1.6;
+            u.rightLeg.rotation.x = -Math.sin(now * 0.045) * 1.6;
+          }
+          if (u.torso) {
+            u.torso.rotation.x = Math.sin(now * 0.02) * 0.8;
           }
         } else {
           // STANDING UPRIGHT FIRMLY ON TWO FEET!
@@ -849,7 +881,17 @@ export class BouncebackEngine {
 
         // Scale effects & Stun wobble
         const baseScale = ent.mesh.userData.baseScale || 1;
-        if (ent.stunTimer > 0) {
+        if (ent.launched) {
+          // Airborne squash & stretch
+          const launchDuration = 0.95;
+          const tProgress = Math.min(1.0, (ent.launchTimer || 0) / launchDuration);
+          const airborneStretch = Math.sin(tProgress * Math.PI);
+          ent.mesh.scale.set(
+            baseScale * (1 - airborneStretch * 0.22),
+            baseScale * (1 + airborneStretch * 0.45),
+            baseScale * (1 - airborneStretch * 0.22)
+          );
+        } else if (ent.stunTimer > 0) {
           // Squash/stretch & comedic wobble on stun
           const t = ent.stunTimer / 0.3;
           ent.mesh.scale.set(
@@ -926,10 +968,14 @@ export class BouncebackEngine {
             const punchDist = punchProgress < 0.35 ? (punchProgress / 0.35) : (1.0 - (punchProgress - 0.35) / 0.65);
             u.rightArm.rotation.x = -1.6;
             u.rightArm.rotation.y = 0.25;
-            u.rightArm.position.z = 0.06 + punchDist * 0.65;
-            if (u.torso) u.torso.rotation.y = -punchDist * 0.35;
+            u.rightArm.position.z = 0.06 + punchDist * 0.95;
+            // Dramatically balloon right arm into a huge cartoon punching fist!
+            const armScale = 1.0 + punchDist * 2.5;
+            u.rightArm.scale.set(armScale, armScale, armScale * 1.3);
+            if (u.torso) u.torso.rotation.y = -punchDist * 0.45;
           } else {
             u.rightArm.position.z = 0.06;
+            u.rightArm.scale.set(1.0, 1.0, 1.0);
           }
 
           // Thruster flames scaling

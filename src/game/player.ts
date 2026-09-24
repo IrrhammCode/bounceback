@@ -393,11 +393,35 @@ export class PlayerController {
         }
       }
       if (bestIdx >= 0) {
-        const result = applyPunch(player, entities[bestIdx], false);
-        entities[bestIdx].lastHitBy = entities.indexOf(player);
-        if (juiceFn) juiceFn("punch", result);
+        const target = entities[bestIdx];
+        const result = applyPunch(player, target, false);
+        target.lastHitBy = entities.indexOf(player);
+        if (juiceFn) {
+          juiceFn("punch", {
+            ...result,
+            x: target.x,
+            z: target.z,
+            originX: player.x,
+            originZ: player.z,
+            dirX: fnx,
+            dirZ: fnz,
+            team: player.team,
+            isHit: true,
+          });
+        }
       } else {
-        if (juiceFn) juiceFn("whiff", { x: player.x + fnx * 1.5, z: player.z + fnz * 1.5 });
+        if (juiceFn) {
+          juiceFn("whiff", {
+            x: player.x + fnx * 1.5,
+            z: player.z + fnz * 1.5,
+            originX: player.x,
+            originZ: player.z,
+            dirX: fnx,
+            dirZ: fnz,
+            team: player.team,
+            isHit: false,
+          });
+        }
       }
     }
   }

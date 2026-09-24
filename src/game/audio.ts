@@ -388,14 +388,35 @@ export function sfxStadiumAirhorn() {
 }
 
 // ─── Action Sound Effects ───
+export function sfxPunchCheer() {
+  // Enthusiastic stadium crowd roar
+  sfxCrowdCheer(1.25);
+  // Sharp referee party whistle
+  playTone(1900, 0.12, "sine", 0.22);
+  setTimeout(() => playTone(2600, 0.16, "sine", 0.28), 70);
+  // Joyful rising brass fanfare chords (C5 -> E5 -> G5 -> C6)
+  setTimeout(() => {
+    playTone(523.25, 0.16, "triangle", 0.28);
+    playTone(659.25, 0.16, "triangle", 0.24);
+  }, 90);
+  setTimeout(() => {
+    playTone(783.99, 0.22, "sawtooth", 0.3);
+    playTone(1046.5, 0.26, "sawtooth", 0.25);
+  }, 190);
+}
+
 export function sfxPunch() {
-  playNoise(0.12, 0.35, 1200);
-  playTone(130, 0.15, "square", 0.25);
-  playTone(70, 0.1, "sawtooth", 0.2);
+  // Heavy visceral punch bass impact & crack
+  playNoise(0.2, 0.5, 1200);
+  playTone(85, 0.25, "square", 0.5);
+  playTone(45, 0.28, "sawtooth", 0.4);
+  // Stadium crowd excited celebration cheer!
+  sfxPunchCheer();
 }
 
 export function sfxWhiff() {
   playTone(320, 0.08, "sine", 0.12);
+  playNoise(0.08, 0.15, 2400);
 }
 
 export function sfxBumperHit(comboCount: number) {

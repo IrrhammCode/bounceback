@@ -70,6 +70,7 @@ export class JuiceSystem {
   private comicPopups: ComicPopup3D[] = [];
   private shockwaves: ShockwaveRing3D[] = [];
   private sparks: Spark3D[] = [];
+  private customFX: { update: (dt: number) => boolean; dispose: () => void }[] = [];
 
   // Canvas Texture Cache
   private textureCache = new Map<string, THREE.CanvasTexture>();
@@ -112,25 +113,51 @@ export class JuiceSystem {
       text?: string;
       team?: number;
       combo?: number;
+      originX?: number;
+      originZ?: number;
+      dirX?: number;
+      dirZ?: number;
+      nx?: number;
+      nz?: number;
+      isHit?: boolean;
     };
     const x = d.x ?? 0;
     const y = d.y ?? 1.2;
     const z = d.z ?? 0;
 
     switch (type) {
-      case "punch":
-        this.addTrauma(0.45);
-        this.hitStopTimer = 0.045;
-        this.spawnComicPopup(d.text || "SMASH!", x, y + 0.6, z, "crimson");
-        this.spawnShockwave(x, y, z, 0xff0055, 2.2);
-        this.spawnHitSparks(x, y + 0.2, z, 0xffd700, 16);
-        break;
+      case "punch": {
+        this.addTrauma(0.55);
+        this.hitStopTimer = 0.05;
+        const comicHits = ["WHAM!!", "KAPOW!!", "BAM!!", "SMASH!!", "OUCH!!"];
+        const hitText = d.text || comicHits[Math.floor(Math.random() * comicHits.length)];
+        this.spawnComicPopup(hitText, x, y + 0.8, z, "crimson");
+        this.spawnShockwave(x, y, z, 0xff0055, 2.8);
+        this.spawnHitSparks(x, y + 0.3, z, 0xffd700, 24);
 
-      case "botpunch":
-        this.addTrauma(0.25);
-        this.spawnShockwave(x, y, z, 0x38bdf8, 1.4);
-        this.spawnHitSparks(x, y + 0.2, z, 0x00f0ff, 8);
+        const ox = d.originX ?? (x - (d.dirX ?? d.nx ?? 0) * 1.5);
+        const oz = d.originZ ?? (z - (d.dirZ ?? d.nz ?? 0) * 1.5);
+        const dx = d.dirX ?? d.nx ?? (x - ox);
+        const dz = d.dirZ ?? d.nz ?? (z - oz);
+        this.spawnGiantPunchFist(ox, y, oz, dx, dz, true, d.team ?? 0);
         break;
+      }
+
+      case "botpunch": {
+        this.addTrauma(0.35);
+        const comicHits = ["BAM!!", "WHACK!!", "POW!!"];
+        const hitText = comicHits[Math.floor(Math.random() * comicHits.length)];
+        this.spawnComicPopup(hitText, x, y + 0.6, z, "gold");
+        this.spawnShockwave(x, y, z, 0x38bdf8, 2.0);
+        this.spawnHitSparks(x, y + 0.2, z, 0x00f0ff, 14);
+
+        const ox = d.originX ?? (x - (d.dirX ?? d.nx ?? 0) * 1.5);
+        const oz = d.originZ ?? (z - (d.dirZ ?? d.nz ?? 0) * 1.5);
+        const dx = d.dirX ?? d.nx ?? (x - ox);
+        const dz = d.dirZ ?? d.nz ?? (z - oz);
+        this.spawnGiantPunchFist(ox, y, oz, dx, dz, true, d.team ?? 1);
+        break;
+      }
 
       case "bumper":
         this.addTrauma(0.5);
@@ -144,11 +171,19 @@ export class JuiceSystem {
         this.spawnShockwave(x, 0.1, z, 0x00ffff, 1.2);
         break;
 
-      case "whiff":
+      case "whiff": {
         this.addTrauma(0.12);
+        this.spawnComicPopup("SWOOSH!", x, y + 0.5, z, "cyan");
         this.spawnShockwave(x, y, z, 0xffffff, 1.4);
         this.spawnHitSparks(x, y + 0.1, z, 0xf8fafc, 8);
+
+        const ox = d.originX ?? x;
+        const oz = d.originZ ?? z;
+        const dx = d.dirX ?? 0;
+        const dz = d.dirZ ?? 1;
+        this.spawnGiantPunchFist(ox, y, oz, dx, dz, false, d.team ?? 0);
         break;
+      }
 
       case "onepunch":
         this.addTrauma(1.0);
@@ -508,6 +543,186 @@ export class JuiceSystem {
     }
   }
 
+  // ─── Giant 3D Cartoon Boxing Glove Punch Fist ───
+  spawnGiantPunchFist(
+    ox: number,
+    oy: number,
+    oz: number,
+    dirX: number,
+    dirZ: number,
+    isHit: boolean,
+    team: number = 0
+  ) {
+    if (!this.scene) return;
+
+    const punchGroup = new THREE.Group();
+    punchGroup.name = "GiantPunchFist";
+    punchGroup.position.set(ox, oy, oz);
+
+    // Orient toward punch direction
+    let len = Math.hypot(dirX, dirZ);
+    if (len < 0.001) {
+      dirZ = 1;
+      len = 1;
+    }
+    const nx = dirX / len;
+    const nz = dirZ / len;
+    punchGroup.rotation.y = Math.atan2(nx, nz);
+
+    // Distinct vibrant color palette
+    const gloveCol = team === 0 ? 0xff1744 : 0x00d2ff; // Cyan or Coral Red
+    const cuffCol = 0xffffff;
+    const goldCol = 0xffd700;
+
+    // 1. Giant Boxing Glove Main Body (Huge, comical rounded mitt)
+    const gloveGeo = new THREE.SphereGeometry(0.75, 16, 16);
+    gloveGeo.scale(1.25, 1.35, 1.55);
+    const gloveMat = new THREE.MeshStandardMaterial({
+      color: gloveCol,
+      roughness: 0.25,
+      metalness: 0.15,
+      emissive: gloveCol,
+      emissiveIntensity: 0.4,
+    });
+    const gloveMesh = new THREE.Mesh(gloveGeo, gloveMat);
+    gloveMesh.position.set(0, 0, 0);
+
+    // 2. Glove Thumb
+    const thumbGeo = new THREE.SphereGeometry(0.4, 12, 12);
+    thumbGeo.scale(0.9, 0.9, 1.3);
+    const thumbMesh = new THREE.Mesh(thumbGeo, gloveMat);
+    thumbMesh.position.set(-0.55, -0.15, 0.3);
+    thumbMesh.rotation.set(0.3, -0.4, 0.2);
+    gloveMesh.add(thumbMesh);
+
+    // 3. Shiny Gold Brass Knuckles / Reinforced Striking Ridges
+    const knuckleGeo = new THREE.TorusGeometry(0.72, 0.12, 8, 16, Math.PI * 0.75);
+    const knuckleMat = new THREE.MeshStandardMaterial({
+      color: goldCol,
+      roughness: 0.2,
+      metalness: 0.85,
+      emissive: goldCol,
+      emissiveIntensity: 0.45,
+    });
+    const knuckleMesh = new THREE.Mesh(knuckleGeo, knuckleMat);
+    knuckleMesh.rotation.set(Math.PI / 2, 0, -Math.PI * 0.38);
+    knuckleMesh.position.set(0, 0.15, 0.7);
+    gloveMesh.add(knuckleMesh);
+
+    // 4. White Glove Cuff / Wristband
+    const cuffGeo = new THREE.CylinderGeometry(0.68, 0.72, 0.45, 16);
+    cuffGeo.rotateX(Math.PI / 2);
+    const cuffMat = new THREE.MeshStandardMaterial({
+      color: cuffCol,
+      roughness: 0.3,
+      metalness: 0.1,
+    });
+    const cuffMesh = new THREE.Mesh(cuffGeo, cuffMat);
+    cuffMesh.position.set(0, 0, -0.85);
+    gloveMesh.add(cuffMesh);
+
+    // 5. Accordion Spring Link (behind the glove)
+    const springGroup = new THREE.Group();
+    const ringGeo = new THREE.TorusGeometry(0.38, 0.08, 8, 16);
+    const springMat = new THREE.MeshStandardMaterial({
+      color: goldCol,
+      roughness: 0.2,
+      metalness: 0.7,
+    });
+    const ringCount = 5;
+    const ringMeshes: THREE.Mesh[] = [];
+    for (let i = 0; i < ringCount; i++) {
+      const ring = new THREE.Mesh(ringGeo, springMat);
+      ring.position.z = -1.1 - i * 0.28;
+      springGroup.add(ring);
+      ringMeshes.push(ring);
+    }
+    gloveMesh.add(springGroup);
+
+    // 6. Cartoon Speed Wind Cone / Shock Trail
+    const coneGeo = new THREE.ConeGeometry(0.95, 2.4, 16, 1, true);
+    coneGeo.rotateX(-Math.PI / 2);
+    const coneMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.65,
+      wireframe: true,
+      depthWrite: false,
+    });
+    const coneMesh = new THREE.Mesh(coneGeo, coneMat);
+    coneMesh.position.set(0, 0, -1.2);
+    gloveMesh.add(coneMesh);
+
+    punchGroup.add(gloveMesh);
+    this.fxGroup.add(punchGroup);
+
+    // Animation state
+    let elapsed = 0;
+    const duration = 0.32;
+    const maxReach = isHit ? 3.0 : 2.5;
+
+    this.customFX.push({
+      update: (dt: number) => {
+        elapsed += dt;
+        if (elapsed >= duration) return false;
+
+        const p = elapsed / duration;
+
+        if (p < 0.28) {
+          // Phase 1: Explosive forward rocket punch thrust (stretch!)
+          const t = p / 0.28;
+          const easeOut = 1 - Math.pow(1 - t, 3);
+          gloveMesh.position.z = easeOut * maxReach;
+          gloveMesh.scale.set(1.15, 1.15, 1.6); // Cartoon forward stretch
+          coneMesh.scale.set(1.0 + t * 0.5, 1.0 + t * 0.5, 1.0 + t * 0.8);
+          coneMat.opacity = (1 - t * 0.3) * 0.7;
+        } else if (p < 0.48) {
+          // Phase 2: Dramatic impact squash & freeze
+          const t = (p - 0.28) / 0.2;
+          gloveMesh.position.z = maxReach;
+          // Squash wide on impact
+          const squash = Math.sin(t * Math.PI);
+          gloveMesh.scale.set(1.45 + squash * 0.25, 1.45 + squash * 0.25, 0.7 - squash * 0.2);
+          gloveMesh.rotation.z = Math.sin(t * Math.PI * 4) * 0.2; // Vibration shudder
+        } else {
+          // Phase 3: Spring snap recoil & fade out
+          const t = (p - 0.48) / 0.52;
+          const recoil = Math.pow(1 - t, 2);
+          gloveMesh.position.z = maxReach * recoil;
+          const s = Math.max(0.01, 1.0 - t);
+          gloveMesh.scale.set(s, s, s);
+          gloveMat.opacity = Math.max(0, 1 - t);
+          gloveMat.transparent = true;
+          cuffMat.opacity = Math.max(0, 1 - t);
+          cuffMat.transparent = true;
+          coneMat.opacity = Math.max(0, (1 - t) * 0.5);
+        }
+
+        // Expand spring coils as glove moves forward
+        const ext = gloveMesh.position.z;
+        for (let i = 0; i < ringMeshes.length; i++) {
+          ringMeshes[i].position.z = -1.1 - (i / ringCount) * ext * 0.8;
+        }
+
+        return true;
+      },
+      dispose: () => {
+        this.fxGroup.remove(punchGroup);
+        gloveGeo.dispose();
+        thumbGeo.dispose();
+        knuckleGeo.dispose();
+        cuffGeo.dispose();
+        ringGeo.dispose();
+        coneGeo.dispose();
+        gloveMat.dispose();
+        knuckleMat.dispose();
+        cuffMat.dispose();
+        springMat.dispose();
+        coneMat.dispose();
+      },
+    });
+  }
+
   addComboPopup(text: string, screenX: number, screenY: number) {
     this.comboPopups.push({
       text,
@@ -639,7 +854,17 @@ export class JuiceSystem {
       (sp.mesh.material as THREE.MeshBasicMaterial).opacity = alpha;
     }
 
-    // 7. Legacy 2D popups
+    // 7. Update Custom FX (Giant Punch Fists, etc.)
+    for (let i = this.customFX.length - 1; i >= 0; i--) {
+      const fx = this.customFX[i];
+      const alive = fx.update(dt);
+      if (!alive) {
+        fx.dispose();
+        this.customFX.splice(i, 1);
+      }
+    }
+
+    // 8. Legacy 2D popups
     for (let i = this.comboPopups.length - 1; i >= 0; i--) {
       this.comboPopups[i].timer -= dt;
       if (this.comboPopups[i].timer <= 0) this.comboPopups.splice(i, 1);
@@ -659,9 +884,13 @@ export class JuiceSystem {
     for (const sp of this.sparks) {
       (sp.mesh.material as THREE.Material).dispose();
     }
+    for (const fx of this.customFX) {
+      fx.dispose();
+    }
     this.comicPopups = [];
     this.shockwaves = [];
     this.sparks = [];
+    this.customFX = [];
     this.textureCache.forEach((tex) => tex.dispose());
     this.textureCache.clear();
     this.ringGeo.dispose();
