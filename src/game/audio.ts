@@ -10,7 +10,6 @@ let ctx: AudioContext | null = null;
 let masterGain: GainNode | null = null;
 let bgmGain: GainNode | null = null;
 let sfxGain: GainNode | null = null;
-let voiceGain: GainNode | null = null;
 let muted = false;
 
 // BGM State
@@ -28,18 +27,12 @@ export function initAudio() {
   masterGain.connect(ctx.destination);
 
   bgmGain = ctx.createGain();
-  bgmGain.gain.value = 0.2;
+  bgmGain.gain.value = 0.22;
   bgmGain.connect(masterGain);
 
   sfxGain = ctx.createGain();
-  sfxGain.gain.value = 0.5;
+  sfxGain.gain.value = 0.55;
   sfxGain.connect(masterGain);
-
-  voiceGain = ctx.createGain();
-  voiceGain.gain.value = 0.95;
-  voiceGain.connect(masterGain);
-
-  preloadVoiceClips();
 }
 
 export function resumeAudio() {
@@ -47,7 +40,6 @@ export function resumeAudio() {
   if (ctx && ctx.state === "suspended") {
     ctx.resume();
   }
-  preloadVoiceClips();
 }
 
 export function setMuted(v: boolean) {
@@ -754,129 +746,194 @@ export function sfxCommentatorGasp() {
   setTimeout(() => playTone(820, 0.18, "sawtooth", 0.25), 50);
 }
 
-// ─── High-Quality Human Voice Commentary System (Microsoft Neural TTS Clips) ───
-const VOICE_CLIPS: Record<string, string[]> = {
-  start: ["start_1", "start_2"],
-  gong: ["gong_1", "gong_2", "gong_3", "gong_4"],
-  punch: ["punch_1", "punch_2", "punch_3", "punch_4", "punch_5"],
-  onepunch: ["onepunch_1", "onepunch_2"],
-  launch: ["launch_1", "launch_2", "launch_3"],
-  overdrive: ["overdrive_1", "overdrive_2"],
-  gameover: ["gameover_1", "gameover_2"],
-};
-
-const voiceBuffers = new Map<string, AudioBuffer>();
-let currentVoiceSource: AudioBufferSourceNode | null = null;
-let lastCommentaryTime = 0;
-
-export async function preloadVoiceClips() {
-  if (!ctx) return;
-  for (const clips of Object.values(VOICE_CLIPS)) {
-    for (const clip of clips) {
-      if (voiceBuffers.has(clip)) continue;
-      fetch(`/voice/${clip}.mp3`)
-        .then((r) => (r.ok ? r.arrayBuffer() : null))
-        .then((arrayBuf) => {
-          if (arrayBuf && ctx) {
-            ctx.decodeAudioData(arrayBuf).then((decoded) => {
-              voiceBuffers.set(clip, decoded);
-            }).catch(() => {});
-          }
-        })
-        .catch(() => {});
-    }
-  }
+// ─── Reality TV Audience Poll & Disaster Mayhem SFX ───
+export function sfxVoteStart() {
+  if (!ctx || !sfxGain || muted) return;
+  // Reality TV chime / notification sound
+  playTone(523.25, 0.15, "sine", 0.4);
+  setTimeout(() => playTone(659.25, 0.15, "sine", 0.4), 80);
+  setTimeout(() => playTone(783.99, 0.25, "sine", 0.45), 160);
+  setTimeout(() => playTone(1046.5, 0.4, "triangle", 0.5), 240);
 }
 
-export type CommentaryCategory = "start" | "gong" | "punch" | "onepunch" | "launch" | "overdrive" | "gameover";
-
-export function playHumanCommentary(category: CommentaryCategory, force = false) {
-  if (muted || !ctx || !voiceGain) return;
-
-  const now = performance.now();
-  // Prevent spamming repetitive punch clips (cooldown 2.2s unless forced or high priority like gong/onepunch/overdrive)
-  if (!force && category === "punch" && now - lastCommentaryTime < 2200) {
-    return;
-  }
-  if (!force && category === "launch" && now - lastCommentaryTime < 2500) {
-    return;
-  }
-
-  const clips = VOICE_CLIPS[category];
-  if (!clips || clips.length === 0) return;
-
-  const pick = clips[Math.floor(Math.random() * clips.length)];
-  lastCommentaryTime = now;
-
-  const buffer = voiceBuffers.get(pick);
-  if (!buffer) {
-    // If buffer not preloaded yet, fetch and play
-    fetch(`/voice/${pick}.mp3`)
-      .then((r) => (r.ok ? r.arrayBuffer() : null))
-      .then((ab) => {
-        if (ab && ctx && voiceGain && !muted) {
-          ctx.decodeAudioData(ab).then((decoded) => {
-            voiceBuffers.set(pick, decoded);
-            playDecodedBuffer(decoded);
-          });
-        }
-      })
-      .catch(() => {
-        // Fallback to browser Web Speech API
-        speakFallback(category);
-      });
-    return;
-  }
-
-  playDecodedBuffer(buffer);
+export function sfxVoteTick() {
+  if (!ctx || !sfxGain || muted) return;
+  playTone(880, 0.05, "sine", 0.2);
 }
 
-function playDecodedBuffer(buffer: AudioBuffer) {
-  if (!ctx || !voiceGain || muted) return;
+export function sfxDisasterSiren() {
+  if (!ctx || !sfxGain || muted) return;
+  // Urgent reality TV emergency klaxon
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "sawtooth";
+  osc.frequency.setValueAtTime(650, now);
+  osc.frequency.linearRampToValueAtTime(950, now + 0.22);
+  osc.frequency.linearRampToValueAtTime(650, now + 0.45);
+  osc.frequency.linearRampToValueAtTime(950, now + 0.68);
+  osc.frequency.linearRampToValueAtTime(650, now + 0.9);
+
+  gain.gain.setValueAtTime(0.35, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.95);
+
+  osc.connect(gain);
+  gain.connect(sfxGain);
+  osc.start(now);
+  osc.stop(now + 0.95);
+}
+
+export function sfxTornado() {
+  if (!ctx || !sfxGain || muted) return;
+  // Howling, whistling vortex wind loop
   try {
-    if (currentVoiceSource) {
-      try {
-        currentVoiceSource.stop();
-      } catch {}
-      currentVoiceSource.disconnect();
-      currentVoiceSource = null;
-    }
+    const dur = 2.4;
+    const bufSize = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * 0.5;
 
-    const src = ctx.createBufferSource();
-    src.buffer = buffer;
-    src.connect(voiceGain);
-    src.start(ctx.currentTime);
-    currentVoiceSource = src;
-    src.onended = () => {
-      if (currentVoiceSource === src) {
-        currentVoiceSource = null;
-      }
-    };
+    const noise = ctx.createBufferSource();
+    noise.buffer = buf;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.setValueAtTime(260, ctx.currentTime);
+    filter.frequency.linearRampToValueAtTime(680, ctx.currentTime + 0.8);
+    filter.frequency.linearRampToValueAtTime(320, ctx.currentTime + 1.6);
+    filter.frequency.linearRampToValueAtTime(540, ctx.currentTime + 2.4);
+    filter.Q.value = 4.5;
+
+    // High howling resonance whistle
+    const whistle = ctx.createOscillator();
+    whistle.type = "sine";
+    whistle.frequency.setValueAtTime(380, ctx.currentTime);
+    whistle.frequency.linearRampToValueAtTime(740, ctx.currentTime + 1.2);
+    whistle.frequency.linearRampToValueAtTime(420, ctx.currentTime + 2.4);
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.5, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+
+    const whistleGain = ctx.createGain();
+    whistleGain.gain.setValueAtTime(0.18, ctx.currentTime);
+    whistleGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(sfxGain);
+
+    whistle.connect(whistleGain);
+    whistleGain.connect(sfxGain);
+
+    noise.start(ctx.currentTime);
+    noise.stop(ctx.currentTime + dur);
+    whistle.start(ctx.currentTime);
+    whistle.stop(ctx.currentTime + dur);
   } catch {}
 }
 
-function speakFallback(category: string) {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-  const FALLBACK_PHRASES: Record<string, string[]> = {
-    start: ["Pertandingan dimulai!", "Ayo bertanding!"],
-    gong: ["Gong! Poin spektakuler!", "Gong masuk telak!"],
-    punch: ["Aduhai kerasnya!", "Pukulan telak!"],
-    onepunch: ["Jurus satu pukulan!", "Saitama punch!"],
-    launch: ["Melayang tinggi!", "Terpental jauh!"],
-    overdrive: ["Overdrive showtime!"],
-    gameover: ["Kemenangan mutlak!", "Pertandingan selesai!"],
-  };
-  const list = FALLBACK_PHRASES[category] || ["Bagus sekali!"];
-  const text = list[Math.floor(Math.random() * list.length)];
+export function sfxMeteorIncoming() {
+  if (!ctx || !sfxGain || muted) return;
+  // Supersonic whistling descent
   try {
-    window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.rate = 1.15;
-    utter.pitch = 1.05;
-    const voices = window.speechSynthesis.getVoices();
-    const idVoice = voices.find((v) => v.lang.startsWith("id"));
-    if (idVoice) utter.voice = idVoice;
-    window.speechSynthesis.speak(utter);
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(1400, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(180, ctx.currentTime + 0.65);
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.65);
+    osc.connect(gain);
+    gain.connect(sfxGain);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.65);
+  } catch {}
+}
+
+export function sfxMeteorExplode() {
+  if (!ctx || !sfxGain || muted) return;
+  // Cataclysmic fiery blast
+  playTone(55, 0.8, "sawtooth", 0.75);
+  playTone(35, 0.9, "sine", 0.85);
+  playNoise(0.7, 0.8, 1600);
+  setTimeout(() => playNoise(0.4, 0.35, 800), 120);
+  sfxCrowdCheer(1.2);
+}
+
+export function sfxEarthquake() {
+  if (!ctx || !sfxGain || muted) return;
+  // Tectonic sub-rumble tremor
+  try {
+    const osc = ctx.createOscillator();
+    const lfo = ctx.createOscillator();
+    const lfoGain = ctx.createGain();
+    const gain = ctx.createGain();
+
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(45, ctx.currentTime);
+
+    lfo.frequency.setValueAtTime(18, ctx.currentTime);
+    lfoGain.gain.setValueAtTime(25, ctx.currentTime);
+
+    lfo.connect(lfoGain);
+    lfoGain.connect(osc.frequency);
+
+    gain.gain.setValueAtTime(0.65, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.8);
+
+    osc.connect(gain);
+    gain.connect(sfxGain);
+
+    lfo.start(ctx.currentTime);
+    osc.start(ctx.currentTime);
+    lfo.stop(ctx.currentTime + 1.8);
+    osc.stop(ctx.currentTime + 1.8);
+    playNoise(1.5, 0.45, 450);
+  } catch {}
+}
+
+export function sfxLaserBeam() {
+  if (!ctx || !sfxGain || muted) return;
+  // Orbital sci-fi plasma beam sweep
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(120, now);
+    osc.frequency.exponentialRampToValueAtTime(2200, now + 0.18);
+    osc.frequency.linearRampToValueAtTime(800, now + 0.7);
+    gain.gain.setValueAtTime(0.55, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.75);
+    osc.connect(gain);
+    gain.connect(sfxGain);
+    osc.start(now);
+    osc.stop(now + 0.75);
+    playNoise(0.5, 0.3, 3000);
+  } catch {}
+}
+
+export function sfxBlackHole() {
+  if (!ctx || !sfxGain || muted) return;
+  // Gravitational anomaly vacuum warp + shockwave
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    // Suction pitch drop
+    osc.frequency.setValueAtTime(500, now);
+    osc.frequency.exponentialRampToValueAtTime(50, now + 0.7);
+    osc.frequency.linearRampToValueAtTime(900, now + 0.85); // Anti-grav pop!
+    gain.gain.setValueAtTime(0.4, now);
+    gain.gain.linearRampToValueAtTime(0.7, now + 0.7);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.1);
+
+    osc.connect(gain);
+    gain.connect(sfxGain);
+    osc.start(now);
+    osc.stop(now + 1.1);
   } catch {}
 }
 

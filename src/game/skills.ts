@@ -40,13 +40,13 @@ export const SKILL_NAMES: Record<SkillType, string> = {
 
 export const SKILL_ICONS: Record<SkillType, string> = {
   [SkillType.None]: "",
-  [SkillType.GigaFist]: "🥊",
-  [SkillType.BananaPeel]: "🍌",
-  [SkillType.RocketBoost]: "🚀",
-  [SkillType.GigaMagnet]: "🧲",
-  [SkillType.BounceBomb]: "💣",
-  [SkillType.ShrinkZap]: "🩳",
-  [SkillType.OnePunchMan]: "💥",
+  [SkillType.GigaFist]: "FIST",
+  [SkillType.BananaPeel]: "SLIP",
+  [SkillType.RocketBoost]: "NITRO",
+  [SkillType.GigaMagnet]: "PULL",
+  [SkillType.BounceBomb]: "BLAST",
+  [SkillType.ShrinkZap]: "RAY",
+  [SkillType.OnePunchMan]: "K.O.",
 };
 
 // ─── Mystery Box Config ───

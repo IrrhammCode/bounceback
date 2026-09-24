@@ -100,9 +100,9 @@ export default function TVIntroOverlay({ onComplete, onSkip }: TVIntroOverlayPro
           <span className="live-dot" />
           <span className="live-text">LIVE BROADCAST</span>
         </div>
-        <div className="tv-channel-title">📺 BOUNCE TV: 3v3 ARENA SHOWDOWN</div>
+        <div className="tv-channel-title">BOUNCE TV: 3v3 REALITY SHOWDOWN</div>
         <button className="tv-skip-btn" onClick={onSkip} title="Skip Intro (Space / Esc)">
-          ⚡ SKIP INTRO <span className="key-hint">[SPACE]</span>
+          SKIP INTRO <span className="key-hint">[SPACE]</span>
         </button>
       </div>
 
@@ -111,7 +111,7 @@ export default function TVIntroOverlay({ onComplete, onSkip }: TVIntroOverlayPro
         <div className="tv-opener-banner animate-pop">
           <div className="tv-badge-pill">OFFICIAL MATCH #420</div>
           <h1 className="tv-hero-title">BATTLE GONG CHAMPIONSHIP</h1>
-          <p className="tv-hero-subtitle">3 VS 3 HIGH-FLYING CARTOON CARNAGE</p>
+          <p className="tv-hero-subtitle">3 VS 3 REALITY TV TOURNAMENT</p>
         </div>
       )}
 
@@ -120,7 +120,7 @@ export default function TVIntroOverlay({ onComplete, onSkip }: TVIntroOverlayPro
         <div className="tv-roster-showcase cyan-theme">
           <div className="team-banner cyan animate-slide-down">
             <span className="team-tag">TEAM CYAN</span>
-            <h2 className="team-name">THE BOUNCING BLUES 👑</h2>
+            <h2 className="team-name">THE BOUNCING BLUES</h2>
             <p className="team-slogan">Defending the West Gong • Fast, Punchy & Relentless</p>
           </div>
 
@@ -150,7 +150,7 @@ export default function TVIntroOverlay({ onComplete, onSkip }: TVIntroOverlayPro
         <div className="tv-roster-showcase coral-theme">
           <div className="team-banner coral animate-slide-down">
             <span className="team-tag">TEAM CORAL</span>
-            <h2 className="team-name">THE RED CRUSHERS 🔥</h2>
+            <h2 className="team-name">THE RED CRUSHERS</h2>
             <p className="team-slogan">Defending the East Gong • Heavy Hitters & Chaos Bringers</p>
           </div>
 
@@ -169,12 +169,12 @@ export default function TVIntroOverlay({ onComplete, onSkip }: TVIntroOverlayPro
             <div className="countdown-number animate-zoom-beat" key={countdownNum}>
               <span className="num">{countdownNum}</span>
               <span className="sub">
-                {countdownNum === 3 ? "READY!" : countdownNum === 2 ? "SET!" : "SMASH!!"}
+                {countdownNum === 3 ? "READY!" : countdownNum === 2 ? "SET!" : "SMASH!"}
               </span>
             </div>
           ) : (
             <div className="countdown-go animate-boom" key="go">
-              <span className="go-text">BOUNCE &amp; SCORE!! 🔔</span>
+              <span className="go-text">BOUNCE &amp; SCORE!</span>
             </div>
           )}
         </div>
@@ -185,8 +185,7 @@ export default function TVIntroOverlay({ onComplete, onSkip }: TVIntroOverlayPro
         <div className="ticker-label">BREAKING:</div>
         <div className="ticker-content">
           <span>
-            🔔 TARGET GOAL: SMASH OPPONENTS INTO THEIR GIANT GONG TO SCORE • 👊 PUNCH TO LAUNCH
-            ENEMIES • 🌀 BEWARE OF THE ROTATING SWEEPER ARM • 💥 ONE PUNCH MAN SKILL READY FOR ACTION!
+            TARGET GOAL: SMASH OPPONENTS INTO THEIR GIANT GONG • PUNCH TO LAUNCH ENEMIES • BEWARE OF THE ROTATING SWEEPER ARM • AUDIENCE DISASTER VOTES TRIGGER EVERY 30 SECONDS!
           </span>
         </div>
       </div>
@@ -210,12 +209,12 @@ function FighterCard({
     >
       <div className="card-top">
         <span className="fighter-jersey">#{fighter.number}</span>
-        <span className="fighter-badge">{fighter.id === "cyan_player" ? "⭐ CAPTAIN" : "FIGHTER"}</span>
+        <span className="fighter-badge">{fighter.id === "cyan_player" ? "CAPTAIN" : "FIGHTER"}</span>
       </div>
 
       <div className="card-avatar-wrap">
         <div className="card-avatar-halo" />
-        <span className="card-avatar-icon">{fighter.avatarIcon}</span>
+        <span className="card-avatar-icon font-mono font-bold text-2xl tracking-wider">{fighter.avatarIcon}</span>
       </div>
 
       <div className="card-info">
@@ -228,15 +227,21 @@ function FighterCard({
       <div className="card-stats">
         <div className="stat-row">
           <span>PUNCH</span>
-          <div className="stars">{"★".repeat(fighter.statPunch)}{"☆".repeat(5 - fighter.statPunch)}</div>
+          <div className="stat-bars">
+            <div className="stat-meter" style={{ width: `${fighter.statPunch * 20}%` }} />
+          </div>
         </div>
         <div className="stat-row">
           <span>SPEED</span>
-          <div className="stars">{"★".repeat(fighter.statSpeed)}{"☆".repeat(5 - fighter.statSpeed)}</div>
+          <div className="stat-bars">
+            <div className="stat-meter" style={{ width: `${fighter.statSpeed * 20}%` }} />
+          </div>
         </div>
         <div className="stat-row">
           <span>CHAOS</span>
-          <div className="stars">{"★".repeat(fighter.statChaos)}{"☆".repeat(5 - fighter.statChaos)}</div>
+          <div className="stat-bars">
+            <div className="stat-meter" style={{ width: `${fighter.statChaos * 20}%` }} />
+          </div>
         </div>
       </div>
     </div>

@@ -46,8 +46,8 @@ import {
   sfxBombExplode,
   sfxShrink,
   sfxOnePunch,
-  playHumanCommentary,
 } from "./audio";
+import { DisasterManager, type DisasterVoteState, type DisasterId } from "./disasters";
 // @ts-ignore — JS asset modules following 404 asset contract
 import generateMecha from "../assets/toy_mecha.js";
 // @ts-ignore
@@ -70,10 +70,8 @@ export interface GameState {
   playerSkillName: string;
   playerSkillIcon: string;
   cameraMode: "third_wide" | "third_close" | "first_person";
-  // TV Game Show Commentary & Dynamic Hype Meter
-  hypeMeter: number;
-  commentaryText: string;
-  commentaryMood: "normal" | "excited" | "shocked" | "crazy";
+  // Reality TV Live Audience Disaster Vote
+  disasterVoteState: DisasterVoteState;
 }
 
 export type GameStateCallback = (state: GameState) => void;
@@ -106,21 +104,8 @@ export class BouncebackEngine {
   private announcement = "";
   private announcementTimer = 0;
 
-  // TV Broadcast Commentary & Dynamic Hype Meter
-  public hypeMeter = 20;
-  public commentaryText = "Selamat datang di BOUNCE TV 3v3 ARENA! Hajar gong lawan sekarang!";
-  public commentaryMood: "normal" | "excited" | "shocked" | "crazy" = "normal";
-  private commentaryTimer = 4.0;
-
-  private idleCommentaryList = [
-    { text: "Bobby: 'Kedua tim saling tatap mata! Tensi di arena makin memanas!'", mood: "excited" as const },
-    { text: "Prof. Clang: 'Sensor seismik mendeteksi getaran pukulan luar biasa!'", mood: "normal" as const },
-    { text: "Bobby: 'Satu pukulan telak bisa langsung melempar lawan ke gong!'", mood: "excited" as const },
-    { text: "Prof. Clang: 'Hati-hati dengan Sweeper Arm di tengah! Putarannya berbahaya!'", mood: "normal" as const },
-    { text: "Bobby: 'Ayo jangan cuma lari-lari, nonjok dong!!'", mood: "excited" as const },
-    { text: "Prof. Clang: 'Gong lawan terbuka lebar! Ini saatnya menyerang!'", mood: "excited" as const },
-    { text: "Bobby: 'Suasana di studio BOUNCE TV semakin riuh penonton!'", mood: "excited" as const },
-  ];
+  // Reality TV Live Audience Disaster Manager
+  private disasterManager!: DisasterManager;
 
   // Camera follow state (starts behind Cyan player at z=-17, looking downfield toward Coral at +Z)
   private camTargetPos = new THREE.Vector3(0, 8.5, -31.0);
@@ -203,30 +188,17 @@ export class BouncebackEngine {
       this.juice.trigger("gong", { team, x: 0, y: 3.0, z: goalZ });
       this.arenaController?.onGoalCelebration(team);
       const teamName = team === 0 ? "CYAN" : "CORAL";
-      let txt = `🔔 ${teamName} GONG SCORE +${points}!`;
+      let txt = `${teamName} GONG SCORE +${points}!`;
       if (bounces >= 2) txt += ` ${bounces}x BOUNCE!`;
       if (combo > 1) txt += ` COMBO x${combo}!`;
       this.showAnnouncement(txt);
-
-      const gongPhrases = [
-        `GOOOONG!! CETARRR! ${teamName} mencetak poin emas!`,
-        `GONGNYA JEBOL! 1000 DECIBEL OF PURE DESTRUCTION!`,
-        `GONG SLAM SPECTACULAR! Suaranya sampai ke luar angkasa!`,
-        `BOOM! Lawan terhempas telak menghantam gong!`,
-      ];
-      const phrase = gongPhrases[Math.floor(Math.random() * gongPhrases.length)];
-      this.triggerCommentary(phrase, "crazy", 32);
-      playHumanCommentary("gong", true);
     };
     this.match.onPhaseChange = (phase) => {
       if (phase === 2) {
-        this.showAnnouncement("⚡ PHASE 2 — DOUBLE GONG VALUE!");
-        this.triggerCommentary("PHASE 2 DIMULAI! NILAI GONG BERLIPAT GANDA!", "excited", 20);
+        this.showAnnouncement("PHASE 2 — DOUBLE GONG VALUE!");
         this.activatePhase2();
       } else if (phase === 3) {
-        this.showAnnouncement("🔥 OVERDRIVE — TRIPLE GONG!");
-        this.triggerCommentary("🔥 OVERDRIVE SHOWTIME! SEMUA POIN GONG DILIPAT TIGA!", "crazy", 35);
-        playHumanCommentary("overdrive", true);
+        this.showAnnouncement("OVERDRIVE — TRIPLE GONG!");
       }
     };
     this.match.onOverdrive = () => {
@@ -238,8 +210,7 @@ export class BouncebackEngine {
       sfxGameOver();
       this.running = false;
       const winTeam = winner === 0 ? "TEAM CYAN" : "TEAM CORAL";
-      this.triggerCommentary(`PELUIT AKHIR BERBUNYI! ${winTeam} KELUAR SEBAGAI JUARA!`, "crazy", 25);
-      playHumanCommentary("gameover", true);
+      this.showAnnouncement(`MATCH OVER — ${winTeam} WINS!`);
       if (this.onMatchEnd) this.onMatchEnd(winner, scores);
     };
 
@@ -247,6 +218,9 @@ export class BouncebackEngine {
     this.skills = new SkillManager(this.scene);
     this.skills.init();
     this.skillSlots = this.entities.map(() => createEmptySkillSlot());
+
+    // Reality TV Live Audience Disaster Manager
+    this.disasterManager = new DisasterManager(this.scene);
 
     // Audio
     initAudio();
@@ -476,15 +450,8 @@ export class BouncebackEngine {
     this.announcementTimer = 2.5;
   }
 
-  public triggerCommentary(
-    text: string,
-    mood: "normal" | "excited" | "shocked" | "crazy" = "excited",
-    hypeDelta = 10
-  ) {
-    this.commentaryText = text;
-    this.commentaryMood = mood;
-    this.commentaryTimer = 3.8;
-    this.hypeMeter = Math.min(100, Math.max(5, this.hypeMeter + hypeDelta));
+  public castDisasterVote(id: DisasterId) {
+    this.disasterManager.userVote(id);
   }
 
   startMatch() {
@@ -493,14 +460,10 @@ export class BouncebackEngine {
     sfxMatchStart();
     startBGM();
     this.match.start();
+    this.disasterManager.reset();
     this.running = true;
     this.lastTime = performance.now();
-    this.triggerCommentary(
-      "PERTANDINGAN 3v3 RESMI DIMULAI! HAJAR MEREKA KE GONG!",
-      "excited",
-      15
-    );
-    playHumanCommentary("start", true);
+    this.showAnnouncement("3V3 ARENA MATCH START!");
     this.loop(this.lastTime);
   }
 
@@ -635,19 +598,19 @@ export class BouncebackEngine {
       case "gigafist":
         sfxGigaFist();
         this.juice.trigger("gigafist");
-        this.showAnnouncement("🥊 MEGA SLAP!");
+        this.showAnnouncement("MEGA SLAP!");
         break;
       case "banana_drop":
         break;
       case "banana_slip":
         sfxBananaSlip();
         this.juice.trigger("banana_slip");
-        this.showAnnouncement("🍌 SLIP!");
+        this.showAnnouncement("BANANA SLIP!");
         break;
       case "rocket_start":
         sfxRocket();
         this.juice.trigger("rocket_start");
-        this.showAnnouncement("🚀 NITRO!");
+        this.showAnnouncement("NITRO DASH!");
         break;
       case "rocket_hit":
         sfxPunch();
@@ -658,34 +621,24 @@ export class BouncebackEngine {
       case "magnet":
         sfxMagnet();
         this.juice.trigger("magnet");
-        this.showAnnouncement("🧲 MAGNET!");
+        this.showAnnouncement("MAGNET PULL!");
         break;
       case "bomb_roll":
         break;
       case "bomb_explode":
         sfxBombExplode();
         this.juice.trigger("bomb_explode");
-        this.showAnnouncement("💣 BOOOM!");
-        this.triggerCommentary("LEDAKAN BOM SUPER! SELURUH ARENA BERGONCANG!", "shocked", 18);
-        break;
-      case "banana_slip":
-        sfxBananaSlip();
-        this.juice.trigger("banana_slip");
-        this.showAnnouncement("🍌 SLIP!");
-        this.triggerCommentary("TERPELESET PISANG! KOCAK BANGET JATUHNYA!", "normal", 8);
+        this.showAnnouncement("BOMB BLAST!");
         break;
       case "shrink":
         sfxShrink();
         this.juice.trigger("shrink");
-        this.showAnnouncement("🩳 SHRINK!");
-        this.triggerCommentary("BADANNYA MENGECIL SEPERTI SEMUT! TARGET EMPUK!", "excited", 12);
+        this.showAnnouncement("SHRINK RAY!");
         break;
       case "onepunch":
         sfxOnePunch();
         this.juice.trigger("onepunch", data);
-        this.showAnnouncement("💥 ONE PUNCH!!");
-        this.triggerCommentary("JURUS SATU PUKULAN AKTIF! HANCUR SUDAH SEMUANYA!!", "crazy", 45);
-        playHumanCommentary("onepunch", true);
+        this.showAnnouncement("ONE PUNCH KNOCKOUT!");
         break;
       case "whiff":
         sfxWhiff();
@@ -721,18 +674,6 @@ export class BouncebackEngine {
           const d = data as any;
           if (type === "punch") {
             sfxPunch();
-            const punchPhrases = [
-              "PUKULAN MAUT! Lawan terpental jauh!",
-              "ADUHAI! Bunyi gubraknya terdengar sampai ke ruang juri!",
-              "HOOK TELAK! Bobby sampai loncat dari kursi!",
-              "BOOOM! Tembakan pukulan meluncur deras!",
-            ];
-            this.triggerCommentary(
-              punchPhrases[Math.floor(Math.random() * punchPhrases.length)],
-              "excited",
-              8
-            );
-            playHumanCommentary("punch");
             this.juice.trigger("punch", {
               x: d?.x ?? this.entities[0].x,
               y: 1.2,
@@ -767,8 +708,10 @@ export class BouncebackEngine {
         isFirstPerson
       );
 
-      // Player debug grant skill via number keys 1-7
-      if (this.player.debugGrantSkill !== null) {
+      // Player debug grant skill via number keys 1-7 (disabled during live disaster voting)
+      if (this.disasterManager.state.isActive) {
+        this.player.debugGrantSkill = null;
+      } else if (this.player.debugGrantSkill !== null) {
         this.skillSlots[0].type = this.player.debugGrantSkill;
         this.player.debugGrantSkill = null;
       }
@@ -791,9 +734,6 @@ export class BouncebackEngine {
         const d = data as any;
         if (type === "botpunch") {
           sfxPunch();
-          if (Math.random() < 0.35) {
-            playHumanCommentary("punch");
-          }
           this.juice.trigger("botpunch", {
             x: d?.x ?? 0,
             y: 1.2,
@@ -861,16 +801,12 @@ export class BouncebackEngine {
                 ent.immuneTimer = 1.4; // 1.4s immunity prevents sweeper multi-hit juggle!
 
                 sfxBoing();
-                playHumanCommentary("launch");
                 this.juice.trigger("bumper", {
                   x: ent.x,
                   y: getArenaHeight(ent.x, ent.z) + 1.0,
                   z: ent.z,
                   text: "BOING!",
                 });
-                if (Math.random() < 0.45) {
-                  this.triggerCommentary("TERPENTAL SWEEPER ARM! Dia melayang bebas tanpa tiket!", "shocked", 12);
-                }
               }
             }
           }
@@ -1142,23 +1078,10 @@ export class BouncebackEngine {
       }
     }
 
-    // Dynamic Hype Meter decay and idle commentary cycling
-    const totalScore = this.match.scores[0] + this.match.scores[1];
-    const minHype = Math.min(85, 15 + totalScore * 12);
-    if (this.hypeMeter > minHype) {
-      this.hypeMeter = Math.max(minHype, this.hypeMeter - dt * 2.2);
-    } else if (this.hypeMeter < minHype) {
-      this.hypeMeter = Math.min(minHype, this.hypeMeter + dt * 4.5);
-    }
+    // Update reality TV live audience disaster manager & physics on entities
+    const disasterVoteState = this.disasterManager.update(dt, this.entities);
 
-    this.commentaryTimer -= dt;
-    if (this.commentaryTimer <= 0) {
-      this.commentaryTimer = 4.5 + Math.random() * 3.5;
-      const idle = this.idleCommentaryList[Math.floor(Math.random() * this.idleCommentaryList.length)];
-      this.triggerCommentary(idle.text, idle.mood, 0);
-    }
-
-    // Push game state to React (including player skill & TV commentary)
+    // Push game state to React (including player skill & reality TV disaster voting)
     const pSlot = this.skillSlots[0];
     this.onStateChange({
       timer: this.match.getTimerDisplay(),
@@ -1173,9 +1096,7 @@ export class BouncebackEngine {
       playerSkillName: pSlot ? SKILL_NAMES[pSlot.type] : "",
       playerSkillIcon: pSlot ? SKILL_ICONS[pSlot.type] : "",
       cameraMode: this.cameraMode,
-      hypeMeter: this.hypeMeter,
-      commentaryText: this.commentaryText,
-      commentaryMood: this.commentaryMood,
+      disasterVoteState,
     });
 
     this.renderer.render(this.scene, this.camera);
@@ -1202,6 +1123,7 @@ export class BouncebackEngine {
     }
     this.player.destroy();
     this.skills.destroy();
+    this.disasterManager.destroy();
     for (const g of this.gongs) {
       g.dispose();
     }

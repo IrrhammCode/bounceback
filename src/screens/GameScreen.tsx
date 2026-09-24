@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { BouncebackEngine, type GameState } from "../game/engine";
 import { SkillType } from "../game/skills";
 import TVIntroOverlay from "../components/TVIntroOverlay";
+import DisasterVoteOverlay from "../components/DisasterVoteOverlay";
 
 interface GameScreenProps {
   onMatchEnd: (winner: number, scores: [number, number]) => void;
@@ -21,9 +22,15 @@ const initialState: GameState = {
   playerSkillName: "",
   playerSkillIcon: "",
   cameraMode: "third_wide",
-  hypeMeter: 20,
-  commentaryText: "Selamat datang di BOUNCE TV 3v3 ARENA! Hajar gong lawan sekarang!",
-  commentaryMood: "normal",
+  disasterVoteState: {
+    isActive: false,
+    voteTimeLeft: 0,
+    candidates: [],
+    userVotedId: null,
+    activeDisaster: null,
+    disasterTimeLeft: 0,
+    announcement: "",
+  },
 };
 
 export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
@@ -86,6 +93,12 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
         />
       )}
 
+      {/* Reality TV Live Audience Disaster Vote Overlay */}
+      <DisasterVoteOverlay
+        voteState={gameState.disasterVoteState}
+        onVote={(id) => engineRef.current?.castDisasterVote(id)}
+      />
+
       {/* HUD Overlay — always visible during match */}
       <div className="hud">
         {/* Exit button */}
@@ -100,10 +113,10 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
           title="Toggle Camera (or press C / V)"
         >
           {gameState.cameraMode === "first_person"
-            ? "🎥 1ST POV"
+            ? "CAM: 1ST POV"
             : gameState.cameraMode === "third_close"
-              ? "🎥 3RD CLOSE"
-              : "🎥 3RD WIDE"}
+              ? "CAM: 3RD CLOSE"
+              : "CAM: 3RD WIDE"}
         </button>
 
         {/* Top Bar: Scoreboard + Timer */}
@@ -168,16 +181,16 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
               className={`action-btn skill ${hasSkill ? "ready" : ""}`}
             >
               <span className="icon">
-                {hasSkill ? gameState.playerSkillIcon : "⭐"}
+                {hasSkill ? gameState.playerSkillIcon : "POW"}
               </span>
               {hasSkill ? "USE" : "SKILL"}
             </button>
             <button id="btnA" className="action-btn punch">
-              <span className="icon">👊</span>
-              HIT
+              <span className="icon">HIT</span>
+              PUNCH
             </button>
             <button id="btnB" className="action-btn dash">
-              <span className="icon">💨</span>
+              <span className="icon">RUN</span>
               DASH
             </button>
           </div>
