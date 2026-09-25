@@ -102,6 +102,8 @@ interface MysteryBox {
   active: boolean;
   respawnTimer: number;
   mesh: THREE.Object3D;
+  dropAnim: number;
+  landed: boolean;
 }
 
 // ─── Skill State per Entity ───
@@ -213,6 +215,8 @@ export class SkillManager {
         active: true,
         respawnTimer: 0,
         mesh,
+        dropAnim: 0,
+        landed: true,
       });
     }
   }
@@ -220,14 +224,14 @@ export class SkillManager {
   private createBoxMesh(): THREE.Object3D {
     const group = new THREE.Group();
 
-    // 1. Translucent Golden Beveled Cube (1.15m size)
-    const outerGeo = new THREE.BoxGeometry(1.15, 1.15, 1.15);
+    // 1. Translucent Golden Beveled Cube (1.2m size)
+    const outerGeo = new THREE.BoxGeometry(1.2, 1.2, 1.2);
     const outer = new THREE.Mesh(outerGeo, this.boxMat);
     outer.castShadow = true;
     group.add(outer);
 
-    // 2. Rotating Inner Golden Diamond Star
-    const innerGeo = new THREE.OctahedronGeometry(0.48, 0);
+    // 2. Rotating Inner Golden Diamond Star Core
+    const innerGeo = new THREE.OctahedronGeometry(0.55, 0);
     const inner = new THREE.Mesh(innerGeo, this.boxInnerMat);
     group.add(inner);
     group.userData.inner = inner;
@@ -243,58 +247,71 @@ export class SkillManager {
       c.textAlign = "center";
       c.textBaseline = "middle";
       c.shadowColor = "#ffd166";
-      c.shadowBlur = 14;
+      c.shadowBlur = 16;
       c.fillText("?", 64, 66);
       const tex = new THREE.CanvasTexture(canvas);
       const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.95 });
       const sprite = new THREE.Sprite(spriteMat);
-      sprite.scale.set(0.85, 0.85, 1);
+      sprite.scale.set(0.9, 0.9, 1);
       group.add(sprite);
     }
 
-    // 4. Orbiting Sparkle Dust Halo Ring
-    const sparkCount = 20;
+    // 4. Orbiting Sparkle Dust Halo Ring (32 particles)
+    const sparkCount = 32;
     const sparkPositions = new Float32Array(sparkCount * 3);
     for (let i = 0; i < sparkCount; i++) {
       const angle = (i / sparkCount) * Math.PI * 2;
-      const r = 0.95;
+      const r = 1.05;
       sparkPositions[i * 3] = Math.cos(angle) * r;
-      sparkPositions[i * 3 + 1] = Math.sin(angle * 2) * 0.22;
+      sparkPositions[i * 3 + 1] = Math.sin(angle * 3) * 0.28;
       sparkPositions[i * 3 + 2] = Math.sin(angle) * r;
     }
     const sparkGeo = new THREE.BufferGeometry();
     sparkGeo.setAttribute("position", new THREE.BufferAttribute(sparkPositions, 3));
     const sparkMat = new THREE.PointsMaterial({
       color: 0xfff3b0,
-      size: 0.12,
+      size: 0.15,
       transparent: true,
-      opacity: 0.9,
+      opacity: 0.95,
       blending: THREE.AdditiveBlending,
     });
     const sparkPoints = new THREE.Points(sparkGeo, sparkMat);
     group.add(sparkPoints);
+    group.userData.sparks = sparkPoints;
 
-    // 5. Vertical Sky Beacon Light Beam (visible from across the entire arena!)
-    const beaconGeo = new THREE.CylinderGeometry(0.32, 0.52, 16, 16);
+    // 5. Giant 24m Vertical Volumetric Sky Beacon Light Beam
+    const beaconGeo = new THREE.CylinderGeometry(0.35, 0.65, 24, 16);
     const beaconMat = new THREE.MeshBasicMaterial({
       color: 0xffd166,
       transparent: true,
-      opacity: 0.35,
+      opacity: 0.38,
       blending: THREE.AdditiveBlending,
       side: THREE.DoubleSide,
       depthWrite: false,
     });
     const beacon = new THREE.Mesh(beaconGeo, beaconMat);
-    beacon.position.y = 8.0;
+    beacon.position.y = 12.0;
     group.add(beacon);
     group.userData.beacon = beacon;
 
-    // 6. Ground Projection Target Ring on arena floor
-    const ringGeo = new THREE.RingGeometry(0.7, 1.5, 32);
+    // Top Sky Crown Flare
+    const flareGeo = new THREE.SphereGeometry(0.8, 12, 10);
+    const flareMat = new THREE.MeshBasicMaterial({
+      color: 0xfff066,
+      transparent: true,
+      opacity: 0.6,
+      blending: THREE.AdditiveBlending,
+    });
+    const crownFlare = new THREE.Mesh(flareGeo, flareMat);
+    crownFlare.position.y = 24.0;
+    group.add(crownFlare);
+
+    // 6. Ground Projection Target Ring on arena floor with segmented runes
+    const ringGeo = new THREE.RingGeometry(0.8, 1.8, 36);
     const ringMat = new THREE.MeshBasicMaterial({
       color: 0xffd166,
       transparent: true,
-      opacity: 0.6,
+      opacity: 0.65,
       blending: THREE.AdditiveBlending,
       side: THREE.DoubleSide,
       depthWrite: false,
@@ -305,18 +322,48 @@ export class SkillManager {
     group.add(floorRing);
     group.userData.floorRing = floorRing;
 
-    // 7. Outer Cyan Energy Torus Ring
-    const torusGeo = new THREE.TorusGeometry(1.35, 0.04, 8, 32);
-    const torusMat = new THREE.MeshBasicMaterial({
+    // Outer Target Pulse Ring
+    const outerRingGeo = new THREE.RingGeometry(2.1, 2.22, 32);
+    const outerRingMat = new THREE.MeshBasicMaterial({
+      color: 0x27e5ff,
+      transparent: true,
+      opacity: 0.5,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    const outerFloorRing = new THREE.Mesh(outerRingGeo, outerRingMat);
+    outerFloorRing.rotation.x = -Math.PI / 2;
+    outerFloorRing.position.y = -BOX_FLOAT_HEIGHT + 0.08;
+    group.add(outerFloorRing);
+    group.userData.outerFloorRing = outerFloorRing;
+
+    // 7. Dual Gyroscope Energy Torus Rings
+    // Ring A: Cyan (X-axis tilt)
+    const torusGeoA = new THREE.TorusGeometry(1.45, 0.045, 8, 32);
+    const torusMatA = new THREE.MeshBasicMaterial({
       color: 0x27e5ff,
       wireframe: true,
       transparent: true,
-      opacity: 0.8,
+      opacity: 0.85,
     });
-    const torus = new THREE.Mesh(torusGeo, torusMat);
-    torus.rotation.x = Math.PI / 3;
-    group.add(torus);
-    group.userData.torus = torus;
+    const torusA = new THREE.Mesh(torusGeoA, torusMatA);
+    torusA.rotation.x = Math.PI / 3;
+    group.add(torusA);
+    group.userData.torusA = torusA;
+
+    // Ring B: Gold/Coral (Y-axis tilt)
+    const torusGeoB = new THREE.TorusGeometry(1.3, 0.04, 8, 32);
+    const torusMatB = new THREE.MeshBasicMaterial({
+      color: 0xffd166,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.75,
+    });
+    const torusB = new THREE.Mesh(torusGeoB, torusMatB);
+    torusB.rotation.y = Math.PI / 3;
+    group.add(torusB);
+    group.userData.torusB = torusB;
 
     return group;
   }
@@ -419,6 +466,9 @@ export class SkillManager {
           if (isPlayer) {
             sfxSkillAcquire();
           }
+
+          // Trigger 3D Starburst Pickup FX
+          this.spawnBoxPickupFX(box.x, box.z, isPlayer);
 
           if (eventFn) {
             eventFn("pickup", {
@@ -1225,6 +1275,146 @@ export class SkillManager {
     });
   }
 
+  // ─── 8. 🌟 Mystery Box Pickup Burst FX (3D Starburst & Shockwave) ───
+  private spawnBoxPickupFX(x: number, z: number, isPlayer: boolean) {
+    const burstGroup = new THREE.Group();
+    burstGroup.position.set(x, 1.2, z);
+
+    // 1. Expanding Golden Shockwave Ring
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0xffd166,
+      transparent: true,
+      opacity: 0.95,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+    });
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.3, 0.7, 32), ringMat);
+    ring.rotation.x = -Math.PI / 2;
+    burstGroup.add(ring);
+
+    // 2. Cyan Concentric Wave for Player
+    let cyanRing: THREE.Mesh | null = null;
+    let cyanMat: THREE.MeshBasicMaterial | null = null;
+    if (isPlayer) {
+      cyanMat = new THREE.MeshBasicMaterial({
+        color: 0x27e5ff,
+        transparent: true,
+        opacity: 0.9,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide,
+      });
+      cyanRing = new THREE.Mesh(new THREE.RingGeometry(0.2, 0.5, 32), cyanMat);
+      cyanRing.rotation.x = -Math.PI / 2;
+      cyanRing.position.y = 0.15;
+      burstGroup.add(cyanRing);
+    }
+
+    // 3. 36 Starburst Spark Particles bursting in all directions
+    const sparkCount = 36;
+    const sparkPositions = new Float32Array(sparkCount * 3);
+    const sparkVelocities: { x: number; y: number; z: number }[] = [];
+    for (let i = 0; i < sparkCount; i++) {
+      sparkPositions[i * 3] = 0;
+      sparkPositions[i * 3 + 1] = 0;
+      sparkPositions[i * 3 + 2] = 0;
+      const phi = Math.random() * Math.PI * 2;
+      const theta = Math.random() * Math.PI * 0.5; // upward hemisphere
+      const spd = 6.0 + Math.random() * 8.0;
+      sparkVelocities.push({
+        x: Math.cos(phi) * Math.sin(theta) * spd,
+        y: Math.cos(theta) * spd + 2.0,
+        z: Math.sin(phi) * Math.sin(theta) * spd,
+      });
+    }
+    const sparkGeo = new THREE.BufferGeometry();
+    sparkGeo.setAttribute("position", new THREE.BufferAttribute(sparkPositions, 3));
+    const sparkMat = new THREE.PointsMaterial({
+      color: 0xfff066,
+      size: 0.22,
+      transparent: true,
+      opacity: 1.0,
+      blending: THREE.AdditiveBlending,
+    });
+    const sparkPoints = new THREE.Points(sparkGeo, sparkMat);
+    burstGroup.add(sparkPoints);
+
+    this.fxGroup.add(burstGroup);
+
+    let age = 0;
+    const maxAge = 0.5;
+
+    this.activeFX.push({
+      update: (dt: number) => {
+        age += dt;
+        const t = age / maxAge;
+        if (t >= 1.0) return true;
+
+        // Expand shockwave
+        const rScale = 1.0 + t * 6.5;
+        ring.scale.set(rScale, rScale, rScale);
+        ringMat.opacity = Math.max(0, 1.0 - t * 1.2);
+
+        if (cyanRing && cyanMat) {
+          const cScale = 1.0 + t * 7.5;
+          cyanRing.scale.set(cScale, cScale, cScale);
+          cyanMat.opacity = Math.max(0, 1.0 - t);
+        }
+
+        // Animate particles
+        const posAttr = sparkGeo.attributes.position as THREE.BufferAttribute;
+        for (let i = 0; i < sparkCount; i++) {
+          const v = sparkVelocities[i];
+          posAttr.setXYZ(
+            i,
+            posAttr.getX(i) + v.x * dt,
+            posAttr.getY(i) + v.y * dt - 9.8 * dt * dt,
+            posAttr.getZ(i) + v.z * dt
+          );
+        }
+        posAttr.needsUpdate = true;
+        sparkMat.opacity = Math.max(0, 1.0 - t * 1.1);
+
+        return false;
+      },
+      dispose: () => {
+        this.fxGroup.remove(burstGroup);
+      },
+    });
+  }
+
+  // ─── 9. Mystery Box Landing Impact FX ───
+  private spawnBoxLandingFX(x: number, z: number) {
+    const shockMat = new THREE.MeshBasicMaterial({
+      color: 0xffd166,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+    });
+    const shock = new THREE.Mesh(new THREE.RingGeometry(0.4, 1.2, 28), shockMat);
+    shock.rotation.x = -Math.PI / 2;
+    shock.position.set(x, 0.08, z);
+    this.fxGroup.add(shock);
+
+    let age = 0;
+    const maxAge = 0.35;
+
+    this.activeFX.push({
+      update: (dt: number) => {
+        age += dt;
+        const t = age / maxAge;
+        if (t >= 1.0) return true;
+        const s = 1.0 + t * 3.5;
+        shock.scale.set(s, s, s);
+        shockMat.opacity = Math.max(0, 1.0 - t);
+        return false;
+      },
+      dispose: () => {
+        this.fxGroup.remove(shock);
+      },
+    });
+  }
+
   // ─── Title Mode Box Animation ───
   public updateTitleBoxes() {
     const now = performance.now() * 0.001;
@@ -1259,6 +1449,9 @@ export class SkillManager {
         if (box.respawnTimer <= 0) {
           box.active = true;
           box.mesh.visible = true;
+          box.dropAnim = 0.55;
+          box.landed = false;
+          box.mesh.position.y = 22.0;
           sfxSkillSpawn();
           if (eventFn) eventFn("box_spawn", { x: box.x, z: box.z });
         }
@@ -1270,23 +1463,50 @@ export class SkillManager {
     for (const box of this.boxes) {
       if (!box.active) continue;
       box.mesh.rotation.y = now * BOX_SPIN_SPEED;
-      box.mesh.position.y = BOX_FLOAT_HEIGHT + Math.sin(now * 2.5 + box.x) * 0.28;
+
+      if (box.dropAnim > 0) {
+        box.dropAnim -= dt;
+        const t = 1.0 - Math.max(0, box.dropAnim / 0.55);
+        // Supersonic ease-in drop
+        const dropH = 22.0 - t * t * (22.0 - BOX_FLOAT_HEIGHT);
+        box.mesh.position.y = dropH;
+        box.mesh.scale.set(0.7 + t * 0.3, 1.3 - t * 0.3, 0.7 + t * 0.3);
+        if (box.dropAnim <= 0 && !box.landed) {
+          box.landed = true;
+          box.mesh.scale.set(1, 1, 1);
+          this.spawnBoxLandingFX(box.x, box.z);
+        }
+      } else {
+        box.mesh.position.y = BOX_FLOAT_HEIGHT + Math.sin(now * 2.5 + box.x) * 0.28;
+      }
 
       const u = box.mesh.userData;
       if (u.beacon) {
-        u.beacon.material.opacity = 0.22 + Math.sin(now * 4.0) * 0.12;
+        u.beacon.material.opacity = 0.28 + Math.sin(now * 4.5) * 0.16;
       }
       if (u.floorRing) {
-        const ringScale = 1.0 + Math.sin(now * 3.5) * 0.12;
+        const ringScale = 1.0 + Math.sin(now * 3.5) * 0.14;
         u.floorRing.scale.set(ringScale, ringScale, ringScale);
       }
-      if (u.torus) {
-        u.torus.rotation.x = now * 1.8;
-        u.torus.rotation.y = now * 1.4;
+      if (u.outerFloorRing) {
+        u.outerFloorRing.rotation.z = now * 1.5;
+        const outerScale = 1.0 + Math.cos(now * 2.8) * 0.1;
+        u.outerFloorRing.scale.set(outerScale, outerScale, outerScale);
+      }
+      if (u.torusA) {
+        u.torusA.rotation.x = now * 2.2;
+        u.torusA.rotation.y = now * 1.6;
+      }
+      if (u.torusB) {
+        u.torusB.rotation.z = -now * 1.9;
+        u.torusB.rotation.x = now * 1.3;
       }
       if (u.inner) {
-        u.inner.rotation.x = -now * 2.2;
-        u.inner.rotation.z = now * 1.6;
+        u.inner.rotation.x = -now * 2.8;
+        u.inner.rotation.z = now * 2.0;
+      }
+      if (u.sparks) {
+        u.sparks.rotation.y = now * 1.8;
       }
     }
 

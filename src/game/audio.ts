@@ -582,6 +582,47 @@ export function sfxSkillAcquire() {
   } catch {}
 }
 
+// ─── Skill Activation Supersonic Release SFX ───
+export function sfxSkillActivate() {
+  if (!ctx || !sfxGain || muted) return;
+  try {
+    const now = ctx.currentTime;
+    // High-energy ascending chord + whoosh
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(320, now);
+    osc.frequency.exponentialRampToValueAtTime(1480, now + 0.22);
+    g.gain.setValueAtTime(0.35, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    osc.connect(g);
+    g.connect(sfxGain);
+    osc.start(now);
+    osc.stop(now + 0.35);
+
+    // Sub-bass thump
+    const sub = ctx.createOscillator();
+    const subG = ctx.createGain();
+    sub.type = "sine";
+    sub.frequency.setValueAtTime(160, now);
+    sub.frequency.exponentialRampToValueAtTime(45, now + 0.3);
+    subG.gain.setValueAtTime(0.45, now);
+    subG.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+    sub.connect(subG);
+    subG.connect(sfxGain);
+    sub.start(now);
+    sub.stop(now + 0.3);
+  } catch {}
+}
+
+// ─── Live Audience Vote Surge Cheer ───
+export function sfxVoteCheer() {
+  if (!ctx || !sfxGain || muted) return;
+  try {
+    playTone(880, 0.08, "triangle", 0.08);
+  } catch {}
+}
+
 // ─── Goal / Ring-Out Fanfare ───
 export function sfxGongHit() {
   // Gong sound fully removed — replaced by stadium crowd cheers

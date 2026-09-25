@@ -48,6 +48,7 @@ import {
   sfxShrink,
   sfxOnePunch,
   sfxLethalHit,
+  sfxSkillActivate,
 } from "./audio";
 import { DisasterManager, type DisasterVoteState, type DisasterId } from "./disasters";
 // @ts-ignore — JS asset modules following 404 asset contract
@@ -399,11 +400,69 @@ export class BouncebackEngine {
       const initH = getArenaHeight(sp.x, sp.z);
       mecha.position.set(sp.x, initH + footOffset, sp.z);
       mecha.rotation.y = sp.team === 1 ? Math.PI : 0;
+
+      // Attach 3D Power-Up Aura (activated when entity gains a Mystery Box skill)
+      const aura = this.createCharacterSkillAura(!!sp.isPlayer);
+      aura.visible = false;
+      mecha.add(aura);
+      mecha.userData.skillAura = aura;
+
       ent.mesh = mecha;
       this.scene.add(mecha);
     }
 
     assignRoles(this.entities);
+  }
+
+  // ─── 3D Character Power-Up Skill Aura ───
+  private createCharacterSkillAura(isPlayer: boolean): THREE.Group {
+    const auraGroup = new THREE.Group();
+    auraGroup.name = "CharacterSkillAura";
+
+    // 1. Swirling ground energy ring
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: isPlayer ? 0xffd166 : 0x27e5ff,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+    });
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.88, 24), ringMat);
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.y = 0.05;
+    auraGroup.add(ring);
+
+    // 2. Orbiting luminous powerup orbs
+    const orbMat = new THREE.MeshStandardMaterial({
+      color: isPlayer ? 0xfff066 : 0x38bdf8,
+      emissive: isPlayer ? 0xffd166 : 0x00f0ff,
+      emissiveIntensity: 0.9,
+      roughness: 0.1,
+    });
+    const orbs: THREE.Mesh[] = [];
+    for (let o = 0; o < 2; o++) {
+      const orb = new THREE.Mesh(new THREE.SphereGeometry(0.12, 10, 8), orbMat);
+      auraGroup.add(orb);
+      orbs.push(orb);
+    }
+    auraGroup.userData.orbs = orbs;
+
+    // 3. For Player: Hovering golden crown star over head
+    if (isPlayer) {
+      const starGeo = new THREE.OctahedronGeometry(0.18, 0);
+      const starMat = new THREE.MeshStandardMaterial({
+        color: 0xffd166,
+        emissive: 0xf59e0b,
+        emissiveIntensity: 0.85,
+        metalness: 0.9,
+      });
+      const star = new THREE.Mesh(starGeo, starMat);
+      star.position.y = 2.1;
+      auraGroup.add(star);
+      auraGroup.userData.crown = star;
+    }
+
+    return auraGroup;
   }
 
   private spawnBumpers() {
@@ -493,6 +552,8 @@ export class BouncebackEngine {
   public triggerPlayerSkill() {
     if (this.appMode !== "game") return;
     if (this.skillSlots[0] && this.skillSlots[0].type !== SkillType.None) {
+      sfxSkillActivate();
+      this.juice.addTrauma(0.42);
       this.skills.activateSkill(
         0,
         this.entities[0],
@@ -1587,6 +1648,26 @@ export class BouncebackEngine {
             const flameScale = isRocket ? 2.6 : (isDash ? 1.8 : (spd > 0.4 ? 1.0 : 0.35));
             for (const f of u.flames) {
               f.scale.set(flameScale, flameScale * (0.8 + Math.random() * 0.4), flameScale);
+            }
+          }
+        }
+
+        // 3D Character Power-Up Skill Aura Update
+        if (u.skillAura) {
+          const hasSkill = slot && slot.type !== SkillType.None;
+          u.skillAura.visible = hasSkill;
+          if (hasSkill) {
+            u.skillAura.rotation.y += dt * 3.5;
+            if (u.skillAuraOrbs) {
+              for (let o = 0; o < u.skillAuraOrbs.length; o++) {
+                const orb = u.skillAuraOrbs[o];
+                const a = now * 0.005 + (o * Math.PI);
+                orb.position.set(Math.cos(a) * 0.82, 0.35 + Math.sin(now * 0.006 + o) * 0.12, Math.sin(a) * 0.82);
+              }
+            }
+            if (u.skillCrown) {
+              u.skillCrown.rotation.y = -now * 0.004;
+              u.skillCrown.position.y = 2.1 + Math.sin(now * 0.005) * 0.1;
             }
           }
         }

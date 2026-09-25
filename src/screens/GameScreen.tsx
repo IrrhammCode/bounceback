@@ -123,6 +123,44 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
     engineRef.current?.startIntro();
   }, []);
 
+  // Skill visual triggers & flashes
+  const [skillFiredFlash, setSkillFiredFlash] = useState(false);
+  const [skillAcquiredFlash, setSkillAcquiredFlash] = useState(false);
+  const prevSkillRef = useRef(gameState.playerSkill);
+
+  const hasSkill = gameState.playerSkill !== SkillType.None;
+
+  const handleActivateSkill = useCallback(() => {
+    if (gameState.playerSkill === SkillType.None) return;
+    setSkillFiredFlash(true);
+    setTimeout(() => setSkillFiredFlash(false), 380);
+    engineRef.current?.triggerPlayerSkill();
+  }, [gameState.playerSkill]);
+
+  // Flash banner when player collects a new power-up box
+  useEffect(() => {
+    if (gameState.playerSkill !== SkillType.None && prevSkillRef.current === SkillType.None) {
+      setSkillAcquiredFlash(true);
+      const t = setTimeout(() => setSkillAcquiredFlash(false), 2000);
+      return () => clearTimeout(t);
+    }
+    prevSkillRef.current = gameState.playerSkill;
+  }, [gameState.playerSkill]);
+
+  // Desktop keyboard activation for E and Q
+  useEffect(() => {
+    if (appMode !== "game") return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.code === "KeyE" || e.code === "KeyQ") && !e.repeat) {
+        if (gameState.playerSkill !== SkillType.None) {
+          handleActivateSkill();
+        }
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [appMode, gameState.playerSkill, handleActivateSkill]);
+
   const timerSecs = parseInt(gameState.timer.split(":")[1] || "0");
   const isUrgent =
     gameState.timer.startsWith("0:") && timerSecs <= 15 && timerSecs > 0;
@@ -135,10 +173,14 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
         : "PHASE 1";
 
   const maxCombo = Math.max(gameState.combo[0], gameState.combo[1]);
-  const hasSkill = gameState.playerSkill !== SkillType.None;
 
   return (
     <div className="screen" style={{ background: "#111625" }}>
+      {/* Cinematic Screen Speedlines Flash on Skill Activation */}
+      {skillFiredFlash && (
+        <div className="skill-activation-speedlines animate-speedlines-pop" />
+      )}
+
       {/* Unified 3D WebGL Canvas — always active across Title, Intro, Game, and Result */}
       <canvas ref={canvasRef} className="game-canvas" />
 
@@ -261,6 +303,16 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
             </div>
           )}
 
+          {/* Golden Power-Up Acquired Full-Center Flash Banner */}
+          {skillAcquiredFlash && (
+            <div className="skill-acquired-banner animate-powerup-zoom">
+              <div className="acq-glow-halo" />
+              <div className="acq-tag">★ MYSTERY POWER-UP READY ★</div>
+              <div className="acq-name">{gameState.playerSkillName}</div>
+              <div className="acq-sub">PRESS [E] / [Q] OR CLICK FIRE TO UNLEASH!</div>
+            </div>
+          )}
+
           {/* Combo Multiplier Display */}
           {maxCombo > 1 && (
             <div className="combo-display" key={maxCombo}>
@@ -307,7 +359,7 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
               {hasSkill && (
                 <button
                   className="skill-activate-hud-btn"
-                  onClick={() => engineRef.current?.triggerPlayerSkill()}
+                  onClick={handleActivateSkill}
                   title="Activate Skill (E / Q / Right-Click)"
                 >
                   <span className="act-key">[E]</span>
@@ -326,7 +378,7 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
               <button
                 id="btnSkill"
                 className={`action-btn skill ${hasSkill ? "ready" : ""}`}
-                onClick={() => engineRef.current?.triggerPlayerSkill()}
+                onClick={handleActivateSkill}
               >
                 <span className="icon">
                   {hasSkill ? gameState.playerSkillIcon : "POW"}
