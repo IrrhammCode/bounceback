@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 
 interface FullscreenButtonProps {
   className?: string;
@@ -16,7 +17,26 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [toast, setToast] = useState<ToastInfo | null>(null);
+  const [showIOSModal, setShowIOSModal] = useState(false);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastToggleRef = useRef(0);
+
+  const isIOS = useCallback((): boolean => {
+    if (typeof navigator === "undefined") return false;
+    return (
+      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+    );
+  }, []);
+
+  const isStandalone = useCallback((): boolean => {
+    if (typeof window === "undefined") return false;
+    const nav = window.navigator as any;
+    return (
+      nav.standalone === true ||
+      window.matchMedia("(display-mode: standalone)").matches
+    );
+  }, []);
 
   const checkIsFullscreen = useCallback((): boolean => {
     if (typeof document === "undefined") return false;
@@ -31,7 +51,7 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
     return isNative || isSimulated;
   }, []);
 
-  const triggerHaptic = useCallback((ms = 15) => {
+  const triggerHaptic = useCallback((ms = 18) => {
     try {
       if (typeof navigator !== "undefined" && "vibrate" in navigator && typeof navigator.vibrate === "function") {
         navigator.vibrate(ms);
@@ -44,7 +64,7 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
     setToast({ title, sub });
     toastTimerRef.current = setTimeout(() => {
       setToast(null);
-    }, 2800);
+    }, 3200);
   }, []);
 
   useEffect(() => {
@@ -69,99 +89,103 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
     };
   }, [checkIsFullscreen]);
 
-  const handleToggle = useCallback(
-    async (e: React.MouseEvent | React.TouchEvent) => {
-      e.stopPropagation();
-      triggerHaptic(18);
+  const applySimulatedFullscreen = useCallback((enable: boolean) => {
+    if (enable) {
+      document.documentElement.classList.add("simulated-fullscreen");
+      document.body.classList.add("simulated-fullscreen");
+      setIsFullscreen(true);
+      try {
+        window.scrollTo(0, 1);
+        setTimeout(() => window.scrollTo(0, 0), 50);
+      } catch {}
+      window.dispatchEvent(new Event("resize"));
+      window.dispatchEvent(new CustomEvent("fullscreen-mode-change", { detail: { isFullscreen: true } }));
+    } else {
+      document.documentElement.classList.remove("simulated-fullscreen");
+      document.body.classList.remove("simulated-fullscreen");
+      setIsFullscreen(false);
+      window.dispatchEvent(new Event("resize"));
+      window.dispatchEvent(new CustomEvent("fullscreen-mode-change", { detail: { isFullscreen: false } }));
+    }
+  }, []);
 
+  const handleToggle = useCallback(
+    async (e: React.SyntheticEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+
+      // Debounce fast multi-event touch/click triggers (350ms)
+      const now = Date.now();
+      if (now - lastToggleRef.current < 350) return;
+      lastToggleRef.current = now;
+
+      triggerHaptic(20);
+
+      const currentlyFs = checkIsFullscreen();
       const doc = document as any;
       const docEl = document.documentElement as any;
-      const currentlyFs = checkIsFullscreen();
-
-      const isIOS =
-        typeof navigator !== "undefined" &&
-        (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
-          (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
 
       if (currentlyFs) {
         // EXIT FULLSCREEN
         try {
           if (doc.fullscreenElement || doc.webkitFullscreenElement) {
-            if (doc.exitFullscreen) {
-              await doc.exitFullscreen();
-            } else if (doc.webkitExitFullscreen) {
-              await doc.webkitExitFullscreen();
-            } else if (doc.mozCancelFullScreen) {
-              await doc.mozCancelFullScreen();
-            } else if (doc.msExitFullscreen) {
-              await doc.msExitFullscreen();
-            }
+            if (doc.exitFullscreen) await doc.exitFullscreen();
+            else if (doc.webkitExitFullscreen) await doc.webkitExitFullscreen();
           }
         } catch (err) {
           console.warn("Native exit fullscreen error:", err);
         }
 
-        // Clean up simulated fullscreen
-        document.documentElement.classList.remove("simulated-fullscreen");
-        document.body.classList.remove("simulated-fullscreen");
-        setIsFullscreen(false);
-        window.dispatchEvent(new Event("resize"));
-        window.dispatchEvent(new CustomEvent("fullscreen-mode-change", { detail: { isFullscreen: false } }));
+        applySimulatedFullscreen(false);
         showToastMsg("MODE JENDELA (WINDOWED)");
+        return;
+      }
+
+      // ENTER FULLSCREEN
+      // Case A: User is already playing from Home Screen (iOS Standalone PWA)
+      if (isStandalone()) {
+        showToastMsg("SUDAH LAYAR PENUH", "Game berjalan dalam mode Fullscreen Standalone App!");
+        applySimulatedFullscreen(true);
+        return;
+      }
+
+      // Case B: iPhone / iOS Safari in browser tab
+      // Apple blocks element.requestFullscreen() in iOS Safari tabs.
+      // Show interactive iOS guide explaining Add to Home Screen + activate immersive mode.
+      if (isIOS()) {
+        applySimulatedFullscreen(true);
+        setShowIOSModal(true);
+        return;
+      }
+
+      // Case C: Android Chrome / Desktop browsers with native Fullscreen API support
+      let nativeSucceeded = false;
+      try {
+        if (docEl.requestFullscreen) {
+          await docEl.requestFullscreen({ navigationUI: "hide" });
+          nativeSucceeded = true;
+        } else if (docEl.webkitRequestFullscreen) {
+          await docEl.webkitRequestFullscreen();
+          nativeSucceeded = true;
+        } else if (docEl.mozRequestFullScreen) {
+          await docEl.mozRequestFullScreen();
+          nativeSucceeded = true;
+        } else if (docEl.msRequestFullscreen) {
+          await docEl.msRequestFullscreen();
+          nativeSucceeded = true;
+        }
+      } catch (err) {
+        console.warn("Native fullscreen rejected, applying immersive fallback:", err);
+      }
+
+      applySimulatedFullscreen(true);
+      if (nativeSucceeded) {
+        showToastMsg("MODE LAYAR PENUH AKTIF");
       } else {
-        // ENTER FULLSCREEN
-        let nativeSucceeded = false;
-
-        // Try native Fullscreen API first (works on Android Chrome, Desktop browsers, iPadOS)
-        if (!isIOS) {
-          try {
-            if (docEl.requestFullscreen) {
-              await docEl.requestFullscreen({ navigationUI: "hide" });
-              nativeSucceeded = true;
-            } else if (docEl.webkitRequestFullscreen) {
-              await docEl.webkitRequestFullscreen();
-              nativeSucceeded = true;
-            } else if (docEl.mozRequestFullScreen) {
-              await docEl.mozRequestFullScreen();
-              nativeSucceeded = true;
-            } else if (docEl.msRequestFullscreen) {
-              await docEl.msRequestFullscreen();
-              nativeSucceeded = true;
-            }
-          } catch (err) {
-            console.warn("Native requestFullscreen rejected, falling back to simulated immersive mode:", err);
-          }
-        }
-
-        // Fallback to simulated immersive fullscreen (especially for iOS Safari & restricted iframes)
-        if (!nativeSucceeded) {
-          document.documentElement.classList.add("simulated-fullscreen");
-          document.body.classList.add("simulated-fullscreen");
-          setIsFullscreen(true);
-          try {
-            window.scrollTo(0, 1);
-            setTimeout(() => window.scrollTo(0, 0), 60);
-          } catch {}
-          window.dispatchEvent(new Event("resize"));
-          window.dispatchEvent(new CustomEvent("fullscreen-mode-change", { detail: { isFullscreen: true } }));
-
-          if (isIOS) {
-            showToastMsg(
-              "LAYAR PENUH AKTIF",
-              "Tip iOS: Buka Share > Add to Home Screen untuk 100% tanpa bar browser"
-            );
-          } else {
-            showToastMsg("LAYAR PENUH AKTIF", "Tekan tombol sekali lagi untuk keluar");
-          }
-        } else {
-          setIsFullscreen(true);
-          window.dispatchEvent(new Event("resize"));
-          window.dispatchEvent(new CustomEvent("fullscreen-mode-change", { detail: { isFullscreen: true } }));
-          showToastMsg("MODE LAYAR PENUH AKTIF");
-        }
+        showToastMsg("MODE IMMERSIVE AKTIF", "Layar disesuaikan penuh ke tampilan browser");
       }
     },
-    [checkIsFullscreen, triggerHaptic, showToastMsg]
+    [checkIsFullscreen, isIOS, isStandalone, triggerHaptic, applySimulatedFullscreen, showToastMsg]
   );
 
   return (
@@ -170,6 +194,7 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
         type="button"
         className={`btn-fullscreen-toggle ${isFullscreen ? "is-fullscreen" : ""} ${className}`}
         onClick={handleToggle}
+        onTouchEnd={handleToggle}
         title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
         aria-label={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
       >
@@ -217,30 +242,119 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
         )}
       </button>
 
-      {/* Broadcast Toast Notification */}
-      {toast && (
-        <div className="fs-toast-alert animate-fade-in" role="status" aria-live="polite">
-          <div className="fs-toast-title">
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#27e5ff"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M3 8V5a2 2 0 0 1 2-2h3" />
-              <path d="M16 3h3a2 2 0 0 1 2 2v3" />
-              <path d="M8 21H5a2 2 0 0 1-2-2v-3" />
-              <path d="M21 16v3a2 2 0 0 1-2 2h-3" />
-            </svg>
-            <span>{toast.title}</span>
-          </div>
-          {toast.sub && <div className="fs-toast-sub">{toast.sub}</div>}
-        </div>
-      )}
+      {/* Broadcast Toast Notification — Portaled to body to escape all stacking contexts */}
+      {toast &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div className="fs-toast-alert animate-fade-in" role="status" aria-live="polite">
+            <div className="fs-toast-title">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#27e5ff"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M3 8V5a2 2 0 0 1 2-2h3" />
+                <path d="M16 3h3a2 2 0 0 1 2 2v3" />
+                <path d="M8 21H5a2 2 0 0 1-2-2v-3" />
+                <path d="M21 16v3a2 2 0 0 1-2 2h-3" />
+              </svg>
+              <span>{toast.title}</span>
+            </div>
+            {toast.sub && <div className="fs-toast-sub">{toast.sub}</div>}
+          </div>,
+          document.body
+        )}
+
+      {/* Interactive Apple iOS Fullscreen Guide Modal — Portaled to body to escape all stacking contexts */}
+      {showIOSModal &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            className="ios-fs-modal-backdrop animate-fade-in"
+            onClick={() => setShowIOSModal(false)}
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="ios-fs-modal animate-scale-pop" onClick={(e) => e.stopPropagation()}>
+              <div className="ios-fs-header">
+                <span className="ios-fs-badge">PANDUAN IPHONE (IOS)</span>
+                <button
+                  type="button"
+                  className="ios-fs-close-btn"
+                  onClick={() => setShowIOSModal(false)}
+                  aria-label="Tutup"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="ios-fs-title">100% Layar Penuh di iPhone</div>
+              <p className="ios-fs-desc">
+                Apple membatasi tombol fullscreen otomatis di dalam tab browser Safari. Agar game tampil <strong>100% Fullscreen tanpa bilah browser sama sekali</strong>:
+              </p>
+
+              <div className="ios-fs-steps">
+                <div className="ios-step-item">
+                  <div className="ios-step-num">1</div>
+                  <div className="ios-step-content">
+                    <div className="ios-step-heading">
+                      Tekan Tombol <strong>Share</strong>
+                      <svg className="ios-step-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#27e5ff" strokeWidth="2.2">
+                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                        <polyline points="16 6 12 2 8 6" />
+                        <line x1="12" y1="2" x2="12" y2="15" />
+                      </svg>
+                    </div>
+                    <div className="ios-step-sub">Ikon kotak dengan panah ke atas di bilah bawah Safari kamu.</div>
+                  </div>
+                </div>
+
+                <div className="ios-step-item">
+                  <div className="ios-step-num">2</div>
+                  <div className="ios-step-content">
+                    <div className="ios-step-heading">
+                      Pilih <strong>Tambahkan ke Layar Utama</strong>
+                    </div>
+                    <div className="ios-step-sub">Gulir ke bawah di menu Share lalu pilih <em>Add to Home Screen</em>.</div>
+                  </div>
+                </div>
+
+                <div className="ios-step-item">
+                  <div className="ios-step-num">3</div>
+                  <div className="ios-step-content">
+                    <div className="ios-step-heading">Buka Game dari Layar Utama</div>
+                    <div className="ios-step-sub">Game akan langsung terbuka <strong>100% Fullscreen tanpa bilah browser</strong> seperti game aplikasi App Store!</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="ios-fs-tip">
+                <strong>Trik Cepat di Browser:</strong> Tekan tombol <strong>aA</strong> di kiri address bar Safari kamu &rarr; pilih <em>"Sembunyikan Bilah Alat" (Hide Toolbar)</em>.
+              </div>
+
+              <button
+                type="button"
+                className="ios-fs-action-btn"
+                onClick={() => {
+                  setShowIOSModal(false);
+                  applySimulatedFullscreen(true);
+                  showToastMsg("MODE IMMERSIVE AKTIF", "Layar diperluas penuh!");
+                }}
+              >
+                Lanjutkan Main
+              </button>
+            </div>
+          </div>,
+          document.body
+        )}
     </>
   );
 };
