@@ -180,7 +180,7 @@ export default function TitleScreenOverlay({ onStartMatch, onWatchIntro }: Title
                 onClick={onWatchIntro}
                 style={{ borderColor: "rgba(39, 229, 255, 0.6)", color: "#7eeeff" }}
               >
-                WATCH 3V3 TV INTRO
+                WATCH 5V5 TV INTRO
               </button>
             )}
             <button

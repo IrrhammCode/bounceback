@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 
 (async () => {
-  const outDir = path.join(__dirname, "docs", "screenshots");
+  const outDir = path.join(__dirname, "..", "docs", "screenshots");
   fs.mkdirSync(outDir, { recursive: true });
 
   const browser = await puppeteer.launch({
