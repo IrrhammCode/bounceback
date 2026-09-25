@@ -10,6 +10,7 @@
  */
 import * as C from "./config";
 import { Entity, applyPunch } from "./physics";
+import { SkillType } from "./skills";
 
 export type JuiceFn = (type: string, data?: unknown) => void;
 

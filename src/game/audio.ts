@@ -588,10 +588,12 @@ export function sfxRoundBuzzer() {
 }
 
 export function sfxRoundVictoryFanfare(team: number) {
-  if (!ctx || !sfxGain || muted) return;
+  const audioCtx = ctx;
+  const audioGain = sfxGain;
+  if (!audioCtx || !audioGain || muted) return;
   try {
     sfxCrowdCheer(1.5);
-    const t = ctx.currentTime;
+    const t = audioCtx.currentTime;
 
     // Triumphant 4-note brass fanfare
     const notes = team === 0
@@ -602,10 +604,10 @@ export function sfxRoundVictoryFanfare(team: number) {
       const noteStart = t + idx * 0.16;
       const noteDur = idx === notes.length - 1 ? 0.75 : 0.22;
 
-      const osc = ctx.createOscillator();
-      const osc2 = ctx.createOscillator();
-      const gain = ctx.createGain();
-      const filter = ctx.createBiquadFilter();
+      const osc = audioCtx.createOscillator();
+      const osc2 = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      const filter = audioCtx.createBiquadFilter();
 
       osc.type = "sawtooth";
       osc.frequency.setValueAtTime(freq, noteStart);
@@ -622,7 +624,7 @@ export function sfxRoundVictoryFanfare(team: number) {
       osc.connect(filter);
       osc2.connect(filter);
       filter.connect(gain);
-      gain.connect(sfxGain);
+      gain.connect(audioGain);
 
       osc.start(noteStart);
       osc2.start(noteStart);
@@ -688,10 +690,12 @@ export function sfxRoundTransitionWhoosh() {
 }
 
 export function sfxGrandChampionshipVictory() {
-  if (!ctx || !sfxGain || muted) return;
+  const audioCtx = ctx;
+  const audioGain = sfxGain;
+  if (!audioCtx || !audioGain || muted) return;
   try {
     sfxCrowdCheer(2.0);
-    const t = ctx.currentTime;
+    const t = audioCtx.currentTime;
 
     // Multi-chord epic Grand Championship brass fanfare
     const chords = [
@@ -706,8 +710,8 @@ export function sfxGrandChampionshipVictory() {
       const stepDur = step === chords.length - 1 ? 1.6 : 0.32;
 
       chord.forEach((freq) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
         osc.type = "sawtooth";
         osc.frequency.setValueAtTime(freq, stepTime);
 
@@ -716,7 +720,7 @@ export function sfxGrandChampionshipVictory() {
         gain.gain.exponentialRampToValueAtTime(0.001, stepTime + stepDur);
 
         osc.connect(gain);
-        gain.connect(sfxGain);
+        gain.connect(audioGain);
         osc.start(stepTime);
         osc.stop(stepTime + stepDur);
       });

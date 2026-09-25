@@ -120,6 +120,7 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
       handleTournamentEnd
     );
     engineRef.current = engine;
+    (window as any).__ENGINE__ = engine;
     engine.init();
 
     return () => {
@@ -191,6 +192,8 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
       setSkillAcquiredFlash(true);
       const t = setTimeout(() => setSkillAcquiredFlash(false), 2000);
       return () => clearTimeout(t);
+    } else if (gameState.playerSkill === SkillType.None) {
+      setSkillAcquiredFlash(false);
     }
     prevSkillRef.current = gameState.playerSkill;
   }, [gameState.playerSkill]);
@@ -378,17 +381,6 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
             </div>
           </div>
 
-          {/* Final 3, 2, 1 Seconds Tension Countdown */}
-          {gameState.finalCountdown > 0 && (
-            <div className="final-countdown-overlay" key={gameState.finalCountdown}>
-              <div className="final-countdown-ring" />
-              <div className="final-countdown-number animate-countdown-pulse">
-                {gameState.finalCountdown}
-              </div>
-              <div className="final-countdown-label">FINAL SECONDS!</div>
-            </div>
-          )}
-
           {/* In-Game Animated Round Victory Broadcast Overlay */}
           {gameState.celebrationBanner?.isActive && (
             gameState.celebrationBanner.isGrandChampionship ? (
@@ -428,7 +420,7 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
           )}
 
           {/* Golden Power-Up Acquired Full-Center Flash Banner */}
-          {skillAcquiredFlash && (
+          {skillAcquiredFlash && hasSkill && gameState.playerSkill !== SkillType.None && (
             <div className="skill-acquired-banner animate-powerup-zoom">
               <div className="acq-glow-halo" />
               <div className="acq-icon-wrap">

@@ -817,6 +817,15 @@ export class BouncebackEngine {
       this.startMatch(this.tournament.currentRound);
     } else {
       this.appMode = "result";
+      if (this.onTournamentEnd) {
+        this.onTournamentEnd(
+          this.tournament.tournamentWinner,
+          this.tournament.roundHistory,
+          this.tournament.roundWins
+        );
+      } else if (this.onMatchEnd) {
+        this.onMatchEnd(this.winningTeam, this.match.scores);
+      }
     }
   }
 
@@ -1338,6 +1347,8 @@ export class BouncebackEngine {
     if (!this.running) return;
     this.animId = requestAnimationFrame(this.loop);
 
+    try {
+
     const rawDt = (now - this.lastTime) / 1000;
     this.lastTime = now;
     const dt = Math.min(rawDt, 0.05) * this.juice.getTimeScale();
@@ -1403,7 +1414,7 @@ export class BouncebackEngine {
     // Hit-stop: skip physics when frozen
     if (!this.juice.isHitStopped()) {
       // Player input with camera orientation awareness
-      const isFirstPerson = this.cameraMode === "first_person";
+      const isFirstPerson = (this.cameraMode as string) === "first_person";
       let camAngle = 0;
       if (this.camera) {
         const camDir = new THREE.Vector3();
@@ -1679,7 +1690,7 @@ export class BouncebackEngine {
 
       // Round 5: Midnight Cosmic Singularity Vortex in Final 30 Seconds
       if (currentRoundDef.roundNumber === 5) {
-        const isFinal30s = this.match.timeLeft <= 30 && this.match.timeLeft > 0;
+        const isFinal30s = this.match.timer <= 30 && this.match.timer > 0;
         this.arenaController?.setCosmicVortexActive?.(isFinal30s);
         if (isFinal30s) {
           for (const ent of this.entities) {
@@ -2263,6 +2274,9 @@ export class BouncebackEngine {
       pos: p ? [p.x, p.z] : [0, 0],
       speed: Number(speed.toFixed(2)),
     };
+    } catch (err) {
+      console.error("[BouncebackEngine Error in loop]", err);
+    }
   };
 
   destroy() {
