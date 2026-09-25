@@ -6,7 +6,7 @@ interface OrientationPromptModalProps {
   onCloseTutorial?: () => void;
 }
 
-export type GuideCategory = "all" | "rotate" | "fullscreen";
+export type GuideTopic = "rotate" | "fullscreen";
 
 export const OrientationPromptModal: React.FC<OrientationPromptModalProps> = ({
   forceShowTutorial = false,
@@ -17,7 +17,7 @@ export const OrientationPromptModal: React.FC<OrientationPromptModalProps> = ({
   const [dismissed, setDismissed] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [activeDeviceTab, setActiveDeviceTab] = useState<"iphone" | "android">("iphone");
-  const [activeCategory, setActiveCategory] = useState<GuideCategory>("all");
+  const [activeTopic, setActiveTopic] = useState<GuideTopic>("rotate");
   const [fullscreenActive, setFullscreenActive] = useState(false);
 
   const cardRef = useRef<HTMLDivElement>(null);
@@ -31,7 +31,7 @@ export const OrientationPromptModal: React.FC<OrientationPromptModalProps> = ({
   }, []);
 
   const handleScrollDown = () => {
-    cardRef.current?.scrollBy({ top: 180, behavior: "smooth" });
+    cardRef.current?.scrollBy({ top: 160, behavior: "smooth" });
   };
 
   const checkOrientation = useCallback(() => {
@@ -75,10 +75,18 @@ export const OrientationPromptModal: React.FC<OrientationPromptModalProps> = ({
 
   // Listen to global open events from Title Screen, Pause Menu, or Fullscreen button
   useEffect(() => {
-    const handleOpenTutorial = () => setShowTutorial(true);
+    const handleOpenTutorial = (e: any) => {
+      if (e?.detail?.topic === "rotate" || e?.detail?.topic === "fullscreen") {
+        setActiveTopic(e.detail.topic);
+      }
+      setShowTutorial(true);
+    };
     window.addEventListener("open-orientation-guide", handleOpenTutorial);
     window.addEventListener("open-phone-tips", handleOpenTutorial);
-    window.addEventListener("open-ios-fs-modal", handleOpenTutorial);
+    window.addEventListener("open-ios-fs-modal", (e: any) => {
+      setActiveTopic("fullscreen");
+      handleOpenTutorial(e);
+    });
     return () => {
       window.removeEventListener("open-orientation-guide", handleOpenTutorial);
       window.removeEventListener("open-phone-tips", handleOpenTutorial);
@@ -101,7 +109,7 @@ export const OrientationPromptModal: React.FC<OrientationPromptModalProps> = ({
         window.removeEventListener("resize", checkScrollState);
       };
     }
-  }, [showTutorial, activeDeviceTab, activeCategory, checkScrollState]);
+  }, [showTutorial, activeDeviceTab, activeTopic, checkScrollState]);
 
   const handleCloseTutorial = () => {
     setShowTutorial(false);
@@ -148,9 +156,6 @@ export const OrientationPromptModal: React.FC<OrientationPromptModalProps> = ({
 
   // Show Tutorial Modal if requested
   if (showTutorial) {
-    const showRotate = activeCategory === "all" || activeCategory === "rotate";
-    const showFullscreen = activeCategory === "all" || activeCategory === "fullscreen";
-
     return createPortal(
       <div
         className="orientation-tutorial-backdrop animate-fade-in"
@@ -167,11 +172,11 @@ export const OrientationPromptModal: React.FC<OrientationPromptModalProps> = ({
           {/* Header */}
           <div className="tutorial-header">
             <div className="tutorial-badge">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
                 <line x1="12" y1="18" x2="12.01" y2="18" />
               </svg>
-              PHONE & TABLET PLAY GUIDE
+              <span>PHONE &amp; TABLET GUIDE</span>
             </div>
             <button
               type="button"
@@ -179,101 +184,83 @@ export const OrientationPromptModal: React.FC<OrientationPromptModalProps> = ({
               onClick={handleCloseTutorial}
               aria-label="Close Guide"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18" />
                 <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
             </button>
           </div>
 
-          <div className="tutorial-title">Rotate to Landscape & 100% Fullscreen</div>
+          {/* Title & Short Description */}
+          <div className="tutorial-title">Rotate &amp; Fullscreen Guide</div>
           <p className="tutorial-desc">
-            Bounce Back features an ultra-wide 5v5 stadium. Rotate horizontally and launch fullscreen for maximum tactical arena vision and zero browser address bars!
+            Optimize your mobile display for the full 5v5 stadium experience.
           </p>
 
-          {/* Category Filter Tabs */}
-          <div className="category-tab-bar">
+          {/* Topic Switcher (2 Clean Balanced Tabs) */}
+          <div className="guide-topic-bar">
             <button
               type="button"
-              className={`category-tab-btn ${activeCategory === "all" ? "active" : ""}`}
-              onClick={() => setActiveCategory("all")}
+              className={`guide-topic-btn ${activeTopic === "rotate" ? "active" : ""}`}
+              onClick={() => setActiveTopic("rotate")}
             >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
-                <rect x="3" y="3" width="7" height="7" />
-                <rect x="14" y="3" width="7" height="7" />
-                <rect x="14" y="14" width="7" height="7" />
-                <rect x="3" y="14" width="7" height="7" />
-              </svg>
-              ALL TIPS
-            </button>
-            <button
-              type="button"
-              className={`category-tab-btn ${activeCategory === "rotate" ? "active" : ""}`}
-              onClick={() => setActiveCategory("rotate")}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
               </svg>
-              HOW TO ROTATE
+              <span>1. Rotate Screen</span>
             </button>
             <button
               type="button"
-              className={`category-tab-btn ${activeCategory === "fullscreen" ? "active" : ""}`}
-              onClick={() => setActiveCategory("fullscreen")}
+              className={`guide-topic-btn ${activeTopic === "fullscreen" ? "active" : ""}`}
+              onClick={() => setActiveTopic("fullscreen")}
             >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="15 3 21 3 21 9" />
                 <polyline points="9 21 3 21 3 15" />
                 <line x1="21" y1="3" x2="14" y2="10" />
                 <line x1="3" y1="21" x2="10" y2="14" />
               </svg>
-              100% FULLSCREEN
+              <span>2. 100% Fullscreen</span>
             </button>
           </div>
 
-          {/* Device Tabs */}
-          <div className="device-tab-bar">
+          {/* Device Switcher (Single-Line Clean Segmented Pill) */}
+          <div className="guide-device-bar">
             <button
               type="button"
-              className={`device-tab-btn ${activeDeviceTab === "iphone" ? "active" : ""}`}
+              className={`guide-device-btn ${activeDeviceTab === "iphone" ? "active" : ""}`}
               onClick={() => setActiveDeviceTab("iphone")}
             >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
                 <line x1="12" y1="18" x2="12.01" y2="18" />
               </svg>
-              Apple iPhone (iOS)
+              <span>Apple iPhone</span>
             </button>
             <button
               type="button"
-              className={`device-tab-btn ${activeDeviceTab === "android" ? "active" : ""}`}
+              className={`guide-device-btn ${activeDeviceTab === "android" ? "active" : ""}`}
               onClick={() => setActiveDeviceTab("android")}
             >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
                 <circle cx="12" cy="18" r="1" />
               </svg>
-              Android (Samsung / Pixel)
+              <span>Android Phone</span>
             </button>
           </div>
 
-          {/* ==================== TAB 1: IPHONE (iOS) ==================== */}
-          {activeDeviceTab === "iphone" && (
+          {/* ==================== CONTENT 1: ROTATE SCREEN ==================== */}
+          {activeTopic === "rotate" && (
             <div className="tutorial-steps-wrap">
-              {/* Part 1: How to Rotate */}
-              {showRotate && (
+              {activeDeviceTab === "iphone" ? (
                 <>
-                  <div className="tutorial-section-divider">
-                    <span className="tutorial-section-tag">Part 1 &bull; Rotate to Landscape</span>
-                    <div className="tutorial-section-line" />
-                  </div>
-
                   <div className="tutorial-step">
                     <div className="step-num">1</div>
                     <div className="step-body">
                       <div className="step-name">Open Control Center</div>
                       <div className="step-info">
-                        Swipe down from the <strong>top-right corner</strong> of your screen (or swipe up from the bottom edge on older iPhone models).
+                        Swipe down from the <strong>top-right corner</strong> of your screen.
                       </div>
                     </div>
                   </div>
@@ -283,99 +270,7 @@ export const OrientationPromptModal: React.FC<OrientationPromptModalProps> = ({
                     <div className="step-body">
                       <div className="step-name">Turn OFF Portrait Lock</div>
                       <div className="step-info">
-                        Tap the <strong>Lock with Circular Arrow</strong> icon. Ensure it is <strong>white/gray (OFF)</strong>, not red/active.
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="tutorial-step">
-                    <div className="step-num">3</div>
-                    <div className="step-body">
-                      <div className="step-name">Rotate iPhone to Landscape</div>
-                      <div className="step-info">
-                        Turn your iPhone sideways. The game immediately reconfigures into wide panoramic arena view!
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Part 2: 100% Fullscreen */}
-              {showFullscreen && (
-                <>
-                  <div className="tutorial-section-divider">
-                    <span className="tutorial-section-tag">Part 2 &bull; 100% Fullscreen (App Mode)</span>
-                    <div className="tutorial-section-line" />
-                  </div>
-
-                  <div className="tutorial-step">
-                    <div className="step-num">{showRotate ? "4" : "1"}</div>
-                    <div className="step-body">
-                      <div className="step-name">Tap Safari's Share Button</div>
-                      <div className="step-info">
-                        Tap the square icon with an upward arrow in your Safari bottom navigation bar.
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="tutorial-step">
-                    <div className="step-num">{showRotate ? "5" : "2"}</div>
-                    <div className="step-body">
-                      <div className="step-name">Select "Add to Home Screen"</div>
-                      <div className="step-info">
-                        Scroll down the share sheet and tap <strong>Add to Home Screen</strong>, then tap <em>Add</em> in the top right.
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="tutorial-step">
-                    <div className="step-num">{showRotate ? "6" : "3"}</div>
-                    <div className="step-body">
-                      <div className="step-name">Launch Game from Home Screen</div>
-                      <div className="step-info">
-                        Open the game icon on your Home Screen. It runs in <strong>100% borderless fullscreen with zero address bars</strong> just like an App Store game!
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="tutorial-tip-box">
-                    <div className="tip-title">QUICK BROWSER SHORTCUT</div>
-                    <div className="tip-content">
-                      In Safari, tap the <strong>aA</strong> button on the left of your address bar &rarr; select <em>"Hide Toolbar"</em> for instant extra room.
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* ==================== TAB 2: ANDROID ==================== */}
-          {activeDeviceTab === "android" && (
-            <div className="tutorial-steps-wrap">
-              {/* Part 1: How to Rotate */}
-              {showRotate && (
-                <>
-                  <div className="tutorial-section-divider">
-                    <span className="tutorial-section-tag">Part 1 &bull; Rotate to Landscape</span>
-                    <div className="tutorial-section-line" />
-                  </div>
-
-                  <div className="tutorial-step">
-                    <div className="step-num">1</div>
-                    <div className="step-body">
-                      <div className="step-name">Open Quick Settings</div>
-                      <div className="step-info">
-                        Swipe down twice from the top of your screen to expand the quick settings toggle bar.
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="tutorial-step">
-                    <div className="step-num">2</div>
-                    <div className="step-body">
-                      <div className="step-name">Enable "Auto-Rotate"</div>
-                      <div className="step-info">
-                        Find the <strong>Auto-rotate</strong> tile and tap it so it shows <strong>Auto-rotate (ON)</strong>.
+                        Tap the <strong>Lock with Circular Arrow</strong> icon so it becomes <strong>gray (OFF)</strong>.
                       </div>
                     </div>
                   </div>
@@ -385,25 +280,117 @@ export const OrientationPromptModal: React.FC<OrientationPromptModalProps> = ({
                     <div className="step-body">
                       <div className="step-name">Turn Phone Sideways</div>
                       <div className="step-info">
-                        Rotate horizontally. The game expands to fill your entire widescreen display!
+                        Rotate iPhone horizontally. The match instantly expands into full widescreen view!
                       </div>
                     </div>
                   </div>
-                </>
-              )}
 
-              {/* Part 2: 100% Fullscreen */}
-              {showFullscreen && (
+                  <button
+                    type="button"
+                    className="guide-switch-link"
+                    onClick={() => setActiveTopic("fullscreen")}
+                  >
+                    <span>Need borderless fullscreen? View Fullscreen Guide</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  </button>
+                </>
+              ) : (
                 <>
-                  <div className="tutorial-section-divider">
-                    <span className="tutorial-section-tag">Part 2 &bull; 100% Fullscreen (App Mode)</span>
-                    <div className="tutorial-section-line" />
+                  <div className="tutorial-step">
+                    <div className="step-num">1</div>
+                    <div className="step-body">
+                      <div className="step-name">Open Quick Settings</div>
+                      <div className="step-info">
+                        Swipe down twice from the top of your screen to reveal toggles.
+                      </div>
+                    </div>
                   </div>
 
                   <div className="tutorial-step">
-                    <div className="step-num">{showRotate ? "4" : "1"}</div>
+                    <div className="step-num">2</div>
                     <div className="step-body">
-                      <div className="step-name">Tap Chrome Menu (Three Dots)</div>
+                      <div className="step-name">Enable "Auto-Rotate"</div>
+                      <div className="step-info">
+                        Tap the <strong>Auto-rotate</strong> tile so it shows <strong>Auto-rotate (ON)</strong>.
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="tutorial-step">
+                    <div className="step-num">3</div>
+                    <div className="step-body">
+                      <div className="step-name">Turn Phone Sideways</div>
+                      <div className="step-info">
+                        Rotate horizontally. The arena automatically expands across your widescreen!
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="guide-switch-link"
+                    onClick={() => setActiveTopic("fullscreen")}
+                  >
+                    <span>Need borderless fullscreen? View Fullscreen Guide</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* ==================== CONTENT 2: 100% FULLSCREEN ==================== */}
+          {activeTopic === "fullscreen" && (
+            <div className="tutorial-steps-wrap">
+              {activeDeviceTab === "iphone" ? (
+                <>
+                  <div className="tutorial-step">
+                    <div className="step-num">1</div>
+                    <div className="step-body">
+                      <div className="step-name">Tap Safari Share Button</div>
+                      <div className="step-info">
+                        Tap the square share icon (arrow pointing up) at the bottom of Safari.
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="tutorial-step">
+                    <div className="step-num">2</div>
+                    <div className="step-body">
+                      <div className="step-name">Select "Add to Home Screen"</div>
+                      <div className="step-info">
+                        Scroll down the menu and tap <strong>Add to Home Screen</strong>, then tap <em>Add</em>.
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="tutorial-step">
+                    <div className="step-num">3</div>
+                    <div className="step-body">
+                      <div className="step-name">Launch from Home Screen</div>
+                      <div className="step-info">
+                        Open the icon on your Home Screen. It runs in <strong>100% borderless fullscreen with zero address bars</strong>!
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="tutorial-tip-box">
+                    <div className="tip-title">QUICK SAFARI SHORTCUT</div>
+                    <div className="tip-content">
+                      In Safari, tap the <strong>aA</strong> button on the left of your address bar &rarr; select <em>"Hide Toolbar"</em> for instant room.
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="tutorial-step">
+                    <div className="step-num">1</div>
+                    <div className="step-body">
+                      <div className="step-name">Tap Chrome Menu</div>
                       <div className="step-info">
                         Tap the three vertical dots (<strong>&vellip;</strong>) in the top-right corner of Google Chrome.
                       </div>
@@ -411,9 +398,9 @@ export const OrientationPromptModal: React.FC<OrientationPromptModalProps> = ({
                   </div>
 
                   <div className="tutorial-step">
-                    <div className="step-num">{showRotate ? "5" : "2"}</div>
+                    <div className="step-num">2</div>
                     <div className="step-body">
-                      <div className="step-name">Select "Add to Home screen" or "Install"</div>
+                      <div className="step-name">Select "Add to Home screen"</div>
                       <div className="step-info">
                         Tap <strong>Add to Home screen</strong> (or <strong>Install app</strong>) and confirm.
                       </div>
@@ -421,19 +408,19 @@ export const OrientationPromptModal: React.FC<OrientationPromptModalProps> = ({
                   </div>
 
                   <div className="tutorial-step">
-                    <div className="step-num">{showRotate ? "6" : "3"}</div>
+                    <div className="step-num">3</div>
                     <div className="step-body">
                       <div className="step-name">Launch from Home Screen</div>
                       <div className="step-info">
-                        Open from your launcher to play in borderless full screen with no browser controls.
+                        Open from your app drawer to play in pure fullscreen with zero browser address bars.
                       </div>
                     </div>
                   </div>
 
                   <div className="tutorial-tip-box">
-                    <div className="tip-title">QUICK FULLSCREEN SHORTCUT</div>
+                    <div className="tip-title">INSTANT FULLSCREEN SHORTCUT</div>
                     <div className="tip-content">
-                      You can also tap the <strong>Fullscreen Button</strong> below to trigger browser immersive mode immediately!
+                      You can also tap the <strong>Fullscreen Button</strong> below to enter browser immersive mode immediately!
                     </div>
                   </div>
                 </>
@@ -456,32 +443,30 @@ export const OrientationPromptModal: React.FC<OrientationPromptModalProps> = ({
             </button>
           )}
 
-          {/* Footer Actions */}
+          {/* Footer Actions (Stacked Vertically for Perfect Mobile Responsiveness) */}
           <div className="tutorial-footer">
-            <div className="tutorial-actions-row">
-              <button
-                type="button"
-                className="tutorial-btn secondary"
-                onClick={handleToggleFullscreen}
-                title="Toggle Fullscreen Mode"
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="15 3 21 3 21 9" />
-                  <polyline points="9 21 3 21 3 15" />
-                  <line x1="21" y1="3" x2="14" y2="10" />
-                  <line x1="3" y1="21" x2="10" y2="14" />
-                </svg>
-                {fullscreenActive ? "EXIT FULLSCREEN" : "TOGGLE FULLSCREEN"}
-              </button>
+            <button
+              type="button"
+              className="tutorial-btn primary"
+              onClick={handleCloseTutorial}
+            >
+              GOT IT, LET'S PLAY!
+            </button>
 
-              <button
-                type="button"
-                className="tutorial-btn primary"
-                onClick={handleCloseTutorial}
-              >
-                GOT IT, LET'S PLAY!
-              </button>
-            </div>
+            <button
+              type="button"
+              className="tutorial-btn secondary"
+              onClick={handleToggleFullscreen}
+              title="Toggle Fullscreen Mode"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 3 21 3 21 9" />
+                <polyline points="9 21 3 21 3 15" />
+                <line x1="21" y1="3" x2="14" y2="10" />
+                <line x1="3" y1="21" x2="10" y2="14" />
+              </svg>
+              <span>{fullscreenActive ? "EXIT FULLSCREEN" : "TOGGLE FULLSCREEN NOW"}</span>
+            </button>
           </div>
         </div>
       </div>,
@@ -511,7 +496,7 @@ export const OrientationPromptModal: React.FC<OrientationPromptModalProps> = ({
           type="button"
           className="suggest-guide-btn"
           onClick={() => {
-            setActiveCategory("rotate");
+            setActiveTopic("rotate");
             setShowTutorial(true);
           }}
         >
