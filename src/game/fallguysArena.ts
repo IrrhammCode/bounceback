@@ -94,6 +94,12 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   const chasmX = 8.5;
   const chasmZ = 10.0;
 
+  const isMobile =
+    typeof navigator !== "undefined" &&
+    (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+      (navigator.maxTouchPoints || 0) > 0 ||
+      (typeof window !== "undefined" && Math.min(window.innerWidth, window.innerHeight) <= 768));
+
   const texLoader = new THREE.TextureLoader();
 
   // ─── 1. CRISP PROCEDURAL SKY DOME (ULTRA-HD) ───
@@ -151,14 +157,16 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   cloudSea.position.y = -45;
   root.add(cloudSea);
 
-  for (let ci = 0; ci < 32; ci++) {
-    const angle = (ci / 32) * Math.PI * 2;
-    const dist = 85 + (ci % 4) * 16;
-    const r = 16 + (ci % 5) * 4;
-    const cg = new THREE.Mesh(new THREE.SphereGeometry(r, 12, 10), cloudSeaMat);
-    cg.scale.set(2.2, 0.65, 2.2);
-    cg.position.set(Math.cos(angle) * dist, (ci % 5) * 2.5 - 4, Math.sin(angle) * dist);
-    cloudSea.add(cg);
+  if (!isMobile) {
+    for (let ci = 0; ci < 32; ci++) {
+      const angle = (ci / 32) * Math.PI * 2;
+      const dist = 85 + (ci % 4) * 16;
+      const r = 16 + (ci % 5) * 4;
+      const cg = new THREE.Mesh(new THREE.SphereGeometry(r, 12, 10), cloudSeaMat);
+      cg.scale.set(2.2, 0.65, 2.2);
+      cg.position.set(Math.cos(angle) * dist, (ci % 5) * 2.5 - 4, Math.sin(angle) * dist);
+      cloudSea.add(cg);
+    }
   }
 
   // ─── 3. SPACIOUS 3D SCULPTED ARENA FLOOR (28m x 54m) ───
@@ -1029,6 +1037,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   }
 
   stadiumRoofGroup.add(centerJumboGroup);
+  if (isMobile) stadiumRoofGroup.visible = false;
 
   coliseumShellGroup.add(stadiumRoofGroup);
 
@@ -1163,7 +1172,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   const specGeo = new THREE.CapsuleGeometry(0.24, 0.42, 8, 10);
   const specMat = new THREE.MeshStandardMaterial({ roughness: 0.25, metalness: 0.05 });
   const specMesh = new THREE.InstancedMesh(specGeo, specMat, totalSpecCount);
-  specMesh.castShadow = true;
+  specMesh.castShadow = !isMobile;
 
   const faceGeo = new THREE.PlaneGeometry(0.23, 0.23);
   const faceMat = new THREE.MeshBasicMaterial({ map: faceplateTex, transparent: true });
@@ -1459,7 +1468,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     });
     const beanMesh = new THREE.Mesh(new THREE.CapsuleGeometry(1.4, 2.4, 16, 20), beanBodyMat);
     beanMesh.position.y = 3.2;
-    beanMesh.castShadow = true;
+    beanMesh.castShadow = !isMobile;
     mg.add(beanMesh);
 
     const faceplateMesh = new THREE.Mesh(
@@ -2426,6 +2435,11 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   const stormland = createStormlandFeatures(root);
   const pinball = createPinballJumpPads(root);
   const cosmic = createCosmicSingularity(root);
+
+  speedway.group.visible = false;
+  stormland.group.visible = false;
+  pinball.group.visible = false;
+  cosmic.group.visible = false;
 
   const skyCache: Record<number, THREE.CanvasTexture> = { 1: skyTex };
   const floorCache: Record<number, THREE.CanvasTexture> = { 1: floorTex };

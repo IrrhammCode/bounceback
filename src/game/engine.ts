@@ -220,7 +220,7 @@ export class BouncebackEngine {
       isMobile ? Math.min(window.devicePixelRatio || 1, 1.5) : Math.min(window.devicePixelRatio || 1, 2)
     );
     this.renderer.setClearColor(0x38bdf8);
-    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.enabled = !isMobile;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.25;
@@ -388,11 +388,10 @@ export class BouncebackEngine {
     const hemi = new THREE.HemisphereLight(0x7dd3fc, 0xfde047, 0.95);
     this.scene.add(hemi);
 
-    // 2. Warm bright direct sunlight with ultra-crisp shadows (optimized for mobile 60 FPS)
+    const isMobile = this.isMobileDevice();
     const sun = new THREE.DirectionalLight(0xfff8ee, 1.85);
     sun.position.set(18, 38, 18);
-    sun.castShadow = true;
-    const isMobile = this.isMobileDevice();
+    sun.castShadow = !isMobile;
     const shadowMapSize = isMobile ? 1024 : 2048;
     sun.shadow.mapSize.set(shadowMapSize, shadowMapSize);
     sun.shadow.camera.near = 1;
@@ -695,8 +694,8 @@ export class BouncebackEngine {
       { x: 7.0, z: 4 },
       { x: -10.5, z: 0 },       // Side launch wings
       { x: 10.5, z: 0 },
-      { x: 0, z: -11 },         // Ascending ramp crest
-      { x: 0, z: 11 },          // Descending ramp crest
+      { x: -3.5, z: -11 },      // Ascending ramp crest flank
+      { x: 3.5, z: 11 },        // Descending ramp crest flank
       { x: -5.5, z: -21 },      // Goal defense zone
       { x: 5.5, z: -21 },
       { x: -5.5, z: 21 },

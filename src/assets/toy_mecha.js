@@ -185,6 +185,95 @@ function generateJerseyTexture(THREE, team, number, isPlayer) {
   return tex;
 }
 
+let cachedFaceplateTex = null;
+function generateFaceplateTexture(THREE) {
+  if (cachedFaceplateTex) return cachedFaceplateTex;
+  if (typeof document === "undefined") return null;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+
+  // 1. Dark bezel frame border
+  ctx.fillStyle = "#1e293b";
+  ctx.beginPath();
+  ctx.ellipse(256, 256, 248, 220, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 2. Glossy Porcelain White Dish
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.ellipse(256, 256, 228, 200, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 3. Soft Rosy Blushing Cheeks
+  ctx.fillStyle = "rgba(255, 51, 102, 0.45)";
+  ctx.beginPath();
+  ctx.ellipse(120, 280, 44, 26, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(392, 280, 44, 26, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 4. Expressive Eyebrows
+  ctx.fillStyle = "#1e293b";
+  ctx.save();
+  ctx.translate(176, 140);
+  ctx.rotate(-0.15);
+  ctx.fillRect(-36, -8, 72, 16);
+  ctx.restore();
+  ctx.save();
+  ctx.translate(336, 140);
+  ctx.rotate(0.15);
+  ctx.fillRect(-36, -8, 72, 16);
+  ctx.restore();
+
+  // 5. Vertical Glossy Cartoon Pill Eyes
+  ctx.fillStyle = "#090d16";
+  ctx.beginPath();
+  ctx.ellipse(176, 216, 28, 56, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(336, 216, 28, 56, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 6. Sparkling Catchlights / Glints
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.arc(168, 192, 10, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(184, 232, 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(328, 192, 10, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(344, 232, 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 7. Cute Open Cartoon Smile with Pink Tongue
+  ctx.fillStyle = "#1e293b";
+  ctx.beginPath();
+  ctx.arc(256, 280, 36, 0.1, Math.PI - 0.1);
+  ctx.lineTo(292, 280);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "#f43f5e";
+  ctx.beginPath();
+  ctx.arc(256, 296, 20, 0, Math.PI);
+  ctx.fill();
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  cachedFaceplateTex = tex;
+  return tex;
+}
+
 export default function generate(THREE, options = {}) {
   const team = typeof options.team === "number" ? options.team : 0;
   const isCyan = team === 0;
@@ -298,106 +387,24 @@ export default function generate(THREE, options = {}) {
   torsoMesh.receiveShadow = true;
   torso.add(torsoMesh);
 
-  // 3. Head & Faceplate (y = 0.20 on torso)
+  // 3. Head & Faceplate (Clean single-mesh textured faceplate replacing 14 separate geometries)
   const head = new THREE.Group();
   head.position.set(0, 0.20, 0);
   torso.add(head);
 
-  // Faceplate Bezel Frame
-  const bezelGeom = new THREE.TorusGeometry(0.128, 0.016, 14, 32);
-  bezelGeom.scale(1.15, 0.90, 0.4);
-  const bezel = new THREE.Mesh(bezelGeom, mDarkBezel);
-  bezel.position.set(0, 0.02, 0.336);
-  bezel.rotation.x = -0.12;
-  head.add(bezel);
-
-  // Faceplate Dish (Glossy Porcelain White)
-  const plateGeom = new THREE.CylinderGeometry(0.124, 0.124, 0.038, 32);
-  plateGeom.scale(1.14, 1.0, 0.88);
-  plateGeom.rotateX(Math.PI / 2);
-  const plate = new THREE.Mesh(plateGeom, mFaceplate);
-  plate.position.set(0, 0.02, 0.330);
-  plate.rotation.x = -0.12;
-  head.add(plate);
-
-  // Vertical Glossy Cartoon Pill Eyes
-  const eyeGeom = new THREE.CapsuleGeometry(0.017, 0.040, 12, 20);
-  eyeGeom.scale(1.0, 1.0, 0.35);
-
-  const lEye = new THREE.Mesh(eyeGeom, mPupil);
-  lEye.position.set(-0.052, 0.024, 0.347);
-  lEye.rotation.x = -0.12;
-  head.add(lEye);
-
-  const rEye = new THREE.Mesh(eyeGeom, mPupil);
-  rEye.position.set(0.052, 0.024, 0.347);
-  rEye.rotation.x = -0.12;
-  head.add(rEye);
-
-  // Sparkling Eye Catchlights
-  const glintBigGeom = new THREE.SphereGeometry(0.0055, 8, 8);
-  const glintSmallGeom = new THREE.SphereGeometry(0.0030, 8, 8);
-
-  const lGlint1 = new THREE.Mesh(glintBigGeom, mEyeGlint);
-  lGlint1.position.set(-0.046, 0.038, 0.353);
-  head.add(lGlint1);
-
-  const lGlint2 = new THREE.Mesh(glintSmallGeom, mEyeGlint);
-  lGlint2.position.set(-0.056, 0.016, 0.353);
-  head.add(lGlint2);
-
-  const rGlint1 = new THREE.Mesh(glintBigGeom, mEyeGlint);
-  rGlint1.position.set(0.058, 0.038, 0.353);
-  head.add(rGlint1);
-
-  const rGlint2 = new THREE.Mesh(glintSmallGeom, mEyeGlint);
-  rGlint2.position.set(0.048, 0.016, 0.353);
-  head.add(rGlint2);
-
-  // Eyebrows
-  const browGeom = new THREE.BoxGeometry(0.036, 0.008, 0.008);
-  const lBrow = new THREE.Mesh(browGeom, mDarkBezel);
-  lBrow.position.set(-0.052, 0.064, 0.342);
-  lBrow.rotation.set(-0.12, 0, -0.12);
-  head.add(lBrow);
-
-  const rBrow = new THREE.Mesh(browGeom, mDarkBezel);
-  rBrow.position.set(0.052, 0.064, 0.342);
-  rBrow.rotation.set(-0.12, 0, 0.12);
-  head.add(rBrow);
-
-  // Cute Open Cartoon Smile Mouth with Pink Tongue
-  const mouthGroup = new THREE.Group();
-  mouthGroup.position.set(0, -0.022, 0.346);
-  mouthGroup.rotation.x = -0.12;
-  head.add(mouthGroup);
-
-  const mouthGeom = new THREE.TorusGeometry(0.018, 0.004, 8, 20, Math.PI * 0.85);
-  mouthGeom.rotateZ(Math.PI * 1.08);
-  const mouthRim = new THREE.Mesh(mouthGeom, mDarkBezel);
-  mouthGroup.add(mouthRim);
-
-  const tongueGeom = new THREE.SphereGeometry(0.009, 8, 8);
-  tongueGeom.scale(1.2, 0.7, 0.5);
-  const mTongue = new THREE.MeshBasicMaterial({ color: 0xf43f5e });
-  const tongue = new THREE.Mesh(tongueGeom, mTongue);
-  tongue.position.set(0, -0.006, 0.002);
-  mouthGroup.add(tongue);
-
-  // Soft Rosy Blushing Cheeks
-  const mBlush = new THREE.MeshBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.65 });
-  const cheekGeom = new THREE.SphereGeometry(0.016, 10, 8);
-  cheekGeom.scale(1.5, 0.8, 0.2);
-
-  const lCheek = new THREE.Mesh(cheekGeom, mBlush);
-  lCheek.position.set(-0.072, -0.006, 0.346);
-  lCheek.rotation.x = -0.12;
-  head.add(lCheek);
-
-  const rCheek = new THREE.Mesh(cheekGeom, mBlush);
-  rCheek.position.set(0.072, -0.006, 0.346);
-  rCheek.rotation.x = -0.12;
-  head.add(rCheek);
+  const faceTex = generateFaceplateTexture(THREE);
+  const faceMat = new THREE.MeshStandardMaterial({
+    map: faceTex || null,
+    color: 0xffffff,
+    roughness: 0.15,
+    metalness: 0.05,
+    transparent: true,
+  });
+  const faceGeom = new THREE.PlaneGeometry(0.30, 0.27);
+  const faceMesh = new THREE.Mesh(faceGeom, faceMat);
+  faceMesh.position.set(0, 0.02, 0.334);
+  faceMesh.rotation.x = -0.12;
+  head.add(faceMesh);
 
   // ── Signature Costumes & Accessories ──
   const costumeTypes = [
@@ -919,7 +926,7 @@ export default function generate(THREE, options = {}) {
     rightLowerLeg,
     leftFoot,
     rightFoot,
-    eyes: [lEye, rEye],
+    eyes: [faceMesh],
     flames: [leftFlame, rightFlame],
     auraRing: ring,
     propeller: animPropeller,

@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 interface OrientationPromptModalProps {
   forceShowTutorial?: boolean;
   onCloseTutorial?: () => void;
+  inGame?: boolean;
 }
 
 export type GuideTopic = "rotate" | "fullscreen";
@@ -11,6 +12,7 @@ export type GuideTopic = "rotate" | "fullscreen";
 export const OrientationPromptModal: React.FC<OrientationPromptModalProps> = ({
   forceShowTutorial = false,
   onCloseTutorial,
+  inGame = false,
 }) => {
   const [isPortrait, setIsPortrait] = useState(false);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
@@ -474,8 +476,8 @@ export const OrientationPromptModal: React.FC<OrientationPromptModalProps> = ({
     );
   }
 
-  // Floating Notification Banner on Mobile Portrait
-  if (!isMobileDevice || !isPortrait || dismissed) return null;
+  // Floating Notification Banner on Mobile Portrait (never show during active match gameplay)
+  if (!isMobileDevice || !isPortrait || dismissed || inGame) return null;
 
   return createPortal(
     <div className="portrait-suggest-banner animate-fade-in" role="alert">

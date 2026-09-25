@@ -631,6 +631,7 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
       <OrientationPromptModal
         forceShowTutorial={showOrientationGuide}
         onCloseTutorial={() => setShowOrientationGuide(false)}
+        inGame={appMode === "game"}
       />
     </div>
   );

@@ -170,14 +170,8 @@ export class JuiceSystem {
         const comicHits = ["BAM!!", "WHACK!!", "POW!!"];
         const hitText = comicHits[Math.floor(Math.random() * comicHits.length)];
         this.spawnComicPopup(hitText, x, y + 0.6, z, "gold");
-        this.spawnShockwave(x, y, z, 0x38bdf8, 2.0);
-        this.spawnHitSparks(x, y + 0.2, z, 0x00f0ff, 14);
-
-        const ox = d.originX ?? (x - (d.dirX ?? d.nx ?? 0) * 1.5);
-        const oz = d.originZ ?? (z - (d.dirZ ?? d.nz ?? 0) * 1.5);
-        const dx = d.dirX ?? d.nx ?? (x - ox);
-        const dz = d.dirZ ?? d.nz ?? (z - oz);
-        this.spawnGiantPunchFist(ox, y, oz, dx, dz, true, d.team ?? 1);
+        this.spawnShockwave(x, y, z, 0x38bdf8, 1.8);
+        this.spawnHitSparks(x, y + 0.2, z, 0x00f0ff, 3);
         break;
       }
 
@@ -186,12 +180,8 @@ export class JuiceSystem {
         const pinballTexts = ["BOING!", "+100 PTS!", "SUPER BOUNCE!", "PINBALL POP!", "JACKPOT!"];
         const randText = pinballTexts[Math.floor(Math.random() * pinballTexts.length)];
         this.spawnComicPopup(randText, x, y + 1.1, z, "gold");
-        // Dual concentric electric shockwave rings
-        this.spawnShockwave(x, y, z, 0xffd166, 3.5);
-        this.spawnShockwave(x, y + 0.1, z, 0x27e5ff, 2.2);
-        // Explosive multi-colored pinball spark blast
-        this.spawnHitSparks(x, y + 0.4, z, 0xffaa00, 28);
-        this.spawnHitSparks(x, y + 0.4, z, 0x27e5ff, 14);
+        this.spawnShockwave(x, y, z, 0xffd166, 3.0);
+        this.spawnHitSparks(x, y + 0.4, z, 0xffaa00, 4);
         break;
       }
 
@@ -515,8 +505,11 @@ export class JuiceSystem {
       depthWrite: false,
     });
 
-    for (let i = 0; i < count; i++) {
-      const angle = (i / count) * Math.PI * 2 + Math.random() * 0.4;
+    if (this.sparks.length >= 20) return;
+    const effectiveCount = Math.min(count, 4);
+
+    for (let i = 0; i < effectiveCount; i++) {
+      const angle = (i / effectiveCount) * Math.PI * 2 + Math.random() * 0.4;
       const speed = 4.0 + Math.random() * 7.0;
       const elevation = Math.random() * 4.5 + 1.5;
 
