@@ -41,7 +41,7 @@ export default function ResultScreen({
   const totalPlayerOut = history.reduce((acc, r) => acc + (r.playerOut || 0), 0);
 
   return (
-    <div className="screen">
+    <div className="screen result-screen-wrap">
       {/* Animated Background */}
       <div className="bg-arena" aria-hidden="true">
         <div className="neon-grid" />

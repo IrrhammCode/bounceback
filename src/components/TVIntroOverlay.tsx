@@ -179,6 +179,7 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
                 team="cyan"
                 isCaptain={false}
                 slotRole="WINGMAN"
+                slotIndex={1}
                 defaultLeft={20}
                 delay={0.05}
               />
@@ -189,6 +190,7 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
                 team="cyan"
                 isCaptain={false}
                 slotRole="STRIKER"
+                slotIndex={2}
                 defaultLeft={35}
                 delay={0.10}
               />
@@ -199,6 +201,7 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
                 team="cyan"
                 isCaptain={true}
                 slotRole="CAPTAIN"
+                slotIndex={3}
                 defaultLeft={50}
                 delay={0.15}
               />
@@ -209,6 +212,7 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
                 team="cyan"
                 isCaptain={false}
                 slotRole="FLANKER"
+                slotIndex={4}
                 defaultLeft={65}
                 delay={0.20}
               />
@@ -219,6 +223,7 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
                 team="cyan"
                 isCaptain={false}
                 slotRole="FINISHER"
+                slotIndex={5}
                 defaultLeft={80}
                 delay={0.25}
               />
@@ -234,6 +239,7 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
                 team="coral"
                 isCaptain={false}
                 slotRole="SWEEPER"
+                slotIndex={1}
                 defaultLeft={20}
                 delay={0.05}
               />
@@ -244,6 +250,7 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
                 team="coral"
                 isCaptain={false}
                 slotRole="DEFENDER"
+                slotIndex={2}
                 defaultLeft={35}
                 delay={0.10}
               />
@@ -254,6 +261,7 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
                 team="coral"
                 isCaptain={true}
                 slotRole="CAPTAIN"
+                slotIndex={3}
                 defaultLeft={50}
                 delay={0.15}
               />
@@ -264,6 +272,7 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
                 team="coral"
                 isCaptain={false}
                 slotRole="STRIKER"
+                slotIndex={4}
                 defaultLeft={65}
                 delay={0.20}
               />
@@ -274,6 +283,7 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
                 team="coral"
                 isCaptain={false}
                 slotRole="BRUISER"
+                slotIndex={5}
                 defaultLeft={80}
                 delay={0.25}
               />
@@ -303,6 +313,7 @@ function OverheadBadge5v5({
   team,
   isCaptain,
   slotRole,
+  slotIndex,
   defaultLeft,
   delay,
 }: {
@@ -311,18 +322,21 @@ function OverheadBadge5v5({
   team: "cyan" | "coral";
   isCaptain: boolean;
   slotRole: string;
+  slotIndex: number;
   defaultLeft: number;
   delay: number;
 }) {
   return (
     <div
       id={`intro-tag-ent-${entityIndex}`}
-      className={`overhead-badge-5v5 ${team} ${isCaptain ? "captain-badge" : ""}`}
-      style={{
-        left: `${defaultLeft}%`,
-        top: isCaptain ? "33%" : "36%",
-        animationDelay: `${delay}s`,
-      }}
+      className={`overhead-badge-5v5 slot-${slotIndex} ${team} ${isCaptain ? "captain-badge" : ""}`}
+      style={
+        {
+          "--default-left": `${defaultLeft}%`,
+          "--default-top": isCaptain ? "33%" : "36%",
+          animationDelay: `${delay}s`,
+        } as React.CSSProperties
+      }
     >
       <div className="badge-role-row">
         <span className={`badge-role-pill ${isCaptain ? "captain" : ""}`}>

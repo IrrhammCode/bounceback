@@ -800,9 +800,9 @@ export class BouncebackEngine {
         this.introLookTarget.set(0, 2.0, -4.0);
         break;
       case "cyan_team":
-        // Golden 5v5 squad framing: adapts distance so all 5 players fit on screen regardless of phone width
-        this.introCamTarget.set(0, 1.95 + portraitFactor * 1.6, -9.8 - portraitFactor * 6.5);
-        this.introLookTarget.set(0, 1.15, -18.0);
+        // Golden 5v5 squad framing: adapts distance and elevation so all 5 players fit on screen in both landscape and phone portrait
+        this.introCamTarget.set(0, 1.95 + portraitFactor * 3.8, -9.8 + portraitFactor * 8.2);
+        this.introLookTarget.set(0, 1.25, -18.0);
         break;
       case "vs_clash":
         // Low-angle dramatic sweep over the elevated midfield battle deck looking across both teams
@@ -810,9 +810,9 @@ export class BouncebackEngine {
         this.introLookTarget.set(0, 1.4, 0);
         break;
       case "coral_team":
-        // Golden 5v5 squad framing: adapts distance so all 5 players fit on screen regardless of phone width
-        this.introCamTarget.set(0, 1.95 + portraitFactor * 1.6, 9.8 + portraitFactor * 6.5);
-        this.introLookTarget.set(0, 1.15, 18.0);
+        // Golden 5v5 squad framing: adapts distance and elevation so all 5 players fit on screen in both landscape and phone portrait
+        this.introCamTarget.set(0, 1.95 + portraitFactor * 3.8, 9.8 - portraitFactor * 8.2);
+        this.introLookTarget.set(0, 1.25, 18.0);
         break;
       case "countdown":
         // Sweeping up and dropping into exact 3rd-person gameplay position behind player
@@ -1825,11 +1825,18 @@ export class BouncebackEngine {
         );
         this.camera.lookAt(0, 1.4, 0);
       } else {
-        // Regular Round Victory Camera: Frames winning team
+        // Regular Round Victory Camera: Frames winning team with portrait adaptation
+        const w = this.canvas?.clientWidth || window.innerWidth;
+        const h = this.canvas?.clientHeight || window.innerHeight;
+        const aspect = h > 0 ? w / h : 1.77;
+        const portraitFactor = Math.max(0, Math.min(1, (1.55 - aspect) / 1.1));
+
         const winZ = this.celebrationWinner === 0 ? -12.0 : 12.0;
+        const winDist = 8.0 + portraitFactor * 4.2;
+        const winHeight = 4.5 + portraitFactor * 1.8;
         this.camLookTarget.lerp(new THREE.Vector3(0, 1.4, winZ), Math.min(1.0, 5.0 * dt));
         this.camera.position.lerp(
-          new THREE.Vector3(0, 4.5, winZ - (this.celebrationWinner === 0 ? 8.0 : -8.0)),
+          new THREE.Vector3(0, winHeight, winZ - (this.celebrationWinner === 0 ? winDist : -winDist)),
           Math.min(1.0, 4.0 * dt)
         );
         this.camera.lookAt(this.camLookTarget);
