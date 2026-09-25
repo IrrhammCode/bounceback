@@ -490,6 +490,20 @@ export class BouncebackEngine {
     this.disasterManager.userVote(id);
   }
 
+  public triggerPlayerSkill() {
+    if (this.appMode !== "game") return;
+    if (this.skillSlots[0] && this.skillSlots[0].type !== SkillType.None) {
+      this.skills.activateSkill(
+        0,
+        this.entities[0],
+        this.entities,
+        this.skillSlots,
+        this.handleSkillEvent,
+        this.gates
+      );
+    }
+  }
+
   public startIntro() {
     this.appMode = "intro";
     this.introPhase = "opener";
@@ -997,10 +1011,19 @@ export class BouncebackEngine {
   // ─── Skill Event Handler (SFX + Juice + Announcements) ───
   private handleSkillEvent = (event: string, data?: unknown) => {
     switch (event) {
-      case "pickup":
+      case "pickup": {
+        const d = data as any;
         sfxPickup();
-        this.juice.trigger("pickup");
+        this.juice.trigger("pickup", d);
+        if (d?.isPlayer) {
+          this.showAnnouncement(`POWER-UP READY: ${d.skillName}! [PRESS E]`);
+        }
         break;
+      }
+      case "box_spawn": {
+        this.showAnnouncement("POWER-UP MYSTERY BOX SPAWNED!");
+        break;
+      }
       case "gigafist":
         sfxGigaFist();
         this.juice.trigger("gigafist");
@@ -1204,13 +1227,6 @@ export class BouncebackEngine {
         isFirstPerson
       );
 
-      // Player debug grant skill via number keys 1-7 (disabled during live disaster voting)
-      if (this.disasterManager.state.isActive) {
-        this.player.debugGrantSkill = null;
-      } else if (this.player.debugGrantSkill !== null) {
-        this.skillSlots[0].type = this.player.debugGrantSkill;
-        this.player.debugGrantSkill = null;
-      }
 
       // Player skill activation
       const input = this.player.getInput();
@@ -1615,10 +1631,15 @@ export class BouncebackEngine {
             text: "BOING!",
           });
         }
-        b.hitFlash -= dt * 3;
+        b.hitFlash -= dt * 3.5;
         const bscl = mesh.userData.baseScale || 1;
-        const s = bscl * (1 + b.hitFlash * 0.25);
-        mesh.scale.setScalar(s);
+        // Arcade pinball solenoid squash & stretch!
+        const radialScale = bscl * (1 + Math.max(0, b.hitFlash) * 0.45);
+        const verticalScale = bscl * (1 - Math.max(0, b.hitFlash) * 0.32);
+        mesh.scale.set(radialScale, verticalScale, radialScale);
+      } else {
+        const bscl = mesh.userData.baseScale || 1;
+        mesh.scale.set(bscl, bscl, bscl);
       }
     }
 

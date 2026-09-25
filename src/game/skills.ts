@@ -14,6 +14,7 @@
 import * as THREE from "three";
 import * as C from "./config";
 import { Entity } from "./physics";
+import { sfxSkillSpawn, sfxSkillAcquire } from "./audio";
 
 // ─── Skill Type Enum ───
 export enum SkillType {
@@ -219,15 +220,17 @@ export class SkillManager {
   private createBoxMesh(): THREE.Object3D {
     const group = new THREE.Group();
 
-    // 1. Translucent Golden Beveled Cube
-    const outer = new THREE.Mesh(this.boxGeo, this.boxMat);
+    // 1. Translucent Golden Beveled Cube (1.15m size)
+    const outerGeo = new THREE.BoxGeometry(1.15, 1.15, 1.15);
+    const outer = new THREE.Mesh(outerGeo, this.boxMat);
     outer.castShadow = true;
     group.add(outer);
 
     // 2. Rotating Inner Golden Diamond Star
-    const innerGeo = new THREE.OctahedronGeometry(0.38, 0);
+    const innerGeo = new THREE.OctahedronGeometry(0.48, 0);
     const inner = new THREE.Mesh(innerGeo, this.boxInnerMat);
     group.add(inner);
+    group.userData.inner = inner;
 
     // 3. Question mark canvas sprite inside cube
     if (typeof document !== "undefined") {
@@ -240,36 +243,80 @@ export class SkillManager {
       c.textAlign = "center";
       c.textBaseline = "middle";
       c.shadowColor = "#ffd166";
-      c.shadowBlur = 12;
+      c.shadowBlur = 14;
       c.fillText("?", 64, 66);
       const tex = new THREE.CanvasTexture(canvas);
       const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.95 });
       const sprite = new THREE.Sprite(spriteMat);
-      sprite.scale.set(0.68, 0.68, 1);
+      sprite.scale.set(0.85, 0.85, 1);
       group.add(sprite);
     }
 
     // 4. Orbiting Sparkle Dust Halo Ring
-    const sparkCount = 16;
+    const sparkCount = 20;
     const sparkPositions = new Float32Array(sparkCount * 3);
     for (let i = 0; i < sparkCount; i++) {
       const angle = (i / sparkCount) * Math.PI * 2;
-      const r = 0.72;
+      const r = 0.95;
       sparkPositions[i * 3] = Math.cos(angle) * r;
-      sparkPositions[i * 3 + 1] = Math.sin(angle * 2) * 0.18;
+      sparkPositions[i * 3 + 1] = Math.sin(angle * 2) * 0.22;
       sparkPositions[i * 3 + 2] = Math.sin(angle) * r;
     }
     const sparkGeo = new THREE.BufferGeometry();
     sparkGeo.setAttribute("position", new THREE.BufferAttribute(sparkPositions, 3));
     const sparkMat = new THREE.PointsMaterial({
       color: 0xfff3b0,
-      size: 0.08,
+      size: 0.12,
       transparent: true,
       opacity: 0.9,
       blending: THREE.AdditiveBlending,
     });
     const sparkPoints = new THREE.Points(sparkGeo, sparkMat);
     group.add(sparkPoints);
+
+    // 5. Vertical Sky Beacon Light Beam (visible from across the entire arena!)
+    const beaconGeo = new THREE.CylinderGeometry(0.32, 0.52, 16, 16);
+    const beaconMat = new THREE.MeshBasicMaterial({
+      color: 0xffd166,
+      transparent: true,
+      opacity: 0.35,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    const beacon = new THREE.Mesh(beaconGeo, beaconMat);
+    beacon.position.y = 8.0;
+    group.add(beacon);
+    group.userData.beacon = beacon;
+
+    // 6. Ground Projection Target Ring on arena floor
+    const ringGeo = new THREE.RingGeometry(0.7, 1.5, 32);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0xffd166,
+      transparent: true,
+      opacity: 0.6,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    const floorRing = new THREE.Mesh(ringGeo, ringMat);
+    floorRing.rotation.x = -Math.PI / 2;
+    floorRing.position.y = -BOX_FLOAT_HEIGHT + 0.08;
+    group.add(floorRing);
+    group.userData.floorRing = floorRing;
+
+    // 7. Outer Cyan Energy Torus Ring
+    const torusGeo = new THREE.TorusGeometry(1.35, 0.04, 8, 32);
+    const torusMat = new THREE.MeshBasicMaterial({
+      color: 0x27e5ff,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.8,
+    });
+    const torus = new THREE.Mesh(torusGeo, torusMat);
+    torus.rotation.x = Math.PI / 3;
+    group.add(torus);
+    group.userData.torus = torus;
 
     return group;
   }
@@ -367,9 +414,24 @@ export class SkillManager {
           box.active = false;
           box.respawnTimer = BOX_RESPAWN_TIME;
           box.mesh.visible = false;
-          if (eventFn) eventFn("pickup", { entityIdx: i, skill: slot.type });
 
-          if (!ent.isPlayer) {
+          const isPlayer = i === 0 || ent.isPlayer;
+          if (isPlayer) {
+            sfxSkillAcquire();
+          }
+
+          if (eventFn) {
+            eventFn("pickup", {
+              entityIdx: i,
+              skill: slot.type,
+              skillName: SKILL_NAMES[slot.type],
+              isPlayer,
+              x: ent.x,
+              z: ent.z,
+            });
+          }
+
+          if (!ent.isPlayer && i !== 0) {
             this.activateSkill(i, ent, entities, skillSlots, eventFn);
           }
           break;
@@ -1197,16 +1259,35 @@ export class SkillManager {
         if (box.respawnTimer <= 0) {
           box.active = true;
           box.mesh.visible = true;
+          sfxSkillSpawn();
+          if (eventFn) eventFn("box_spawn", { x: box.x, z: box.z });
         }
       }
     }
 
-    // 3. Animate active boxes (spin + bob)
+    // 3. Animate active boxes (spin + bob + beacon pulse + floor ring + torus)
     const now = performance.now() * 0.001;
     for (const box of this.boxes) {
       if (!box.active) continue;
       box.mesh.rotation.y = now * BOX_SPIN_SPEED;
-      box.mesh.position.y = BOX_FLOAT_HEIGHT + Math.sin(now * 2 + box.x) * 0.3;
+      box.mesh.position.y = BOX_FLOAT_HEIGHT + Math.sin(now * 2.5 + box.x) * 0.28;
+
+      const u = box.mesh.userData;
+      if (u.beacon) {
+        u.beacon.material.opacity = 0.22 + Math.sin(now * 4.0) * 0.12;
+      }
+      if (u.floorRing) {
+        const ringScale = 1.0 + Math.sin(now * 3.5) * 0.12;
+        u.floorRing.scale.set(ringScale, ringScale, ringScale);
+      }
+      if (u.torus) {
+        u.torus.rotation.x = now * 1.8;
+        u.torus.rotation.y = now * 1.4;
+      }
+      if (u.inner) {
+        u.inner.rotation.x = -now * 2.2;
+        u.inner.rotation.z = now * 1.6;
+      }
     }
 
     // 4. Rocket Boost active state

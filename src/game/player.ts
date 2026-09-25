@@ -166,13 +166,7 @@ export class PlayerController {
     window.addEventListener("mousedown", this._boundMouseDown);
     window.addEventListener("mouseup", this._boundMouseUp);
 
-    // Number keys 1-7 for instant skill equipping
-    this._boundNumKeys = (e: KeyboardEvent) => {
-      if (e.key >= "1" && e.key <= "7") {
-        this.debugGrantSkill = parseInt(e.key, 10) as SkillType;
-      }
-    };
-    window.addEventListener("keydown", this._boundNumKeys);
+
 
     // Touch and mouse wire for action buttons
     const wireBtn = (id: string, onDown: () => void, onUp: () => void) => {

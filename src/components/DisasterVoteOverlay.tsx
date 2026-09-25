@@ -1,100 +1,99 @@
 /**
- * BOUNCE TV — Reality TV Live Audience Disaster Vote Overlay
+ * BOUNCE TV — Reality TV Live Audience Stream Hazard Poll Overlay
  *
  * Professional broadcast-grade typography and graphics.
  * Strictly ZERO emoji AI slop.
+ * Strictly AUDIENCE STREAM ONLY (Player cannot vote; non-intrusive corner placement).
  */
-import { useEffect, useCallback } from "react";
-import type { DisasterVoteState, DisasterId } from "../game/disasters";
+import { useEffect, useState } from "react";
+import type { DisasterVoteState } from "../game/disasters";
 
 interface DisasterVoteOverlayProps {
   voteState: DisasterVoteState;
-  onVote: (id: DisasterId) => void;
+  onVote?: (id: any) => void;
 }
 
-export default function DisasterVoteOverlay({ voteState, onVote }: DisasterVoteOverlayProps) {
-  // Allow keyboard voting (1, 2, 3)
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (!voteState.isActive) return;
-      if (e.key === "1" && voteState.candidates[0]) {
-        onVote(voteState.candidates[0].id);
-      } else if (e.key === "2" && voteState.candidates[1]) {
-        onVote(voteState.candidates[1].id);
-      } else if (e.key === "3" && voteState.candidates[2]) {
-        onVote(voteState.candidates[2].id);
-      }
-    },
-    [voteState, onVote]
-  );
+const CHAT_REACTIONS = [
+  "Viewer99: VOTE METEOR!!",
+  "ArcadeBouncer: Tornado pls!",
+  "TwitchFan: DO THE LASER!",
+  "GigaChad: DROP THE QUAKE",
+  "ChaosEnjoyer: BLACKHOLE WINS",
+  "SpeedyBean: Meteor strikes now!",
+];
 
+export default function DisasterVoteOverlay({ voteState }: DisasterVoteOverlayProps) {
+  const [chatIdx, setChatIdx] = useState(0);
+
+  // Rotate simulated audience chat reactions
   useEffect(() => {
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleKeyDown]);
+    if (!voteState.isActive) return;
+    const interval = setInterval(() => {
+      setChatIdx((prev) => (prev + 1) % CHAT_REACTIONS.length);
+    }, 1800);
+    return () => clearInterval(interval);
+  }, [voteState.isActive]);
 
   if (!voteState.isActive && !voteState.activeDisaster) {
     return null;
   }
 
-  // Active Disaster Alert Banner (when strike is incoming)
+  // Active Disaster Alert Banner (when strike is incoming) — slim and non-intrusive
   if (voteState.activeDisaster && !voteState.isActive) {
     return (
-      <div className="disaster-strike-alert animate-hazard-drop">
-        <div className="hazard-stripes" />
-        <div className="hazard-content">
-          <div className="hazard-badge">ARENA HAZARD DEPLOYED</div>
-          <h2 className="hazard-title">{voteState.announcement}</h2>
-          <p className="hazard-subtitle">AUDIENCE VOTE CONFIRMED • BRACE FOR IMPACT</p>
-        </div>
-        <div className="hazard-stripes" />
+      <div className="stream-hazard-alert-pill animate-hazard-drop">
+        <span className="hazard-alert-dot" />
+        <span className="hazard-alert-label">AUDIENCE HAZARD DEPLOYED:</span>
+        <span className="hazard-alert-name">{voteState.announcement}</span>
       </div>
     );
   }
 
-  // Active Voting Poll UI
+  // Find leading candidate
+  const leadingId = voteState.candidates.reduce((best, curr) =>
+    curr.votes > (best?.votes || 0) ? curr : best
+  , voteState.candidates[0])?.id;
+
+  // Active Voting Poll UI — Docked neatly in top-right corner, leaving entire arena open
   return (
-    <div className="audience-poll-modal animate-slide-up">
+    <div className="stream-poll-corner-widget animate-slide-left">
       {/* Poll Header Bar */}
-      <div className="poll-header">
-        <div className="poll-live-indicator">
-          <span className="poll-live-beacon" />
-          <span className="poll-live-text">AUDIENCE HAZARD VOTE</span>
+      <div className="stream-poll-header">
+        <div className="stream-live-tag">
+          <span className="stream-live-dot" />
+          <span className="stream-live-title">AUDIENCE POLL</span>
         </div>
-        <div className="poll-countdown">
-          POLL CLOSING IN:{" "}
-          <span className="poll-seconds">{Math.ceil(voteState.voteTimeLeft)}s</span>
+        <div className="stream-poll-timer">
+          CLOSING: <span className="timer-sec">{Math.ceil(voteState.voteTimeLeft)}s</span>
         </div>
       </div>
 
-      <div className="poll-prompt">
-        VOTE TO RELEASE ARENA DISASTER ON FIGHTERS [PRESS 1, 2, OR 3]
+      <div className="stream-poll-subtitle">
+        VIEWER HAZARD VOTE IN PROGRESS
       </div>
 
-      {/* Candidate Cards Grid */}
-      <div className="poll-candidates-row">
-        {voteState.candidates.map((cand, idx) => {
-          const isUserPick = voteState.userVotedId === cand.id;
+      {/* Candidate Rows Grid */}
+      <div className="stream-candidates-list">
+        {voteState.candidates.map((cand) => {
+          const isLeading = cand.id === leadingId;
           return (
-            <button
+            <div
               key={cand.id}
-              className={`poll-candidate-btn ${isUserPick ? "user-voted" : ""}`}
-              onClick={() => onVote(cand.id)}
-              disabled={!!voteState.userVotedId}
-              style={{
-                borderColor: isUserPick ? cand.color : "rgba(255, 255, 255, 0.18)",
-              }}
+              className={`stream-candidate-row ${isLeading ? "leading-row" : ""}`}
             >
-              <div className="cand-key-num">KEY {idx + 1}</div>
-              <div className="cand-name" style={{ color: cand.color }}>
-                {cand.name}
+              <div className="cand-info-line">
+                <span className="cand-title" style={{ color: cand.color }}>
+                  {cand.name}
+                </span>
+                <span className="cand-pct-badge" style={{ color: cand.color }}>
+                  {cand.pct}%
+                </span>
               </div>
-              <div className="cand-subtitle">{cand.subtitle}</div>
 
               {/* Real-time Vote Progress Bar */}
-              <div className="cand-bar-wrap">
+              <div className="stream-bar-track">
                 <div
-                  className="cand-bar-fill"
+                  className="stream-bar-fill"
                   style={{
                     width: `${cand.pct}%`,
                     backgroundColor: cand.color,
@@ -102,17 +101,20 @@ export default function DisasterVoteOverlay({ voteState, onVote }: DisasterVoteO
                 />
               </div>
 
-              <div className="cand-stats-row">
-                <span className="cand-votes">{cand.votes.toLocaleString()} VOTES</span>
-                <span className="cand-pct" style={{ color: cand.color }}>
-                  {cand.pct}%
-                </span>
+              <div className="cand-bottom-line">
+                <span className="cand-votes-count">{cand.votes.toLocaleString()} votes</span>
+                {isLeading && <span className="cand-leading-badge">LEADING</span>}
               </div>
-
-              {isUserPick && <div className="user-pick-tag">YOUR VOTE CAST</div>}
-            </button>
+            </div>
           );
         })}
+      </div>
+
+      {/* Simulated Live Audience Chat Ticker */}
+      <div className="stream-chat-preview">
+        <span className="chat-msg" key={chatIdx}>
+          {CHAT_REACTIONS[chatIdx]}
+        </span>
       </div>
     </div>
   );

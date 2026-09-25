@@ -200,7 +200,7 @@ export function updatePhysics(
       }
     }
 
-    // Bumper collisions
+    // Bumper collisions — Authentic arcade pinball solenoid kick!
     for (const b of bumpers) {
       if (e.immuneTimer > 0) continue;
       const bx = b.x,
@@ -213,13 +213,17 @@ export function updatePhysics(
         const d = Math.sqrt(d2);
         const bnx = ddx / d,
           bnz = ddz / d;
-        e.x = bx + bnx * (br + 0.1);
-        e.z = bz + bnz * (br + 0.1);
-        const dot = e.vx * bnx + e.vz * bnz;
-        e.vx = (e.vx - 2 * dot * bnx) * C.BUMPER_MULT;
-        e.vz = (e.vz - 2 * dot * bnz) * C.BUMPER_MULT;
-        e.bounceCount = Math.min((e.bounceCount || 0) + 1, 3);
-        e.immuneTimer = 0.45;
+        e.x = bx + bnx * (br + 0.16);
+        e.z = bz + bnz * (br + 0.16);
+
+        // Explosive arcade solenoid kick: minimum 26m/s blast speed!
+        const curSpeed = Math.hypot(e.vx, e.vz);
+        const kickSpeed = Math.max(curSpeed * 1.65, 26.5);
+        e.vx = bnx * kickSpeed;
+        e.vz = bnz * kickSpeed;
+        e.launched = true;
+        e.bounceCount = Math.min((e.bounceCount || 0) + 1, 5);
+        e.immuneTimer = 0.22;
         b.hitFlash = 1.0;
       }
     }

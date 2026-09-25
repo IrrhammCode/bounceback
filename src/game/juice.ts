@@ -177,12 +177,19 @@ export class JuiceSystem {
         break;
       }
 
-      case "bumper":
-        this.addTrauma(0.5);
-        this.spawnComicPopup("BOING!", x, y + 0.8, z, "gold");
-        this.spawnShockwave(x, y, z, 0xfbbf24, 2.6);
-        this.spawnHitSparks(x, y + 0.3, z, 0xffa500, 18);
+      case "bumper": {
+        this.addTrauma(0.72);
+        const pinballTexts = ["BOING!", "+100 PTS!", "SUPER BOUNCE!", "PINBALL POP!", "JACKPOT!"];
+        const randText = pinballTexts[Math.floor(Math.random() * pinballTexts.length)];
+        this.spawnComicPopup(randText, x, y + 1.1, z, "gold");
+        // Dual concentric electric shockwave rings!
+        this.spawnShockwave(x, y, z, 0xffd166, 3.5);
+        this.spawnShockwave(x, y + 0.1, z, 0x27e5ff, 2.2);
+        // Explosive multi-colored pinball spark blast!
+        this.spawnHitSparks(x, y + 0.4, z, 0xffaa00, 28);
+        this.spawnHitSparks(x, y + 0.4, z, 0x27e5ff, 14);
         break;
+      }
 
       case "dash":
         this.addTrauma(0.18);

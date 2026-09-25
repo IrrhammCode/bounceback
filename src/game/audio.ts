@@ -490,11 +490,96 @@ export function sfxWhiff() {
   playNoise(0.08, 0.15, 2400);
 }
 
-export function sfxBumperHit(comboCount: number) {
-  sfxBoing();
-  const baseFreq = 440 + Math.min(comboCount, 8) * 80;
-  playTone(baseFreq, 0.14, "sine", 0.28);
-  playTone(baseFreq * 1.25, 0.12, "triangle", 0.22);
+export function sfxBumperHit(comboCount: number = 0) {
+  if (!ctx || !sfxGain || muted) return;
+  try {
+    const now = ctx.currentTime;
+
+    // 1. High metallic pinball bell chime (1760Hz - 2400Hz harmonic pair)
+    const bellFreq = 1760 + Math.min(comboCount, 6) * 110;
+    const osc1 = ctx.createOscillator();
+    const g1 = ctx.createGain();
+    osc1.type = "sine";
+    osc1.frequency.setValueAtTime(bellFreq, now);
+    g1.gain.setValueAtTime(0.4, now);
+    g1.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+    osc1.connect(g1);
+    g1.connect(sfxGain);
+    osc1.start(now);
+    osc1.stop(now + 0.28);
+
+    // 2. Secondary bell chime overtone (1.5x frequency)
+    const osc2 = ctx.createOscillator();
+    const g2 = ctx.createGain();
+    osc2.type = "triangle";
+    osc2.frequency.setValueAtTime(bellFreq * 1.5, now);
+    g2.gain.setValueAtTime(0.25, now);
+    g2.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+    osc2.connect(g2);
+    g2.connect(sfxGain);
+    osc2.start(now);
+    osc2.stop(now + 0.22);
+
+    // 3. Heavy mechanical solenoid thwack
+    const thwack = ctx.createOscillator();
+    const tg = ctx.createGain();
+    thwack.type = "triangle";
+    thwack.frequency.setValueAtTime(140, now);
+    thwack.frequency.exponentialRampToValueAtTime(45, now + 0.12);
+    tg.gain.setValueAtTime(0.5, now);
+    tg.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+    thwack.connect(tg);
+    tg.connect(sfxGain);
+    thwack.start(now);
+    thwack.stop(now + 0.14);
+
+    // 4. Spring boing undertone
+    sfxBoing();
+  } catch {}
+}
+
+// ─── Skill Box Spawn Fanfare ───
+export function sfxSkillSpawn() {
+  if (!ctx || !sfxGain || muted) return;
+  try {
+    const now = ctx.currentTime;
+    const notes = [587.33, 739.99, 880.0, 1174.66]; // D5, F#5, A5, D6 shimmer
+    notes.forEach((freq, idx) => {
+      const t = now + idx * 0.055;
+      const osc = ctx!.createOscillator();
+      const g = ctx!.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, t);
+      g.gain.setValueAtTime(0.18, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+      osc.connect(g);
+      g.connect(sfxGain!);
+      osc.start(t);
+      osc.stop(t + 0.35);
+    });
+  } catch {}
+}
+
+// ─── Power-Up Acquired Jingle ───
+export function sfxSkillAcquire() {
+  if (!ctx || !sfxGain || muted) return;
+  try {
+    const now = ctx.currentTime;
+    const chord = [523.25, 659.25, 783.99, 1046.5]; // C5 -> E5 -> G5 -> C6
+    chord.forEach((freq, idx) => {
+      const t = now + idx * 0.06;
+      const osc = ctx!.createOscillator();
+      const g = ctx!.createGain();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(freq, t);
+      g.gain.setValueAtTime(0.3, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+      osc.connect(g);
+      g.connect(sfxGain!);
+      osc.start(t);
+      osc.stop(t + 0.45);
+    });
+  } catch {}
 }
 
 // ─── Goal / Ring-Out Fanfare ───

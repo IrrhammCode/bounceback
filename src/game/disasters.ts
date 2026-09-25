@@ -37,37 +37,37 @@ export const ALL_DISASTERS: Record<DisasterId, DisasterDef> = {
   tornado: {
     id: "tornado",
     name: "TWISTER TORNADO",
-    subtitle: "ANGIN PUTING BELIUNG",
+    subtitle: "CATEGORY 5 TWISTER",
     color: "#38bdf8",
-    desc: "Vortex putar raksasa menyedot dan melemparkan pemain ke angkasa!",
+    desc: "Giant rotating vortex pulls and launches fighters sky-high!",
   },
   meteor: {
     id: "meteor",
     name: "METEOR STRIKE",
-    subtitle: "HUJAN METEOR",
+    subtitle: "CATACLYSMIC BOMBARDMENT",
     color: "#ff5268",
-    desc: "Pengeboman meteor jatuh membakar arena dan meledakkan petarung!",
+    desc: "Incoming fiery meteors scorch the arena and blast fighters!",
   },
   earthquake: {
     id: "earthquake",
     name: "SEISMIC QUAKE",
-    subtitle: "GEMPA BUMI TEKTONIK",
+    subtitle: "MAGNITUDE 9.0 SHOCK",
     color: "#ffd166",
-    desc: "Patahan tanah terbelah dan melontarkan semua pemain ke udara!",
+    desc: "Tectonic ground fault lines rupture and thrust fighters upward!",
   },
   laser: {
     id: "laser",
     name: "ORBITAL LASER",
-    subtitle: "SATELIT LASER PLASMA",
+    subtitle: "ORBITAL PLASMA CANNON",
     color: "#8338ec",
-    desc: "Sinar laser satelit menyapu arena dengan gelombang kejut mematikan!",
+    desc: "Satellite death-ray sweeps across the turf with lethal shockwaves!",
   },
   blackhole: {
     id: "blackhole",
     name: "GRAVITY SINGULARITY",
-    subtitle: "LUBANG HITAM",
+    subtitle: "SINGULARITY VORTEX",
     color: "#ec4899",
-    desc: "Medan gravitasi menyedot semua petarung lalu meledakkannya keluar!",
+    desc: "Supermassive gravity vortex pulls all fighters in before detonating outward!",
   },
 };
 
@@ -151,15 +151,9 @@ export class DisasterManager {
     };
   }
 
-  public userVote(disasterId: DisasterId) {
-    if (!this.state.isActive || this.state.userVotedId) return;
-    this.state.userVotedId = disasterId;
-    sfxVoteTick();
-    const c = this.state.candidates.find((cand) => cand.id === disasterId);
-    if (c) {
-      c.votes += 45; // Player vote has big audience weight!
-      this.recalculateVotePercentages();
-    }
+  public userVote(_disasterId: DisasterId) {
+    // Player cannot vote — strictly audience stream voting per user requirement
+    return;
   }
 
   public update(dt: number, entities: Entity[]): DisasterVoteState {
@@ -167,11 +161,11 @@ export class DisasterManager {
     if (this.state.isActive) {
       this.state.voteTimeLeft -= dt;
 
-      // Simulate live incoming audience votes
-      if (Math.random() < 0.8) {
+      // Simulate live incoming audience votes from stream viewers
+      if (Math.random() < 0.85) {
         const randCand = this.state.candidates[Math.floor(Math.random() * this.state.candidates.length)];
         if (randCand) {
-          randCand.votes += Math.floor(Math.random() * 8) + 1;
+          randCand.votes += Math.floor(Math.random() * 42) + 15;
         }
         this.recalculateVotePercentages();
       }
@@ -213,7 +207,7 @@ export class DisasterManager {
 
     const candidates: VoteCandidate[] = chosen.map((id) => {
       const def = ALL_DISASTERS[id];
-      const initialVotes = Math.floor(Math.random() * 30) + 15;
+      const initialVotes = Math.floor(Math.random() * 600) + 1400;
       return {
         id: def.id,
         name: def.name,

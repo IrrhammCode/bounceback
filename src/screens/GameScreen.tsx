@@ -268,17 +268,53 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
             </div>
           )}
 
-          {/* Skill Card HUD Slot */}
-          <div className={`skill-slot ${hasSkill ? "has-skill" : ""}`}>
-            {hasSkill ? (
-              <>
-                <span className="skill-icon">{gameState.playerSkillIcon}</span>
-                <span className="skill-name">{gameState.playerSkillName}</span>
-                <span className="skill-hint">E / Q / RMB</span>
-              </>
-            ) : (
-              <span className="skill-empty">—</span>
-            )}
+          {/* ─── Ultra-Prominent Arcade Skill HUD (Skill Wajib Terlihat) ─── */}
+          <div className={`arcade-skill-hud ${hasSkill ? "skill-ready-pulse" : "skill-empty-slot"}`}>
+            <div className="skill-hud-header">
+              <span className={`skill-status-tag ${hasSkill ? "ready" : "empty"}`}>
+                {hasSkill ? "★ POWER-UP READY ★" : "POWER-UP SLOT"}
+              </span>
+              {hasSkill && (
+                <span className="skill-trigger-key-prompt animate-pulse">
+                  PRESS [E] / [Q] OR RIGHT-CLICK
+                </span>
+              )}
+            </div>
+
+            <div className="skill-hud-body">
+              <div className={`skill-icon-box ${hasSkill ? "box-ready" : ""}`}>
+                {hasSkill ? (
+                  <span className="skill-big-icon">{gameState.playerSkillIcon}</span>
+                ) : (
+                  <span className="skill-empty-icon">?</span>
+                )}
+                {hasSkill && <div className="skill-glow-halo" />}
+              </div>
+
+              <div className="skill-text-content">
+                <div className="skill-title-row">
+                  <span className="skill-main-name">
+                    {hasSkill ? gameState.playerSkillName : "NO SKILL EQUIPPED"}
+                  </span>
+                </div>
+                <div className="skill-desc-row">
+                  {hasSkill
+                    ? "READY FOR IMPACT • UNLEASH ON OPPONENTS!"
+                    : "Collect a glowing Mystery Box in the arena to gain a skill!"}
+                </div>
+              </div>
+
+              {hasSkill && (
+                <button
+                  className="skill-activate-hud-btn"
+                  onClick={() => engineRef.current?.triggerPlayerSkill()}
+                  title="Activate Skill (E / Q / Right-Click)"
+                >
+                  <span className="act-key">[E]</span>
+                  <span className="act-text">FIRE</span>
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Touch Controls — always in DOM for 404 test harness */}
@@ -290,11 +326,12 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
               <button
                 id="btnSkill"
                 className={`action-btn skill ${hasSkill ? "ready" : ""}`}
+                onClick={() => engineRef.current?.triggerPlayerSkill()}
               >
                 <span className="icon">
                   {hasSkill ? gameState.playerSkillIcon : "POW"}
                 </span>
-                {hasSkill ? "USE" : "SKILL"}
+                {hasSkill ? "FIRE" : "SKILL"}
               </button>
               <button id="btnA" className="action-btn punch">
                 <span className="icon">HIT</span>
@@ -318,8 +355,8 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
             <span>
               <kbd>Shift</kbd> Dash
             </span>
-            <span>
-              <kbd>E</kbd> Skill
+            <span className={hasSkill ? "hint-skill-ready" : ""}>
+              <kbd>E</kbd> / <kbd>Q</kbd> Skill
             </span>
             <span>
               <kbd>C</kbd> Camera
