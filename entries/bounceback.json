@@ -4,7 +4,7 @@
   "team": ["IrrhammCode"],
   "play_url": "https://bounceback-beta.vercel.app",
   "source_url": "https://github.com/IrrhammCode/bounceback",
-  "commit": "72442e95451cc6820fbf999796968bcb89b75198",
+  "commit": "bca224b17e4bb02bf57b645fa721865910fae55c",
   "genre": "other",
   "agent": "Antigravity IDE",
   "models": ["Gemini 3.8 Flash", "Claude Opus 4.6"],
