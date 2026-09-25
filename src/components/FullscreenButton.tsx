@@ -17,30 +17,8 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [toast, setToast] = useState<ToastInfo | null>(null);
-  const [showIOSModal, setShowIOSModal] = useState(false);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastToggleRef = useRef(0);
-
-  const modalRef = useRef<HTMLDivElement>(null);
-  const [canScrollModal, setCanScrollModal] = useState(false);
-
-  const checkModalScroll = useCallback(() => {
-    const el = modalRef.current;
-    if (!el) return;
-    const hasMore = el.scrollHeight - el.scrollTop - el.clientHeight > 18;
-    setCanScrollModal(hasMore);
-  }, []);
-
-  useEffect(() => {
-    if (showIOSModal) {
-      const t = setTimeout(checkModalScroll, 80);
-      window.addEventListener("resize", checkModalScroll);
-      return () => {
-        clearTimeout(t);
-        window.removeEventListener("resize", checkModalScroll);
-      };
-    }
-  }, [showIOSModal, checkModalScroll]);
 
   const isMobileOrIOS = useCallback((): boolean => {
     if (typeof window === "undefined" || typeof navigator === "undefined") return false;
@@ -121,7 +99,8 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
 
     const handleOpenModal = () => {
       applySimulatedFullscreen(true);
-      setShowIOSModal(true);
+      window.dispatchEvent(new CustomEvent("open-phone-tips"));
+      window.dispatchEvent(new CustomEvent("open-orientation-guide"));
     };
 
     updateFsState();
@@ -155,10 +134,11 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
 
       triggerHaptic(20);
 
-      // On mobile / iPhone: ALWAYS show the guide modal with 3 visual steps to add to home screen!
+      // On mobile / iPhone: ALWAYS show the comprehensive guide modal with Rotate & 100% Fullscreen steps
       if (isMobileOrIOS()) {
         applySimulatedFullscreen(true);
-        setShowIOSModal(true);
+        window.dispatchEvent(new CustomEvent("open-phone-tips"));
+        window.dispatchEvent(new CustomEvent("open-orientation-guide"));
         return;
       }
 
@@ -301,124 +281,6 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
           document.body
         )}
 
-      {/* Interactive Apple iOS Fullscreen Guide Modal — Portaled to body to escape all stacking contexts */}
-      {showIOSModal &&
-        typeof document !== "undefined" &&
-        createPortal(
-          <div
-            className="ios-fs-modal-backdrop animate-fade-in"
-            onClick={() => setShowIOSModal(false)}
-            role="dialog"
-            aria-modal="true"
-          >
-            <div
-              ref={modalRef}
-              onScroll={checkModalScroll}
-              className="ios-fs-modal animate-scale-pop"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="ios-fs-header">
-                <span className="ios-fs-badge">IPHONE (IOS) GUIDE</span>
-                <button
-                  type="button"
-                  className="ios-fs-close-btn"
-                  onClick={() => setShowIOSModal(false)}
-                  aria-label="Close"
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="ios-fs-title">100% Fullscreen on iPhone</div>
-              <p className="ios-fs-desc">
-                Apple restricts automated fullscreen inside Safari browser tabs. To play <strong>100% Fullscreen with zero browser bars</strong>:
-              </p>
-
-              <div className="ios-fs-steps">
-                <div className="ios-step-item">
-                  <div className="ios-step-num">1</div>
-                  <div className="ios-step-content">
-                    <div className="ios-step-heading">
-                      Tap the <strong>Share</strong> Button
-                      <svg className="ios-step-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#27e5ff" strokeWidth="2.2">
-                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                        <polyline points="16 6 12 2 8 6" />
-                        <line x1="12" y1="2" x2="12" y2="15" />
-                      </svg>
-                    </div>
-                    <div className="ios-step-sub">The square icon with an upward arrow in your Safari bottom bar.</div>
-                  </div>
-                </div>
-
-                <div className="ios-step-item">
-                  <div className="ios-step-num">2</div>
-                  <div className="ios-step-content">
-                    <div className="ios-step-heading">
-                      Select <strong>Add to Home Screen</strong>
-                    </div>
-                    <div className="ios-step-sub">Scroll down in the Share menu and select <em>Add to Home Screen</em>.</div>
-                  </div>
-                </div>
-
-                <div className="ios-step-item">
-                  <div className="ios-step-num">3</div>
-                  <div className="ios-step-content">
-                    <div className="ios-step-heading">Launch Game from Home Screen</div>
-                    <div className="ios-step-sub">The game opens directly in <strong>100% Fullscreen with no browser bars</strong> just like an App Store game!</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="ios-fs-tip">
-                <strong>Quick Browser Tip:</strong> Tap the <strong>aA</strong> button on the left of your Safari address bar &rarr; choose <em>"Hide Toolbar"</em>.
-              </div>
-
-              {/* Scroll Indicator Hint Pill (shown when content is taller than viewport) */}
-              {canScrollModal && (
-                <button
-                  type="button"
-                  className="ios-fs-scroller-hint animate-bounce-subtle"
-                  onClick={() => modalRef.current?.scrollBy({ top: 160, behavior: "smooth" })}
-                  aria-label="Scroll down for more steps"
-                >
-                  <span>SCROLL DOWN FOR MORE</span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
-                </button>
-              )}
-
-              <div className="ios-fs-modal-actions">
-                <button
-                  type="button"
-                  className="ios-fs-action-btn primary"
-                  onClick={() => {
-                    setShowIOSModal(false);
-                    applySimulatedFullscreen(true);
-                    showToastMsg("IMMERSIVE MODE ACTIVE", "Display expanded full size!");
-                  }}
-                >
-                  Continue Playing (Fullscreen)
-                </button>
-                <button
-                  type="button"
-                  className="ios-fs-action-btn secondary"
-                  onClick={() => {
-                    setShowIOSModal(false);
-                    applySimulatedFullscreen(false);
-                    showToastMsg("WINDOWED MODE");
-                  }}
-                >
-                  Exit to Windowed Mode
-                </button>
-              </div>
-            </div>
-          </div>,
-          document.body
-        )}
     </>
   );
 };

@@ -105,9 +105,12 @@ export default function TitleScreenOverlay({ onStartMatch }: TitleScreenOverlayP
           <button
             type="button"
             className="title-guide-btn"
-            onClick={() => window.dispatchEvent(new CustomEvent("open-ios-fs-modal"))}
-            title="iPhone / Mobile Fullscreen Guide"
-            aria-label="iPhone / Mobile Fullscreen Guide"
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent("open-phone-tips"));
+              window.dispatchEvent(new CustomEvent("open-orientation-guide"));
+            }}
+            title="Phone Tips: Rotate to Landscape & 100% Fullscreen Guide"
+            aria-label="Phone Tips: Rotate to Landscape & 100% Fullscreen Guide"
           >
             <svg
               width="18"
