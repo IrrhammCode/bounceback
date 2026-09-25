@@ -279,17 +279,17 @@ export default function generate(THREE, options = {}) {
     opacity: 0.85,
   });
 
-  // 1. Hips (y = 0.34)
+  // 1. Hips (y = 0.52 - elevated for tall, athletic long legs)
   const hips = new THREE.Group();
-  hips.position.set(0, 0.34, 0);
+  hips.position.set(0, 0.52, 0);
   root.add(hips);
 
-  // 2. Torso (Bean Body) — Silk-smooth 32x40 capsule
+  // 2. Torso (Bean Body) — Sleek athletic capsule (y = 0.24 on hips)
   const torso = new THREE.Group();
-  torso.position.set(0, 0.28, 0);
+  torso.position.set(0, 0.24, 0);
   hips.add(torso);
 
-  const torsoGeom = new THREE.CapsuleGeometry(0.36, 0.50, 32, 40);
+  const torsoGeom = new THREE.CapsuleGeometry(0.33, 0.40, 32, 40);
   torsoGeom.rotateY(Math.PI * 0.5); // Align texture front (+Z)
   torsoGeom.computeVertexNormals();
 
@@ -298,16 +298,16 @@ export default function generate(THREE, options = {}) {
   torsoMesh.receiveShadow = true;
   torso.add(torsoMesh);
 
-  // 3. Head & Faceplate (y = 0.23 on torso)
+  // 3. Head & Faceplate (y = 0.20 on torso)
   const head = new THREE.Group();
-  head.position.set(0, 0.23, 0);
+  head.position.set(0, 0.20, 0);
   torso.add(head);
 
   // Faceplate Bezel Frame
   const bezelGeom = new THREE.TorusGeometry(0.128, 0.016, 14, 32);
   bezelGeom.scale(1.15, 0.90, 0.4);
   const bezel = new THREE.Mesh(bezelGeom, mDarkBezel);
-  bezel.position.set(0, 0.02, 0.364);
+  bezel.position.set(0, 0.02, 0.336);
   bezel.rotation.x = -0.12;
   head.add(bezel);
 
@@ -316,7 +316,7 @@ export default function generate(THREE, options = {}) {
   plateGeom.scale(1.14, 1.0, 0.88);
   plateGeom.rotateX(Math.PI / 2);
   const plate = new THREE.Mesh(plateGeom, mFaceplate);
-  plate.position.set(0, 0.02, 0.358);
+  plate.position.set(0, 0.02, 0.330);
   plate.rotation.x = -0.12;
   head.add(plate);
 
@@ -325,12 +325,12 @@ export default function generate(THREE, options = {}) {
   eyeGeom.scale(1.0, 1.0, 0.35);
 
   const lEye = new THREE.Mesh(eyeGeom, mPupil);
-  lEye.position.set(-0.052, 0.024, 0.375);
+  lEye.position.set(-0.052, 0.024, 0.347);
   lEye.rotation.x = -0.12;
   head.add(lEye);
 
   const rEye = new THREE.Mesh(eyeGeom, mPupil);
-  rEye.position.set(0.052, 0.024, 0.375);
+  rEye.position.set(0.052, 0.024, 0.347);
   rEye.rotation.x = -0.12;
   head.add(rEye);
 
@@ -339,36 +339,36 @@ export default function generate(THREE, options = {}) {
   const glintSmallGeom = new THREE.SphereGeometry(0.0030, 8, 8);
 
   const lGlint1 = new THREE.Mesh(glintBigGeom, mEyeGlint);
-  lGlint1.position.set(-0.046, 0.038, 0.381);
+  lGlint1.position.set(-0.046, 0.038, 0.353);
   head.add(lGlint1);
 
   const lGlint2 = new THREE.Mesh(glintSmallGeom, mEyeGlint);
-  lGlint2.position.set(-0.056, 0.016, 0.381);
+  lGlint2.position.set(-0.056, 0.016, 0.353);
   head.add(lGlint2);
 
   const rGlint1 = new THREE.Mesh(glintBigGeom, mEyeGlint);
-  rGlint1.position.set(0.058, 0.038, 0.381);
+  rGlint1.position.set(0.058, 0.038, 0.353);
   head.add(rGlint1);
 
   const rGlint2 = new THREE.Mesh(glintSmallGeom, mEyeGlint);
-  rGlint2.position.set(0.048, 0.016, 0.381);
+  rGlint2.position.set(0.048, 0.016, 0.353);
   head.add(rGlint2);
 
   // Eyebrows
   const browGeom = new THREE.BoxGeometry(0.036, 0.008, 0.008);
   const lBrow = new THREE.Mesh(browGeom, mDarkBezel);
-  lBrow.position.set(-0.052, 0.064, 0.370);
+  lBrow.position.set(-0.052, 0.064, 0.342);
   lBrow.rotation.set(-0.12, 0, -0.12);
   head.add(lBrow);
 
   const rBrow = new THREE.Mesh(browGeom, mDarkBezel);
-  rBrow.position.set(0.052, 0.064, 0.370);
+  rBrow.position.set(0.052, 0.064, 0.342);
   rBrow.rotation.set(-0.12, 0, 0.12);
   head.add(rBrow);
 
   // Cute Open Cartoon Smile Mouth with Pink Tongue
   const mouthGroup = new THREE.Group();
-  mouthGroup.position.set(0, -0.022, 0.374);
+  mouthGroup.position.set(0, -0.022, 0.346);
   mouthGroup.rotation.x = -0.12;
   head.add(mouthGroup);
 
@@ -390,12 +390,12 @@ export default function generate(THREE, options = {}) {
   cheekGeom.scale(1.5, 0.8, 0.2);
 
   const lCheek = new THREE.Mesh(cheekGeom, mBlush);
-  lCheek.position.set(-0.072, -0.006, 0.374);
+  lCheek.position.set(-0.072, -0.006, 0.346);
   lCheek.rotation.x = -0.12;
   head.add(lCheek);
 
   const rCheek = new THREE.Mesh(cheekGeom, mBlush);
-  rCheek.position.set(0.072, -0.006, 0.374);
+  rCheek.position.set(0.072, -0.006, 0.346);
   rCheek.rotation.x = -0.12;
   head.add(rCheek);
 
@@ -622,207 +622,239 @@ export default function generate(THREE, options = {}) {
     head.add(coneGroup);
   }
 
-  // 4. Arms (Pivoting at shoulders)
-  const armGeom = new THREE.CapsuleGeometry(0.065, 0.12, 10, 16);
-  const handGeom = new THREE.SphereGeometry(0.065, 14, 12);
+  // 4. Long Athletic Arms (Pivoting at shoulders)
+  const armUpperGeom = new THREE.CapsuleGeometry(0.052, 0.16, 12, 16);
+  const armForeGeom = new THREE.CapsuleGeometry(0.048, 0.14, 12, 16);
+  const handGeom = new THREE.SphereGeometry(0.058, 16, 12);
   handGeom.scale(1.0, 1.15, 0.85);
-  const wristbandGeom = new THREE.CylinderGeometry(0.072, 0.070, 0.04, 14);
-  const thumbGeom = new THREE.CapsuleGeometry(0.022, 0.034, 8, 10);
+  const wristbandGeom = new THREE.CylinderGeometry(0.056, 0.054, 0.04, 16);
+  const thumbGeom = new THREE.CapsuleGeometry(0.020, 0.038, 8, 10);
 
   // Left Arm
   const leftUpperArm = new THREE.Group();
-  leftUpperArm.position.set(-0.36, 0.06, 0.06);
+  leftUpperArm.position.set(-0.35, 0.08, 0.04);
   leftUpperArm.rotation.set(-0.25, 0, 0.35);
   torso.add(leftUpperArm);
 
-  const lArmMesh = new THREE.Mesh(armGeom, mJersey);
-  lArmMesh.position.y = -0.07;
+  const lArmMesh = new THREE.Mesh(armUpperGeom, mJersey);
+  lArmMesh.position.y = -0.10;
   lArmMesh.castShadow = true;
   leftUpperArm.add(lArmMesh);
 
   // Player Captain Armband on left arm!
   if (isPlayer) {
-    const cBandGeo = new THREE.CylinderGeometry(0.076, 0.076, 0.05, 14);
+    const cBandGeo = new THREE.CylinderGeometry(0.062, 0.062, 0.05, 16);
     const cBand = new THREE.Mesh(cBandGeo, mGold);
-    cBand.position.y = -0.05;
+    cBand.position.y = -0.06;
     leftUpperArm.add(cBand);
   }
 
   const leftForearm = new THREE.Group();
-  leftForearm.position.set(0, -0.13, 0);
-  leftForearm.rotation.x = -0.30;
+  leftForearm.position.set(0, -0.21, 0);
+  leftForearm.rotation.x = -0.28;
   leftUpperArm.add(leftForearm);
 
-  const lForearmMesh = new THREE.Mesh(armGeom, mJersey);
-  lForearmMesh.position.y = -0.07;
+  const lForearmMesh = new THREE.Mesh(armForeGeom, mJersey);
+  lForearmMesh.position.y = -0.09;
   lForearmMesh.castShadow = true;
   leftForearm.add(lForearmMesh);
 
   const lWrist = new THREE.Mesh(wristbandGeom, mGold);
-  lWrist.position.y = -0.095;
+  lWrist.position.y = -0.17;
   leftForearm.add(lWrist);
 
   const leftHand = new THREE.Group();
-  leftHand.position.set(0, -0.13, 0);
+  leftHand.position.set(0, -0.20, 0);
   leftForearm.add(leftHand);
 
   const lHandMesh = new THREE.Mesh(handGeom, mWhite);
-  lHandMesh.position.y = -0.02;
+  lHandMesh.position.y = -0.025;
   lHandMesh.castShadow = true;
   leftHand.add(lHandMesh);
 
   const lThumb = new THREE.Mesh(thumbGeom, mWhite);
-  lThumb.position.set(0.042, 0.005, 0.025);
+  lThumb.position.set(0.038, 0.005, 0.020);
   lThumb.rotation.z = -0.55;
   leftHand.add(lThumb);
 
   // Right Arm
   const rightUpperArm = new THREE.Group();
-  rightUpperArm.position.set(0.36, 0.06, 0.06);
+  rightUpperArm.position.set(0.35, 0.08, 0.04);
   rightUpperArm.rotation.set(-0.25, 0, -0.35);
   torso.add(rightUpperArm);
 
-  const rArmMesh = new THREE.Mesh(armGeom, mJersey);
-  rArmMesh.position.y = -0.07;
+  const rArmMesh = new THREE.Mesh(armUpperGeom, mJersey);
+  rArmMesh.position.y = -0.10;
   rArmMesh.castShadow = true;
   rightUpperArm.add(rArmMesh);
 
   const rightForearm = new THREE.Group();
-  rightForearm.position.set(0, -0.13, 0);
-  rightForearm.rotation.x = -0.30;
+  rightForearm.position.set(0, -0.21, 0);
+  rightForearm.rotation.x = -0.28;
   rightUpperArm.add(rightForearm);
 
-  const rForearmMesh = new THREE.Mesh(armGeom, mJersey);
-  rForearmMesh.position.y = -0.07;
+  const rForearmMesh = new THREE.Mesh(armForeGeom, mJersey);
+  rForearmMesh.position.y = -0.09;
   rForearmMesh.castShadow = true;
   rightForearm.add(rForearmMesh);
 
   const rWrist = new THREE.Mesh(wristbandGeom, mGold);
-  rWrist.position.y = -0.095;
+  rWrist.position.y = -0.17;
   rightForearm.add(rWrist);
 
   const rightHand = new THREE.Group();
-  rightHand.position.set(0, -0.13, 0);
+  rightHand.position.set(0, -0.20, 0);
   rightForearm.add(rightHand);
 
   const rHandMesh = new THREE.Mesh(handGeom, mWhite);
-  rHandMesh.position.y = -0.02;
+  rHandMesh.position.y = -0.025;
   rHandMesh.castShadow = true;
   rightHand.add(rHandMesh);
 
   const rThumb = new THREE.Mesh(thumbGeom, mWhite);
-  rThumb.position.set(-0.042, 0.005, 0.025);
+  rThumb.position.set(-0.038, 0.005, 0.020);
   rThumb.rotation.z = 0.55;
   rightHand.add(rThumb);
 
-  // 5. Chunky Stylized Sneakers (Detailed Nintendo / Mario Style)
-  const legGeom = new THREE.CylinderGeometry(0.082, 0.076, 0.13, 14);
-  const sockGeom = new THREE.CylinderGeometry(0.078, 0.074, 0.08, 14);
-  const shoeUpperGeom = new THREE.SphereGeometry(0.10, 16, 12);
-  shoeUpperGeom.scale(1.0, 0.74, 1.5);
-  const toeCapGeom = new THREE.SphereGeometry(0.092, 14, 10);
-  toeCapGeom.scale(0.95, 0.68, 0.85);
-  const midsoleGeom = new THREE.BoxGeometry(0.16, 0.045, 0.28);
-  const outsoleGeom = new THREE.BoxGeometry(0.165, 0.015, 0.285);
+  // 5. Long Athletic Legs & Chunky Stylized Sneakers (Nintendo / Mario / Fall Guy Style)
+  const thighGeom = new THREE.CylinderGeometry(0.065, 0.056, 0.22, 16);
+  const shinGeom = new THREE.CylinderGeometry(0.056, 0.050, 0.20, 16);
+  const kneeGeom = new THREE.SphereGeometry(0.056, 12, 10);
+  kneeGeom.scale(1.0, 1.05, 0.8);
+  const sockGeom = new THREE.CylinderGeometry(0.060, 0.056, 0.09, 16);
+  const sockBandGeom = new THREE.CylinderGeometry(0.062, 0.062, 0.016, 16);
+
+  const shoeUpperGeom = new THREE.SphereGeometry(0.086, 16, 12);
+  shoeUpperGeom.scale(1.02, 0.80, 1.45);
+  const toeCapGeom = new THREE.SphereGeometry(0.080, 14, 10);
+  toeCapGeom.scale(0.96, 0.72, 0.90);
+  const midsoleGeom = new THREE.BoxGeometry(0.155, 0.046, 0.29);
+  const outsoleGeom = new THREE.BoxGeometry(0.160, 0.018, 0.295);
 
   // Left Leg
   const leftUpperLeg = new THREE.Group();
-  leftUpperLeg.position.set(-0.16, -0.08, 0);
-  leftUpperLeg.rotation.z = -0.06;
+  leftUpperLeg.position.set(-0.16, -0.04, 0);
+  leftUpperLeg.rotation.z = -0.05;
   hips.add(leftUpperLeg);
 
-  const lLegMesh = new THREE.Mesh(legGeom, mDarkBezel);
-  lLegMesh.position.y = -0.06;
-  lLegMesh.castShadow = true;
-  leftUpperLeg.add(lLegMesh);
+  const lThighMesh = new THREE.Mesh(thighGeom, mDarkBezel);
+  lThighMesh.position.y = -0.11;
+  lThighMesh.castShadow = true;
+  leftUpperLeg.add(lThighMesh);
+
+  const lKnee = new THREE.Mesh(kneeGeom, mDarkBezel);
+  lKnee.position.set(0, -0.22, 0.015);
+  leftUpperLeg.add(lKnee);
 
   const leftLowerLeg = new THREE.Group();
-  leftLowerLeg.position.set(0, -0.12, 0);
+  leftLowerLeg.position.set(0, -0.22, 0);
   leftUpperLeg.add(leftLowerLeg);
 
+  const lShinMesh = new THREE.Mesh(shinGeom, mDarkBezel);
+  lShinMesh.position.y = -0.09;
+  lShinMesh.castShadow = true;
+  leftLowerLeg.add(lShinMesh);
+
   const lSock = new THREE.Mesh(sockGeom, mWhite);
-  lSock.position.y = -0.04;
+  lSock.position.y = -0.135;
   leftLowerLeg.add(lSock);
 
+  const lSockBand = new THREE.Mesh(sockBandGeom, mAura);
+  lSockBand.position.y = -0.11;
+  leftLowerLeg.add(lSockBand);
+
   const leftFoot = new THREE.Group();
-  leftFoot.position.set(0, -0.08, 0.03);
+  leftFoot.position.set(0, -0.18, 0.035);
   leftLowerLeg.add(leftFoot);
 
   const lShoe = new THREE.Mesh(shoeUpperGeom, mShoe);
-  lShoe.position.set(0, 0.026, 0.03);
+  lShoe.position.set(0, 0.030, 0.045);
   lShoe.castShadow = true;
   leftFoot.add(lShoe);
 
   const lToe = new THREE.Mesh(toeCapGeom, mWhite);
-  lToe.position.set(0, 0.024, 0.115);
+  lToe.position.set(0, 0.025, 0.125);
   leftFoot.add(lToe);
 
-  // Shoe Laces (2 horizontal white straps)
-  for (const ly of [0.045, 0.065]) {
-    const lace = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.012, 0.02), mWhite);
-    lace.position.set(0, ly, 0.03);
+  // Shoe Laces (3 crisp horizontal white straps)
+  for (const ly of [0.042, 0.062, 0.082]) {
+    const lace = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.012, 0.02), mWhite);
+    lace.position.set(0, ly, 0.045);
     leftFoot.add(lace);
   }
 
   const lMidsole = new THREE.Mesh(midsoleGeom, mShoeSole);
-  lMidsole.position.set(0, -0.018, 0.03);
+  lMidsole.position.set(0, -0.015, 0.045);
   leftFoot.add(lMidsole);
 
   const lOutsole = new THREE.Mesh(outsoleGeom, mOutsole);
-  lOutsole.position.set(0, -0.042, 0.03);
+  lOutsole.position.set(0, -0.038, 0.045);
   leftFoot.add(lOutsole);
 
   // Right Leg
   const rightUpperLeg = new THREE.Group();
-  rightUpperLeg.position.set(0.16, -0.08, 0);
-  rightUpperLeg.rotation.z = 0.06;
+  rightUpperLeg.position.set(0.16, -0.04, 0);
+  rightUpperLeg.rotation.z = 0.05;
   hips.add(rightUpperLeg);
 
-  const rLegMesh = new THREE.Mesh(legGeom, mDarkBezel);
-  rLegMesh.position.y = -0.06;
-  rLegMesh.castShadow = true;
-  rightUpperLeg.add(rLegMesh);
+  const rThighMesh = new THREE.Mesh(thighGeom, mDarkBezel);
+  rThighMesh.position.y = -0.11;
+  rThighMesh.castShadow = true;
+  rightUpperLeg.add(rThighMesh);
+
+  const rKnee = new THREE.Mesh(kneeGeom, mDarkBezel);
+  rKnee.position.set(0, -0.22, 0.015);
+  rightUpperLeg.add(rKnee);
 
   const rightLowerLeg = new THREE.Group();
-  rightLowerLeg.position.set(0, -0.12, 0);
+  rightLowerLeg.position.set(0, -0.22, 0);
   rightUpperLeg.add(rightLowerLeg);
 
+  const rShinMesh = new THREE.Mesh(shinGeom, mDarkBezel);
+  rShinMesh.position.y = -0.09;
+  rShinMesh.castShadow = true;
+  rightLowerLeg.add(rShinMesh);
+
   const rSock = new THREE.Mesh(sockGeom, mWhite);
-  rSock.position.y = -0.04;
+  rSock.position.y = -0.135;
   rightLowerLeg.add(rSock);
 
+  const rSockBand = new THREE.Mesh(sockBandGeom, mAura);
+  rSockBand.position.y = -0.11;
+  rightLowerLeg.add(rSockBand);
+
   const rightFoot = new THREE.Group();
-  rightFoot.position.set(0, -0.08, 0.03);
+  rightFoot.position.set(0, -0.18, 0.035);
   rightLowerLeg.add(rightFoot);
 
   const rShoe = new THREE.Mesh(shoeUpperGeom, mShoe);
-  rShoe.position.set(0, 0.026, 0.03);
+  rShoe.position.set(0, 0.030, 0.045);
   rShoe.castShadow = true;
   rightFoot.add(rShoe);
 
   const rToe = new THREE.Mesh(toeCapGeom, mWhite);
-  rToe.position.set(0, 0.024, 0.115);
+  rToe.position.set(0, 0.025, 0.125);
   rightFoot.add(rToe);
 
   // Right Shoe Laces
-  for (const ly of [0.045, 0.065]) {
-    const lace = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.012, 0.02), mWhite);
-    lace.position.set(0, ly, 0.03);
+  for (const ly of [0.042, 0.062, 0.082]) {
+    const lace = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.012, 0.02), mWhite);
+    lace.position.set(0, ly, 0.045);
     rightFoot.add(lace);
   }
 
   const rMidsole = new THREE.Mesh(midsoleGeom, mShoeSole);
-  rMidsole.position.set(0, -0.018, 0.03);
+  rMidsole.position.set(0, -0.015, 0.045);
   rightFoot.add(rMidsole);
 
   const rOutsole = new THREE.Mesh(outsoleGeom, mOutsole);
-  rOutsole.position.set(0, -0.042, 0.03);
+  rOutsole.position.set(0, -0.038, 0.045);
   rightFoot.add(rOutsole);
 
   // 6. Mini Thruster Backpack (Back -Z)
-  const packGeo = new THREE.BoxGeometry(0.34, 0.40, 0.18);
+  const packGeo = new THREE.BoxGeometry(0.32, 0.36, 0.16);
   const pack = new THREE.Mesh(packGeo, mThruster);
-  pack.position.set(0, 0.05, -0.37);
+  pack.position.set(0, 0.04, -0.34);
   pack.castShadow = true;
   torso.add(pack);
 
@@ -831,34 +863,34 @@ export default function generate(THREE, options = {}) {
     new THREE.SphereGeometry(0.03, 8, 8),
     new THREE.MeshBasicMaterial({ color: isCyan ? 0x06b6d4 : 0xf43f5e })
   );
-  thrusterLed.position.set(0, 0.16, -0.47);
+  thrusterLed.position.set(0, 0.14, -0.43);
   torso.add(thrusterLed);
 
-  const nozzleGeo = new THREE.CylinderGeometry(0.065, 0.09, 0.13, 12);
+  const nozzleGeo = new THREE.CylinderGeometry(0.06, 0.085, 0.12, 12);
   const leftNozzle = new THREE.Mesh(nozzleGeo, mDarkBezel);
-  leftNozzle.position.set(-0.10, -0.16, -0.37);
+  leftNozzle.position.set(-0.09, -0.15, -0.34);
   torso.add(leftNozzle);
 
   const rightNozzle = new THREE.Mesh(nozzleGeo, mDarkBezel);
-  rightNozzle.position.set(0.10, -0.16, -0.37);
+  rightNozzle.position.set(0.09, -0.15, -0.34);
   torso.add(rightNozzle);
 
-  const flameGeo = new THREE.ConeGeometry(0.06, 0.16, 10);
+  const flameGeo = new THREE.ConeGeometry(0.055, 0.15, 10);
   const leftFlame = new THREE.Mesh(flameGeo, mFlame);
   leftFlame.rotation.x = Math.PI;
-  leftFlame.position.set(-0.10, -0.27, -0.37);
+  leftFlame.position.set(-0.09, -0.25, -0.34);
   torso.add(leftFlame);
 
   const rightFlame = new THREE.Mesh(flameGeo, mFlame);
   rightFlame.rotation.x = Math.PI;
-  rightFlame.position.set(0.10, -0.27, -0.37);
+  rightFlame.position.set(0.09, -0.25, -0.34);
   torso.add(rightFlame);
 
-  // 7. Ground Team Aura Ring
-  const ringGeo = new THREE.RingGeometry(0.50, 0.66, 28);
+  // 7. Ground Team Aura Ring (Resting right below sneakers)
+  const ringGeo = new THREE.RingGeometry(0.48, 0.64, 28);
   const ring = new THREE.Mesh(ringGeo, mAura);
   ring.rotation.x = -Math.PI * 0.5;
-  ring.position.y = 0.02;
+  ring.position.y = 0.01;
   root.add(ring);
 
   // Normalize placement: Base at y=0, centered on X and Z, front faces +Z
@@ -872,6 +904,7 @@ export default function generate(THREE, options = {}) {
   g.userData = {
     root,
     hips,
+    baseHipsY: hips.position.y,
     torso,
     head,
     leftArm: leftUpperArm,
