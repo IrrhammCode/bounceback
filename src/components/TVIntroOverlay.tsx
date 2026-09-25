@@ -153,7 +153,7 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
         )}
       </div>
 
-      {/* 5v5 Overhead Character Badges (Di atas karakter, persingkat biar cukup semua) */}
+      {/* 5v5 Overhead Character Badges (Overhead nameplates positioned above each fighter) */}
       {(phase === "cyan_team" || phase === "coral_team") && (
         <div className="tv-overhead-tags-layer">
           {/* Top Broadcast Team Showcase Banner */}

@@ -157,14 +157,14 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
         }
 
         applySimulatedFullscreen(false);
-        showToastMsg("MODE JENDELA (WINDOWED)");
+        showToastMsg("WINDOWED MODE");
         return;
       }
 
       // ENTER FULLSCREEN
       // Case A: User is already playing from Home Screen (iOS Standalone PWA)
       if (isStandalone()) {
-        showToastMsg("SUDAH LAYAR PENUH", "Game berjalan dalam mode Fullscreen Standalone App!");
+        showToastMsg("ALREADY FULLSCREEN", "Game running in Fullscreen Standalone App mode!");
         applySimulatedFullscreen(true);
         return;
       }
@@ -191,9 +191,9 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
 
       applySimulatedFullscreen(true);
       if (nativeSucceeded) {
-        showToastMsg("MODE LAYAR PENUH AKTIF");
+        showToastMsg("FULLSCREEN MODE ACTIVE");
       } else {
-        showToastMsg("MODE IMMERSIVE AKTIF", "Layar disesuaikan penuh ke tampilan browser");
+        showToastMsg("IMMERSIVE MODE ACTIVE", "Display expanded to fill browser viewport");
       }
     },
     [checkIsFullscreen, isMobileOrIOS, isStandalone, triggerHaptic, applySimulatedFullscreen, showToastMsg]
@@ -292,12 +292,12 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
           >
             <div className="ios-fs-modal animate-scale-pop" onClick={(e) => e.stopPropagation()}>
               <div className="ios-fs-header">
-                <span className="ios-fs-badge">PANDUAN IPHONE (IOS)</span>
+                <span className="ios-fs-badge">IPHONE (IOS) GUIDE</span>
                 <button
                   type="button"
                   className="ios-fs-close-btn"
                   onClick={() => setShowIOSModal(false)}
-                  aria-label="Tutup"
+                  aria-label="Close"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18" />
@@ -306,9 +306,9 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
                 </button>
               </div>
 
-              <div className="ios-fs-title">100% Layar Penuh di iPhone</div>
+              <div className="ios-fs-title">100% Fullscreen on iPhone</div>
               <p className="ios-fs-desc">
-                Apple membatasi tombol fullscreen otomatis di dalam tab browser Safari. Agar game tampil <strong>100% Fullscreen tanpa bilah browser sama sekali</strong>:
+                Apple restricts automated fullscreen inside Safari browser tabs. To play <strong>100% Fullscreen with zero browser bars</strong>:
               </p>
 
               <div className="ios-fs-steps">
@@ -316,14 +316,14 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
                   <div className="ios-step-num">1</div>
                   <div className="ios-step-content">
                     <div className="ios-step-heading">
-                      Tekan Tombol <strong>Share</strong>
+                      Tap the <strong>Share</strong> Button
                       <svg className="ios-step-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#27e5ff" strokeWidth="2.2">
                         <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
                         <polyline points="16 6 12 2 8 6" />
                         <line x1="12" y1="2" x2="12" y2="15" />
                       </svg>
                     </div>
-                    <div className="ios-step-sub">Ikon kotak dengan panah ke atas di bilah bawah Safari kamu.</div>
+                    <div className="ios-step-sub">The square icon with an upward arrow in your Safari bottom bar.</div>
                   </div>
                 </div>
 
@@ -331,23 +331,23 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
                   <div className="ios-step-num">2</div>
                   <div className="ios-step-content">
                     <div className="ios-step-heading">
-                      Pilih <strong>Tambahkan ke Layar Utama</strong>
+                      Select <strong>Add to Home Screen</strong>
                     </div>
-                    <div className="ios-step-sub">Gulir ke bawah di menu Share lalu pilih <em>Add to Home Screen</em>.</div>
+                    <div className="ios-step-sub">Scroll down in the Share menu and select <em>Add to Home Screen</em>.</div>
                   </div>
                 </div>
 
                 <div className="ios-step-item">
                   <div className="ios-step-num">3</div>
                   <div className="ios-step-content">
-                    <div className="ios-step-heading">Buka Game dari Layar Utama</div>
-                    <div className="ios-step-sub">Game akan langsung terbuka <strong>100% Fullscreen tanpa bilah browser</strong> seperti game aplikasi App Store!</div>
+                    <div className="ios-step-heading">Launch Game from Home Screen</div>
+                    <div className="ios-step-sub">The game opens directly in <strong>100% Fullscreen with no browser bars</strong> just like an App Store game!</div>
                   </div>
                 </div>
               </div>
 
               <div className="ios-fs-tip">
-                <strong>Trik Cepat di Browser:</strong> Tekan tombol <strong>aA</strong> di kiri address bar Safari kamu &rarr; pilih <em>"Sembunyikan Bilah Alat" (Hide Toolbar)</em>.
+                <strong>Quick Browser Tip:</strong> Tap the <strong>aA</strong> button on the left of your Safari address bar &rarr; choose <em>"Hide Toolbar"</em>.
               </div>
 
               <div className="ios-fs-modal-actions">
@@ -357,10 +357,10 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
                   onClick={() => {
                     setShowIOSModal(false);
                     applySimulatedFullscreen(true);
-                    showToastMsg("MODE IMMERSIVE AKTIF", "Layar diperluas penuh!");
+                    showToastMsg("IMMERSIVE MODE ACTIVE", "Display expanded full size!");
                   }}
                 >
-                  Lanjutkan Main (Layar Penuh)
+                  Continue Playing (Fullscreen)
                 </button>
                 <button
                   type="button"
@@ -368,10 +368,10 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
                   onClick={() => {
                     setShowIOSModal(false);
                     applySimulatedFullscreen(false);
-                    showToastMsg("MODE JENDELA (WINDOWED)");
+                    showToastMsg("WINDOWED MODE");
                   }}
                 >
-                  Keluar ke Mode Jendela
+                  Exit to Windowed Mode
                 </button>
               </div>
             </div>

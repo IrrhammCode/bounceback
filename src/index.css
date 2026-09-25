@@ -2138,7 +2138,7 @@ body.simulated-fullscreen .screen {
   white-space: nowrap;
 }
 
-/* ─── Compact Overhead Character Badges (Di Atas Karakter) ─── */
+/* ─── Compact Overhead Character Badges (Overhead Characters) ─── */
 .overhead-badge-5v5 {
   position: absolute;
   transform: translate(-50%, -100%);
