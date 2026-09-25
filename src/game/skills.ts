@@ -698,7 +698,7 @@ export class SkillManager {
           user.vx = (udx / uDist) * 14.0;
           user.vz = (udz / uDist) * 14.0;
 
-          if (eventFn) eventFn("onepunch", { x: bestTarget.x, z: bestTarget.z });
+          if (eventFn) eventFn("onepunch", { x: bestTarget.x, z: bestTarget.z, userIndex: idx });
         } else {
           this.spawnOnePunchManFX(user, null, targetGate);
           if (eventFn) eventFn("whiff");

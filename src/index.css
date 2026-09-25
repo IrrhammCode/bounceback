@@ -1834,20 +1834,9 @@ body.simulated-fullscreen .screen {
   animation: tvFadeIn 0.3s ease-out;
 }
 
-/* CRT Scanlines & Vignette */
+/* Ambient CRT Vignette (No scanlines or fine lines) */
 .tv-scanlines {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: repeating-linear-gradient(
-    0deg,
-    rgba(0, 0, 0, 0.16) 0px,
-    rgba(0, 0, 0, 0.16) 1px,
-    transparent 1px,
-    transparent 3px
-  );
-  z-index: 2;
-  opacity: 0.55;
+  display: none !important;
 }
 
 .tv-vignette {
@@ -2041,21 +2030,7 @@ body.simulated-fullscreen .screen {
 }
 
 .banner-accent-line {
-  flex: 1;
-  max-width: 160px;
-  height: 2px;
-}
-.banner-accent-line.left {
-  background: linear-gradient(90deg, transparent 0%, rgba(39, 229, 255, 0.6) 100%);
-}
-.banner-accent-line.right {
-  background: linear-gradient(90deg, rgba(39, 229, 255, 0.6) 0%, transparent 100%);
-}
-.tv-team-top-banner.coral .banner-accent-line.left {
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 82, 104, 0.6) 100%);
-}
-.tv-team-top-banner.coral .banner-accent-line.right {
-  background: linear-gradient(90deg, rgba(255, 82, 104, 0.6) 0%, transparent 100%);
+  display: none !important;
 }
 
 .banner-content-pill {

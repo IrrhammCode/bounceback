@@ -95,8 +95,7 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
 
   return (
     <div className="tv-intro-overlay">
-      {/* TV Screen Scanlines & Ambient CRT Vignette */}
-      <div className="tv-scanlines" />
+      {/* Ambient CRT Vignette */}
       <div className="tv-vignette" />
 
       {/* Top TV Broadcast Header */}
@@ -159,7 +158,6 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
         <div className="tv-overhead-tags-layer">
           {/* Top Broadcast Team Showcase Banner */}
           <div className={`tv-team-top-banner ${phase === "cyan_team" ? "cyan" : "coral"} animate-deck-appear`}>
-            <div className="banner-accent-line left" />
             <div className={`banner-content-pill ${phase === "cyan_team" ? "cyan" : "coral"}`}>
               <span className="banner-team-name">
                 {phase === "cyan_team" ? "TEAM CYAN // THE BOUNCING BLUES" : "TEAM CORAL // THE RED CRUSHERS"}
@@ -169,7 +167,6 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
                 {phase === "cyan_team" ? "North Deck Defenders • 5 VS 5 Showcase" : "South Deck Challengers • 5 VS 5 Showcase"}
               </span>
             </div>
-            <div className="banner-accent-line right" />
           </div>
 
           {/* Floating Overhead Badges Anchored Right Above Each Character's Head */}

@@ -122,6 +122,10 @@ export class JuiceSystem {
       nx?: number;
       nz?: number;
       isHit?: boolean;
+      isPlayerKill?: boolean;
+      killerIdx?: number;
+      isPlayer?: boolean;
+      userIndex?: number;
     };
     const x = d.x ?? 0;
     const y = d.y ?? 1.2;
@@ -210,31 +214,43 @@ export class JuiceSystem {
         break;
       }
 
-      case "onepunch":
-        this.addTrauma(0.25);
-        this.hitStopTimer = 0.06;
+      case "onepunch": {
+        if (d.userIndex === 0 || d.userIndex === undefined) {
+          this.addTrauma(0.25);
+          this.hitStopTimer = 0.06;
+        }
         this.spawnComicPopup("ONE PUNCH!!", x, y + 1.2, z, "rainbow");
         this.spawnShockwave(x, 0.2, z, 0xff002b, 6.5);
         this.spawnHitSparks(x, y + 0.6, z, 0xffd700, 42);
         break;
+      }
 
-      case "ringout":
-        this.addTrauma(0.20);
-        this.triggerSlowMo(0.5, 0.2);
+      case "ringout": {
+        const isPlayerKill = d.isPlayerKill ?? (d.killerIdx === 0);
+        // Only human player ringout gets cinematic slow-mo and camera trauma
+        if (isPlayerKill) {
+          this.addTrauma(0.20);
+          this.triggerSlowMo(0.5, 0.2);
+        }
         this.spawnComicPopup("RING OUT! K.O.!!", x, y + 1.8, z, "rainbow");
         this.spawnShockwave(x, 0.2, z, (d.team ?? 0) === 0 ? 0x27e5ff : 0xff5268, 8.5);
         this.spawnHitSparks(x, y + 0.5, z, 0xffd700, 45);
         this.spawnGoalCelebration(d.team ?? 0, x, z);
         break;
+      }
 
-      case "goal":
-        this.addTrauma(0.20);
-        this.triggerSlowMo(0.75, 0.2);
+      case "goal": {
+        const isPlayerGoal = d.isPlayerKill ?? (d.killerIdx === 0);
+        if (isPlayerGoal) {
+          this.addTrauma(0.20);
+          this.triggerSlowMo(0.75, 0.2);
+        }
         this.spawnComicPopup("GOAL!!", x, y + 2.0, z, "gold");
         this.spawnShockwave(x, 0.2, z, 0xffd700, 7.5);
         this.spawnHitSparks(x, y + 0.5, z, 0xffea00, 38);
         this.spawnGoalCelebration(d.team ?? 0, x, z);
         break;
+      }
 
       case "combo": {
         this.addTrauma(0.08);

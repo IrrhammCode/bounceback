@@ -255,7 +255,15 @@ export class BouncebackEngine {
       sfxRingOut();
       if (combo > 1) sfxCombo(combo);
 
-      this.juice.trigger("ringout", { team, x: 0, y: 1.5, z: 0 });
+      const isPlayerKill = killerIdx === 0;
+      this.juice.trigger("ringout", {
+        team,
+        killerIdx,
+        isPlayerKill,
+        x: 0,
+        y: 1.5,
+        z: 0,
+      });
       this.arenaController?.onGoalCelebration(team);
       const teamName = team === 0 ? "TEAM CYAN" : "TEAM CORAL";
       let txt =
@@ -1540,47 +1548,20 @@ export class BouncebackEngine {
         (type, data) => {
           const d = data as any;
           if (type === "botpunch") {
-            const halfW = C.ARENA_W * 0.5;
-            const halfL = C.ARENA_L * 0.5;
-            const bImpulse = d?.impulse ?? C.PUNCH_IMPULSE;
-            const dirX = d?.dirX ?? d?.nx ?? 0;
-            const dirZ = d?.dirZ ?? d?.nz ?? 1;
-            const targetX = d?.x ?? 0;
-            const targetZ = d?.z ?? 0;
-
-            const projectedDist = bImpulse * 0.35;
-            const futureX = targetX + dirX * projectedDist;
-            const futureZ = targetZ + dirZ * projectedDist;
-            const isLethal = Math.abs(futureX) > halfW || Math.abs(futureZ) > halfL;
-
-            if (isLethal) {
-              sfxLethalHit();
-              this.juice.trigger("lethal_finish", {
-                x: targetX,
-                y: 1.2,
-                z: targetZ,
-                originX: d?.originX,
-                originZ: d?.originZ,
-                dirX,
-                dirZ,
-                team: d?.team ?? 1,
-                isHit: true,
-              });
-              this.showAnnouncement("CRITICAL RING-OUT HIT!!");
-            } else {
-              sfxPunch();
-              this.juice.trigger("botpunch", {
-                x: targetX,
-                y: 1.2,
-                z: targetZ,
-                originX: d?.originX,
-                originZ: d?.originZ,
-                dirX,
-                dirZ,
-                team: d?.team ?? 1,
-                isHit: true,
-              });
-            }
+            // Bot punches NEVER trigger cinematic slow-mo, hitstop, or screen trauma
+            // so human player locomotion is never interrupted
+            sfxPunch();
+            this.juice.trigger("botpunch", {
+              x: d?.x ?? 0,
+              y: 1.2,
+              z: d?.z ?? 0,
+              originX: d?.originX,
+              originZ: d?.originZ,
+              dirX: d?.dirX ?? d?.nx ?? 0,
+              dirZ: d?.dirZ ?? d?.nz ?? 1,
+              team: d?.team ?? 1,
+              isHit: true,
+            });
           } else {
             this.juice.trigger(type, data);
           }
