@@ -46,7 +46,8 @@ export function updateBots(
   dt: number,
   juiceFn?: JuiceFn,
   skillSlots?: SkillSlot[],
-  onActivateSkill?: (botIdx: number) => void
+  onActivateSkill?: (botIdx: number) => void,
+  activeBoxes?: { x: number; z: number }[]
 ) {
   const halfW = C.ARENA_W * 0.5;
   const halfL = C.ARENA_L * 0.5;
@@ -83,8 +84,41 @@ export function updateBots(
     let targetIdx = -1;
     let targetDist = Infinity;
 
+    // Fallback: Always find closest opponent on opposing team
+    let nearestOpponent: Entity | null = null;
+    let nearestOpponentDist = Infinity;
+    let nearestOpponentIdx = -1;
+
+    for (let j = 0; j < entities.length; j++) {
+      const e = entities[j];
+      if (e.team === bot.team) continue;
+      const d = Math.hypot(e.x - bot.x, e.z - bot.z);
+      if (d < nearestOpponentDist) {
+        nearestOpponentDist = d;
+        nearestOpponent = e;
+        nearestOpponentIdx = j;
+      }
+    }
+
+    // Check for nearby mystery boxes if bot currently has no skill
+    let targetBox: { x: number; z: number } | null = null;
+    let targetBoxDist = Infinity;
+    const botSlot = skillSlots ? skillSlots[i] : null;
+    const needsSkill = !botSlot || botSlot.type === SkillType.None;
+
+    if (needsSkill && activeBoxes && activeBoxes.length > 0) {
+      for (const b of activeBoxes) {
+        const d = Math.hypot(b.x - bot.x, b.z - bot.z);
+        if (d < 14.0 && d < targetBoxDist) {
+          targetBoxDist = d;
+          targetBox = b;
+        }
+      }
+    }
+
     // 2. Role-Based Tactical AI
     const role: BotRole = (bot.role as BotRole) || "striker";
+    const now = Date.now();
 
     switch (role) {
       case "striker": {
@@ -104,6 +138,12 @@ export function updateBots(
           }
         }
 
+        // Fallback: If all enemies are pursued or immune, target nearest opponent anyway
+        if (targetIdx < 0 && nearestOpponent) {
+          targetIdx = nearestOpponentIdx;
+          targetDist = nearestOpponentDist;
+        }
+
         if (targetIdx >= 0) {
           pursuitCount.set(targetIdx, (pursuitCount.get(targetIdx) || 0) + 1);
           const t = entities[targetIdx];
@@ -114,7 +154,7 @@ export function updateBots(
           moveZ = dz / d;
 
           // Dash to close in if lined up at medium distance
-          if (d > 3.6 && d < 7.2 && bot.dashCd <= 0 && Math.random() < 0.25) {
+          if (d > 3.6 && d < 7.2 && bot.dashCd <= 0 && Math.random() < 0.28) {
             shouldDash = true;
           }
 
@@ -123,7 +163,7 @@ export function updateBots(
             const result = applyPunch(bot, t, false);
             t.lastHitBy = i;
             bot.punchCd = C.PUNCH_CD; // Strictly C.PUNCH_CD (0.28s) matching player!
-            bot.chargeTimer = 0.42; // Rhythmic attack cooldown
+            bot.chargeTimer = 0.38; // Rhythmic attack cooldown
             if (juiceFn) {
               juiceFn("botpunch", {
                 ...result,
@@ -138,6 +178,13 @@ export function updateBots(
               });
             }
           }
+        } else if (targetBox) {
+          // Hunt nearby power-up box
+          const dx = targetBox.x - bot.x;
+          const dz = targetBox.z - bot.z;
+          const d = Math.hypot(dx, dz) || 1;
+          moveX = dx / d;
+          moveZ = dz / d;
         }
         break;
       }
@@ -176,7 +223,7 @@ export function updateBots(
             const result = applyPunch(bot, launchedTarget, false);
             launchedTarget.lastHitBy = i;
             bot.punchCd = C.PUNCH_CD;
-            bot.chargeTimer = 0.38;
+            bot.chargeTimer = 0.36;
             if (juiceFn) {
               juiceFn("botpunch", {
                 ...result,
@@ -191,16 +238,48 @@ export function updateBots(
               });
             }
           }
+        } else if (targetBox && targetBoxDist < 10.0) {
+          // Divert to pick up power-up box
+          const dx = targetBox.x - bot.x;
+          const dz = targetBox.z - bot.z;
+          const d = Math.hypot(dx, dz) || 1;
+          moveX = dx / d;
+          moveZ = dz / d;
+        } else if (nearestOpponent && nearestOpponentDist < 9.0) {
+          // Harass closest opponent in midfield
+          const dx = nearestOpponent.x - bot.x;
+          const dz = nearestOpponent.z - bot.z;
+          const d = Math.hypot(dx, dz) || 1;
+          moveX = dx / d;
+          moveZ = dz / d;
+          if (d < C.PUNCH_RANGE && bot.punchCd <= 0 && bot.chargeTimer <= 0) {
+            const result = applyPunch(bot, nearestOpponent, false);
+            nearestOpponent.lastHitBy = i;
+            bot.punchCd = C.PUNCH_CD;
+            bot.chargeTimer = 0.40;
+            if (juiceFn) {
+              juiceFn("botpunch", {
+                ...result,
+                originX: bot.x,
+                originZ: bot.z,
+                dirX: result.nx,
+                dirZ: result.nz,
+                x: nearestOpponent.x,
+                z: nearestOpponent.z,
+                team: bot.team,
+                isHit: true,
+              });
+            }
+          }
         } else {
-          // Standard midfield patrol
-          const patrolZ = bot.team === 0 ? -4.0 : 4.0;
-          const dx = 0 - bot.x;
+          // Dynamic active midfield sweep (continuous lateral patrol, never idle)
+          const patrolZ = bot.team === 0 ? -4.5 : 4.5;
+          const patrolX = Math.sin(now * 0.0022 + i * 1.5) * 8.0;
+          const dx = patrolX - bot.x;
           const dz = patrolZ - bot.z;
           const d = Math.hypot(dx, dz) || 1;
-          if (d > 1.8) {
-            moveX = dx / d;
-            moveZ = dz / d;
-          }
+          moveX = dx / d;
+          moveZ = dz / d;
         }
         break;
       }
@@ -208,9 +287,9 @@ export function updateBots(
       case "guardian": {
         // Defensive anchor: guards team gate and repels attacking opponents
         if (ownGate) {
-          const defendZ = ownGate.z + (bot.team === 0 ? 3.6 : -3.6);
+          const defendZ = ownGate.z + (bot.team === 0 ? 3.8 : -3.8);
           let threat: Entity | null = null;
-          let threatDist = 12.0;
+          let threatDist = 14.0;
 
           for (const e of entities) {
             if (e.team === bot.team) continue;
@@ -223,7 +302,7 @@ export function updateBots(
 
           if (threat) {
             // Position directly between threat and gate
-            const targetX = threat.x * 0.65;
+            const targetX = threat.x * 0.75;
             const targetZ = defendZ;
             const dx = targetX - bot.x;
             const dz = targetZ - bot.z;
@@ -236,7 +315,7 @@ export function updateBots(
               const result = applyPunch(bot, threat, false);
               threat.lastHitBy = i;
               bot.punchCd = C.PUNCH_CD;
-              bot.chargeTimer = 0.45;
+              bot.chargeTimer = 0.42;
               if (juiceFn) {
                 juiceFn("botpunch", {
                   ...result,
@@ -252,14 +331,13 @@ export function updateBots(
               }
             }
           } else {
-            // Hold guard post
-            const dx = ownGate.x - bot.x;
+            // Active Goalkeeper Lateral Shuffle (continuously moves on balls of feet)
+            const shuffleX = Math.sin(now * 0.003 + i) * 5.2;
+            const dx = shuffleX - bot.x;
             const dz = defendZ - bot.z;
             const d = Math.hypot(dx, dz) || 1;
-            if (d > 1.2) {
-              moveX = dx / d;
-              moveZ = dz / d;
-            }
+            moveX = dx / d;
+            moveZ = dz / d;
           }
         }
         break;
@@ -287,10 +365,15 @@ export function updateBots(
           }
         }
 
+        // Fallback: If no open flank target, target nearest opponent
+        if (bestTargetIdx < 0 && nearestOpponent) {
+          bestTargetIdx = nearestOpponentIdx;
+        }
+
         if (bestTargetIdx >= 0) {
           pursuitCount.set(bestTargetIdx, (pursuitCount.get(bestTargetIdx) || 0) + 1);
           const t = entities[bestTargetIdx];
-          const flankOffsetX = t.x > 0 ? -1.8 : 1.8;
+          const flankOffsetX = t.x > 0 ? -2.2 : 2.2;
           const targetX = t.x + flankOffsetX;
           const targetZ = t.z;
           const dx = targetX - bot.x;
@@ -305,53 +388,6 @@ export function updateBots(
           }
 
           if (dDirect < C.PUNCH_RANGE && bot.punchCd <= 0 && bot.chargeTimer <= 0) {
-            const result = applyPunch(bot, t, false);
-            t.lastHitBy = i;
-            bot.punchCd = C.PUNCH_CD;
-            bot.chargeTimer = 0.45;
-            if (juiceFn) {
-              juiceFn("botpunch", {
-                ...result,
-                originX: bot.x,
-                originZ: bot.z,
-                dirX: result.nx,
-                dirZ: result.nz,
-                x: t.x,
-                z: t.z,
-                team: bot.team,
-                isHit: true,
-              });
-            }
-          }
-        }
-        break;
-      }
-
-      case "sweeper": {
-        // High-mobility roamer: roams across center, breaks up enemy formations
-        for (let j = 0; j < entities.length; j++) {
-          const e = entities[j];
-          if (e.team === bot.team || e.immuneTimer > 0) continue;
-          const d = Math.hypot(e.x - bot.x, e.z - bot.z);
-          if (d < targetDist) {
-            targetDist = d;
-            targetIdx = j;
-          }
-        }
-
-        if (targetIdx >= 0) {
-          const t = entities[targetIdx];
-          const dx = t.x - bot.x;
-          const dz = t.z - bot.z;
-          const d = Math.hypot(dx, dz) || 1;
-          moveX = dx / d;
-          moveZ = dz / d;
-
-          if (d > 3.5 && d < 7.0 && bot.dashCd <= 0 && Math.random() < 0.3) {
-            shouldDash = true;
-          }
-
-          if (d < C.PUNCH_RANGE && bot.punchCd <= 0 && bot.chargeTimer <= 0) {
             const result = applyPunch(bot, t, false);
             t.lastHitBy = i;
             bot.punchCd = C.PUNCH_CD;
@@ -370,8 +406,96 @@ export function updateBots(
               });
             }
           }
+        } else if (targetBox) {
+          const dx = targetBox.x - bot.x;
+          const dz = targetBox.z - bot.z;
+          const d = Math.hypot(dx, dz) || 1;
+          moveX = dx / d;
+          moveZ = dz / d;
         }
         break;
+      }
+
+      case "sweeper": {
+        // High-mobility roamer: roams across center, breaks up enemy formations
+        for (let j = 0; j < entities.length; j++) {
+          const e = entities[j];
+          if (e.team === bot.team || e.immuneTimer > 0) continue;
+          const d = Math.hypot(e.x - bot.x, e.z - bot.z);
+          if (d < targetDist) {
+            targetDist = d;
+            targetIdx = j;
+          }
+        }
+
+        // Fallback: If all enemies immune, target nearest opponent anyway
+        if (targetIdx < 0 && nearestOpponent) {
+          targetIdx = nearestOpponentIdx;
+        }
+
+        if (targetIdx >= 0) {
+          const t = entities[targetIdx];
+          const dx = t.x - bot.x;
+          const dz = t.z - bot.z;
+          const d = Math.hypot(dx, dz) || 1;
+          moveX = dx / d;
+          moveZ = dz / d;
+
+          if (d > 3.5 && d < 7.0 && bot.dashCd <= 0 && Math.random() < 0.32) {
+            shouldDash = true;
+          }
+
+          if (d < C.PUNCH_RANGE && bot.punchCd <= 0 && bot.chargeTimer <= 0) {
+            const result = applyPunch(bot, t, false);
+            t.lastHitBy = i;
+            bot.punchCd = C.PUNCH_CD;
+            bot.chargeTimer = 0.40;
+            if (juiceFn) {
+              juiceFn("botpunch", {
+                ...result,
+                originX: bot.x,
+                originZ: bot.z,
+                dirX: result.nx,
+                dirZ: result.nz,
+                x: t.x,
+                z: t.z,
+                team: bot.team,
+                isHit: true,
+              });
+            }
+          }
+        } else if (targetBox) {
+          const dx = targetBox.x - bot.x;
+          const dz = targetBox.z - bot.z;
+          const d = Math.hypot(dx, dz) || 1;
+          moveX = dx / d;
+          moveZ = dz / d;
+        } else {
+          // Dynamic center patrol
+          const dx = Math.sin(now * 0.0025 + i) * 6.0 - bot.x;
+          const dz = 0 - bot.z;
+          const d = Math.hypot(dx, dz) || 1;
+          moveX = dx / d;
+          moveZ = dz / d;
+        }
+        break;
+      }
+    }
+
+    // Absolute Anti-Idle Insurance: If any bot still has move vector 0, push toward arena center or opponent
+    if (moveX === 0 && moveZ === 0) {
+      if (nearestOpponent) {
+        const dx = nearestOpponent.x - bot.x;
+        const dz = nearestOpponent.z - bot.z;
+        const d = Math.hypot(dx, dz) || 1;
+        moveX = dx / d;
+        moveZ = dz / d;
+      } else {
+        const dx = 0 - bot.x;
+        const dz = (bot.team === 0 ? -5 : 5) - bot.z;
+        const d = Math.hypot(dx, dz) || 1;
+        moveX = dx / d;
+        moveZ = dz / d;
       }
     }
 

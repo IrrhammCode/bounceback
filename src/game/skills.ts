@@ -4,12 +4,12 @@
  * Spawns rotating holographic Mystery Cubes in the arena.
  * When a player/bot collides with one, they receive 1 of 6 random skills.
  * Features full 3D visual FX:
- * - 🥊 GIGA FIST: 3D Giant Cartoon Spring Boxing Glove punching outward with shockwave
- * - 🚀 ROCKET BOOST: Twin chrome jet thrusters with billowing flame & smoke particle plumes
- * - 🧲 GIGA MAGNET: Floating holographic horseshoe magnet + concentric forcefields & lightning tethers
- * - 💣 BOUNCE BOMB: Red pulsing pinball bomb + gigantic cartoon mushroom fireball dome with scorch marks
- * - 🩳 SHRINK ZAP: High-energy electric laser beam + collapsing quantum rings & cartoon pop
- * - 🍌 BANANA PEEL: Flying spinning peel + 720° victim slip spin with orbiting halo stars
+ * - GIGA FIST: 3D Giant Cartoon Spring Boxing Glove punching outward with shockwave
+ * - ROCKET BOOST: Twin chrome jet thrusters with billowing flame & smoke particle plumes
+ * - GIGA MAGNET: Floating holographic horseshoe magnet + concentric forcefields & lightning tethers
+ * - BOUNCE BOMB: Red pulsing pinball bomb + gigantic cartoon mushroom fireball dome with scorch marks
+ * - SHRINK ZAP: High-energy electric laser beam + collapsing quantum rings & cartoon pop
+ * - BANANA PEEL: Flying spinning peel + 720 degree victim slip spin with orbiting halo stars
  */
 import * as THREE from "three";
 import * as C from "./config";
@@ -25,7 +25,7 @@ export enum SkillType {
   GigaMagnet = 4,  // Pull 3 nearest enemies toward you
   BounceBomb = 5,  // Roll an explosive pinball ball
   ShrinkZap = 6,   // Shrink nearest enemy to half size
-  OnePunchMan = 7, // 💥 ONE PUNCH MAN: Saitama Serious Punch that blasts enemy straight into the goal!
+  OnePunchMan = 7, // ONE PUNCH MAN: Saitama Serious Punch that blasts enemy straight into the goal!
 }
 
 export const SKILL_NAMES: Record<SkillType, string> = {
@@ -219,6 +219,10 @@ export class SkillManager {
         landed: true,
       });
     }
+  }
+
+  getActiveBoxes(): { x: number; z: number }[] {
+    return this.boxes.filter((b) => b.active).map((b) => ({ x: b.x, z: b.z }));
   }
 
   private createBoxMesh(): THREE.Object3D {
@@ -704,7 +708,7 @@ export class SkillManager {
   //  3D SKILL VISUAL EFFECTS
   // ═══════════════════════════════════════════
 
-  // 1. 🥊 Giga Fist: 3D Giant Spring Boxing Glove
+  // 1. Giga Fist: 3D Giant Spring Boxing Glove
   private spawnGigaFistFX(user: Entity, target?: Entity | null) {
     const fistGroup = new THREE.Group();
     const fistMat = new THREE.MeshStandardMaterial({
@@ -787,7 +791,7 @@ export class SkillManager {
     });
   }
 
-  // 2. 🚀 Rocket Boost: Twin Jet Turbines & Trailing Flame Plumes
+  // 2. Rocket Boost: Twin Jet Turbines & Trailing Flame Plumes
   private spawnRocketThrusterFX(user: Entity, slot: SkillSlot) {
     const thrusterGroup = new THREE.Group();
     const chromeMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9, roughness: 0.2 });
@@ -861,7 +865,7 @@ export class SkillManager {
     });
   }
 
-  // 3. 🧲 Giga Magnet: Floating Horseshoe Magnet + Electric Tethers
+  // 3. Giga Magnet: Floating Horseshoe Magnet + Electric Tethers
   private spawnMagnetFieldFX(user: Entity, victims: Entity[]) {
     const magnetGroup = new THREE.Group();
 
@@ -958,7 +962,7 @@ export class SkillManager {
     });
   }
 
-  // 4. 💣 Bounce Bomb: Monumental 3D Fireball Explosion Sphere
+  // 4. Bounce Bomb: Monumental 3D Fireball Explosion Sphere
   private spawnBombExplosionFX(x: number, z: number) {
     // 1. Expanding fireball dome
     const fireGeo = new THREE.SphereGeometry(1.0, 16, 12);
@@ -1029,7 +1033,7 @@ export class SkillManager {
     });
   }
 
-  // 5. 🩳 Shrink Zap: High-Energy Neon Laser Beam + Quantum Rings
+  // 5. Shrink Zap: High-Energy Neon Laser Beam + Quantum Rings
   private spawnShrinkLaserFX(user: Entity, target: Entity) {
     const dist = Math.hypot(target.x - user.x, target.z - user.z) || 1.0;
     const beamGeo = new THREE.CylinderGeometry(0.12, 0.12, dist, 12);
@@ -1083,7 +1087,7 @@ export class SkillManager {
     });
   }
 
-  // 6. 🍌 Banana Slip: 3 Orbiting Cartoon Halo Stars
+  // 6. Banana Slip: 3 Orbiting Cartoon Halo Stars
   private spawnBananaSlipFX(victim: Entity) {
     const haloGroup = new THREE.Group();
     haloGroup.position.set(victim.x, 1.8, victim.z);
@@ -1127,7 +1131,7 @@ export class SkillManager {
     });
   }
 
-  // 7. 💥 One Punch Man: 3D Giant Saitama Serious Punch Fist & Hyper Shockwaves
+  // 7. One Punch Man: 3D Giant Saitama Serious Punch Fist & Hyper Shockwaves
   private spawnOnePunchManFX(user: Entity, target: Entity | null, targetGate: { x: number; z: number }) {
     const punchGroup = new THREE.Group();
     punchGroup.name = "OnePunchManFX";
@@ -1275,7 +1279,7 @@ export class SkillManager {
     });
   }
 
-  // ─── 8. 🌟 Mystery Box Pickup Burst FX (3D Starburst & Shockwave) ───
+  // ─── 8. Mystery Box Pickup Burst FX (3D Starburst & Shockwave) ───
   private spawnBoxPickupFX(x: number, z: number, isPlayer: boolean) {
     const burstGroup = new THREE.Group();
     burstGroup.position.set(x, 1.2, z);

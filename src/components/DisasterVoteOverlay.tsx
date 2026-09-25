@@ -183,7 +183,7 @@ export default function DisasterVoteOverlay({ voteState }: DisasterVoteOverlayPr
                 <span className="cand-votes-count">{cand.votes.toLocaleString()} votes</span>
                 {isLeading && (
                   <span className="cand-leading-badge">
-                    ★ LEADING PICK
+                    LEADING PICK
                   </span>
                 )}
               </div>

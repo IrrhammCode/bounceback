@@ -18,6 +18,8 @@ type AppMode = "title" | "intro" | "game" | "result" | "round_recap";
 
 const initialState: GameState = {
   timer: "3:00",
+  rawTimer: 180,
+  finalCountdown: 0,
   scores: [0, 0],
   phase: 1,
   combo: [0, 0],
@@ -45,6 +47,7 @@ const initialState: GameState = {
   roundSubtitle: "ROUND 1: OPENING CLASH",
   roundBadge: "CLASSIC SHOWDOWN",
   roundTheme: "colosseum",
+  celebrationBanner: null,
 };
 
 export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
@@ -343,6 +346,46 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
               </div>
             </div>
           </div>
+
+          {/* Final 3, 2, 1 Seconds Tension Countdown */}
+          {gameState.finalCountdown > 0 && (
+            <div className="final-countdown-overlay" key={gameState.finalCountdown}>
+              <div className="final-countdown-ring" />
+              <div className="final-countdown-number animate-countdown-pulse">
+                {gameState.finalCountdown}
+              </div>
+              <div className="final-countdown-label">FINAL SECONDS!</div>
+            </div>
+          )}
+
+          {/* In-Game Round & Championship Celebration Broadcast Banner */}
+          {gameState.celebrationBanner?.isActive && (
+            <div
+              className={`round-celebration-banner ${
+                gameState.celebrationBanner.winner === 0
+                  ? "team-cyan"
+                  : gameState.celebrationBanner.winner === 1
+                    ? "team-coral"
+                    : "draw"
+              } animate-celebration-enter`}
+            >
+              <div className="celebration-badge">
+                {gameState.celebrationBanner.isGrandChampionship
+                  ? "GRAND CHAMPIONSHIP FINALE"
+                  : `ROUND ${gameState.currentRound} CONCLUSION`}
+              </div>
+              <div className="celebration-title">
+                {gameState.celebrationBanner.isGrandChampionship
+                  ? `${gameState.celebrationBanner.winnerName} WINS THE TOURNAMENT!`
+                  : `${gameState.celebrationBanner.winnerName} TAKES ROUND ${gameState.currentRound}!`}
+              </div>
+              <div className="celebration-sub">
+                {gameState.celebrationBanner.isGrandChampionship
+                  ? "THE CHAMPIONS HOIST THE GOLDEN TROPHY!"
+                  : "VICTORY CELEBRATION IN PROGRESS..."}
+              </div>
+            </div>
+          )}
 
           {/* Broadcast Center Announcement */}
           {gameState.announcement && (

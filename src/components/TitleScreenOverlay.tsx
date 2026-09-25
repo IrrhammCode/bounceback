@@ -106,7 +106,7 @@ export default function TitleScreenOverlay({ onStartMatch }: TitleScreenOverlayP
       {/* Centerpiece Hero Titleplate */}
       <main className="title-center-plate">
         <div className="title-season-tag animate-fade-in">
-          ★ SEASON 1 • REALITY SHOW SHOWDOWN ★
+          SEASON 1 • REALITY SHOW SHOWDOWN
         </div>
 
         <h1 className="title-logo-3d animate-scale-pop">
@@ -178,7 +178,7 @@ export default function TitleScreenOverlay({ onStartMatch }: TitleScreenOverlayP
                 onClick={() => setShowGuide(false)}
                 title="Close Guide"
               >
-                ✕
+                X
               </button>
             </div>
 

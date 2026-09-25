@@ -592,6 +592,123 @@ export class JuiceSystem {
     }
   }
 
+  // ─── Round Victory Pyrotechnic Cannons ───
+  spawnRoundCelebration(team: number) {
+    if (!this.scene) return;
+    const teamCol = team === 0 ? 0x00f0ff : 0xff2a5f;
+    const goldCol = 0xffd166;
+    const teamZ = team === 0 ? -12 : 12;
+
+    this.spawnShockwave(0, 0.2, teamZ, teamCol, 8.5);
+    setTimeout(() => {
+      this.spawnShockwave(0, 0.2, teamZ, goldCol, 6.0);
+    }, 150);
+
+    const positions = [
+      { x: -9, z: teamZ },
+      { x: 9, z: teamZ },
+      { x: 0, z: teamZ - (team === 0 ? 5 : -5) },
+      { x: 0, z: 0 },
+    ];
+
+    const colors = [teamCol, goldCol, 0xffffff, 0x38bdf8, 0xf43f5e];
+    for (const pos of positions) {
+      for (let i = 0; i < 32; i++) {
+        const cCol = colors[i % colors.length];
+        const confMat = new THREE.MeshBasicMaterial({
+          color: cCol,
+          transparent: true,
+          opacity: 1.0,
+          side: THREE.DoubleSide,
+          depthWrite: false,
+        });
+
+        const pMesh = new THREE.Mesh(this.starGeo, confMat);
+        pMesh.position.set(pos.x, 1.8, pos.z);
+
+        const launchAngle = Math.random() * Math.PI * 2;
+        const launchSpeed = 4.0 + Math.random() * 9.0;
+        const vY = 14.0 + Math.random() * 8.0;
+
+        this.fxGroup.add(pMesh);
+        this.sparks.push({
+          pos: new THREE.Vector3(pos.x, 1.8, pos.z),
+          vel: new THREE.Vector3(
+            Math.cos(launchAngle) * launchSpeed,
+            vY,
+            Math.sin(launchAngle) * launchSpeed
+          ),
+          mesh: pMesh,
+          life: 2.2 + Math.random() * 0.8,
+          maxLife: 3.0,
+          rotSpeed: new THREE.Vector3(
+            (Math.random() - 0.5) * 14,
+            (Math.random() - 0.5) * 14,
+            (Math.random() - 0.5) * 14
+          ),
+        });
+      }
+    }
+  }
+
+  // ─── Grand Championship Golden Confetti & Stadium Fireworks ───
+  spawnGrandChampionshipFireworks() {
+    if (!this.scene) return;
+    const goldCol = 0xffd166;
+    const cyanCol = 0x00f0ff;
+    const coralCol = 0xff2a5f;
+
+    this.spawnShockwave(0, 0.2, 0, goldCol, 12.0);
+    setTimeout(() => this.spawnShockwave(0, 0.2, 0, 0xffffff, 8.0), 200);
+
+    const origins = [
+      { x: 0, z: 0 },
+      { x: -14, z: -20 },
+      { x: 14, z: -20 },
+      { x: -14, z: 20 },
+      { x: 14, z: 20 },
+    ];
+
+    const champColors = [0xffd700, 0xffea00, 0xffb703, 0xffffff, cyanCol, coralCol, 0xa855f7];
+    for (const o of origins) {
+      for (let i = 0; i < 40; i++) {
+        const col = champColors[i % champColors.length];
+        const confMat = new THREE.MeshBasicMaterial({
+          color: col,
+          transparent: true,
+          opacity: 1.0,
+          side: THREE.DoubleSide,
+          depthWrite: false,
+        });
+
+        const pMesh = new THREE.Mesh(this.starGeo, confMat);
+        pMesh.position.set(o.x, 2.0, o.z);
+
+        const launchAngle = Math.random() * Math.PI * 2;
+        const launchSpeed = 5.0 + Math.random() * 11.0;
+        const vY = 16.0 + Math.random() * 12.0;
+
+        this.fxGroup.add(pMesh);
+        this.sparks.push({
+          pos: new THREE.Vector3(o.x, 2.0, o.z),
+          vel: new THREE.Vector3(
+            Math.cos(launchAngle) * launchSpeed,
+            vY,
+            Math.sin(launchAngle) * launchSpeed
+          ),
+          mesh: pMesh,
+          life: 2.8 + Math.random() * 1.0,
+          maxLife: 3.8,
+          rotSpeed: new THREE.Vector3(
+            (Math.random() - 0.5) * 16,
+            (Math.random() - 0.5) * 16,
+            (Math.random() - 0.5) * 16
+          ),
+        });
+      }
+    }
+  }
+
   // ─── Giant 3D Cartoon Boxing Glove Punch Fist ───
   spawnGiantPunchFist(
     ox: number,

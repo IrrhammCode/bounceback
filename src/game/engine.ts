@@ -49,6 +49,11 @@ import {
   sfxOnePunch,
   sfxLethalHit,
   sfxSkillActivate,
+  sfxRoundCountdownTick,
+  sfxRoundBuzzer,
+  sfxRoundVictoryFanfare,
+  sfxRoundTransitionWhoosh,
+  sfxGrandChampionshipVictory,
 } from "./audio";
 import { DisasterManager, type DisasterVoteState, type DisasterId } from "./disasters";
 // @ts-ignore — JS asset modules following 404 asset contract
@@ -61,6 +66,8 @@ import { TournamentManager, type RoundResult, type RoundDef } from "./tournament
 
 export interface GameState {
   timer: string;
+  rawTimer: number;
+  finalCountdown: number; // 3, 2, 1, or 0
   scores: [number, number];
   phase: number;
   combo: [number, number];
@@ -83,6 +90,13 @@ export interface GameState {
   roundSubtitle: string;
   roundBadge: string;
   roundTheme: string;
+  // Celebration state
+  celebrationBanner: {
+    isActive: boolean;
+    winner: number;
+    winnerName: string;
+    isGrandChampionship: boolean;
+  } | null;
 }
 
 export type GameStateCallback = (state: GameState) => void;
@@ -136,6 +150,14 @@ export class BouncebackEngine {
   // Arena visual meshes & controller
   private floorMesh!: THREE.Mesh;
   private arenaController: ArenaController | null = null;
+
+  // Round Celebration & Grand Championship State
+  public isCelebratingRound = false;
+  private roundCelebrationTimer = 0;
+  private isGrandChampionship = false;
+  private celebrationWinner = 0;
+  private lastCountdownSec = 0;
+  private trophyMesh!: THREE.Group;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -198,6 +220,10 @@ export class BouncebackEngine {
     this.player = new PlayerController();
     this.player.init();
 
+    // 3D Grand Championship Trophy
+    this.trophyMesh = this.createChampionshipTrophy();
+    this.scene.add(this.trophyMesh);
+
     // Match
     this.match = new Match();
     this.match.onGoal = (team, points, combo, bounces) => {
@@ -226,36 +252,35 @@ export class BouncebackEngine {
       this.activateOverdrive();
     };
     this.match.onMatchEnd = (winner, scores) => {
-      sfxGameOver();
+      sfxRoundBuzzer();
+      sfxCrowdCheer(1.8);
+
       const roundResult = this.tournament.recordRoundResult(winner, scores);
       this.winningTeam = winner;
+      this.celebrationWinner = winner;
+      this.isGrandChampionship = this.tournament.isTournamentOver;
+      this.isCelebratingRound = true;
+      this.roundCelebrationTimer = this.isGrandChampionship ? 5.2 : 3.0;
 
-      if (this.tournament.isTournamentOver) {
-        this.appMode = "result";
+      if (this.isGrandChampionship) {
         this.winningTeam = this.tournament.tournamentWinner;
+        this.celebrationWinner = this.tournament.tournamentWinner;
+        this.trophyMesh.visible = true;
+        this.juice.spawnGrandChampionshipFireworks();
+        sfxGrandChampionshipVictory();
         const winTeam =
           this.winningTeam === 0
             ? "TEAM CYAN"
             : this.winningTeam === 1
               ? "TEAM CORAL"
               : "DRAW";
-        this.showAnnouncement(`GRAND CHAMPIONSHIP OVER — ${winTeam} WINS!`);
-        if (this.onTournamentEnd) {
-          this.onTournamentEnd(
-            this.tournament.tournamentWinner,
-            this.tournament.roundHistory,
-            this.tournament.roundWins
-          );
-        }
-        if (this.onMatchEnd) this.onMatchEnd(this.winningTeam, scores);
+        this.showAnnouncement(`GRAND CHAMPIONS: ${winTeam} WINS THE TOURNAMENT!`);
       } else {
-        this.appMode = "round_recap";
+        this.juice.spawnRoundCelebration(winner);
+        sfxRoundVictoryFanfare(winner);
         const winTeam =
           winner === 0 ? "TEAM CYAN" : winner === 1 ? "TEAM CORAL" : "TIED ROUND";
-        this.showAnnouncement(`ROUND ${roundResult.roundNumber} OVER — ${winTeam}!`);
-        if (this.onRoundEnd) {
-          this.onRoundEnd(roundResult);
-        }
+        this.showAnnouncement(`ROUND ${roundResult.roundNumber} OVER — ${winTeam} WINS!`);
       }
     };
 
@@ -496,6 +521,90 @@ export class BouncebackEngine {
     return auraGroup;
   }
 
+  // ─── 3D Grand Championship Golden Trophy ───
+  private createChampionshipTrophy(): THREE.Group {
+    const trophy = new THREE.Group();
+    trophy.name = "GrandChampionshipTrophy";
+
+    const goldMat = new THREE.MeshStandardMaterial({
+      color: 0xffd700,
+      metalness: 0.92,
+      roughness: 0.18,
+      emissive: 0xff9900,
+      emissiveIntensity: 0.35,
+    });
+
+    const marbleMat = new THREE.MeshStandardMaterial({
+      color: 0x1e293b,
+      roughness: 0.4,
+      metalness: 0.2,
+    });
+
+    // 1. Heavy Marble Plinth
+    const plinth = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.1, 0.45, 16), marbleMat);
+    plinth.position.y = 0.225;
+    trophy.add(plinth);
+
+    // 2. Golden Plinth Trim
+    const trim = new THREE.Mesh(new THREE.CylinderGeometry(0.92, 0.92, 0.08, 16), goldMat);
+    trim.position.y = 0.48;
+    trophy.add(trim);
+
+    // 3. Fluted Golden Stem
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.45, 0.65, 16), goldMat);
+    stem.position.y = 0.82;
+    trophy.add(stem);
+
+    // 4. Golden Trophy Cup Bowl
+    const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 0.35, 1.1, 20), goldMat);
+    bowl.position.y = 1.65;
+    trophy.add(bowl);
+
+    // 5. Flanged Golden Cup Rim
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.95, 0.08, 12, 24), goldMat);
+    rim.rotation.x = Math.PI / 2;
+    rim.position.y = 2.2;
+    trophy.add(rim);
+
+    // 6. Sweeping Dual Golden Handles
+    const handleGeo = new THREE.TorusGeometry(0.48, 0.07, 10, 20, Math.PI * 1.3);
+    const leftHandle = new THREE.Mesh(handleGeo, goldMat);
+    leftHandle.position.set(-0.95, 1.65, 0);
+    leftHandle.rotation.z = Math.PI * 0.45;
+    trophy.add(leftHandle);
+
+    const rightHandle = new THREE.Mesh(handleGeo, goldMat);
+    rightHandle.position.set(0.95, 1.65, 0);
+    rightHandle.rotation.z = -Math.PI * 0.45;
+    trophy.add(rightHandle);
+
+    // 7. Golden Star Crest on Front
+    const star = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 12), new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      emissive: 0xffd700,
+      emissiveIntensity: 1.2,
+    }));
+    star.position.set(0, 1.75, 0.85);
+    trophy.add(star);
+
+    // 8. Sparkling Halo Ring
+    const haloMat = new THREE.MeshBasicMaterial({
+      color: 0xffea00,
+      transparent: true,
+      opacity: 0.65,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+    });
+    const halo = new THREE.Mesh(new THREE.RingGeometry(1.2, 1.55, 24), haloMat);
+    halo.rotation.x = Math.PI / 2;
+    halo.position.y = 0.04;
+    trophy.add(halo);
+
+    trophy.position.set(0, 0, 0);
+    trophy.visible = false;
+    return trophy;
+  }
+
   private spawnBumpers() {
     // 13 strategic bumpers spaced across spacious 28x54 arena
     const positions = [
@@ -644,6 +753,11 @@ export class BouncebackEngine {
     }
     const currentRoundDef = this.tournament.getCurrentRoundDef();
 
+    this.isCelebratingRound = false;
+    this.roundCelebrationTimer = 0;
+    this.lastCountdownSec = 0;
+    if (this.trophyMesh) this.trophyMesh.visible = false;
+
     this.appMode = "game";
     resumeAudio();
     sfxMatchStart();
@@ -669,6 +783,10 @@ export class BouncebackEngine {
   }
 
   public advanceToNextRound() {
+    this.isCelebratingRound = false;
+    this.roundCelebrationTimer = 0;
+    if (this.trophyMesh) this.trophyMesh.visible = false;
+    sfxRoundTransitionWhoosh();
     if (this.tournament.advanceToNextRound()) {
       this.startMatch(this.tournament.currentRound);
     } else {
@@ -677,6 +795,10 @@ export class BouncebackEngine {
   }
 
   public startNewTournament() {
+    this.isCelebratingRound = false;
+    this.roundCelebrationTimer = 0;
+    this.lastCountdownSec = 0;
+    if (this.trophyMesh) this.trophyMesh.visible = false;
     this.tournament.startNewTournament();
     if (this.arenaController) {
       this.arenaController.setMapTheme(1);
@@ -685,6 +807,10 @@ export class BouncebackEngine {
   }
 
   public resetToTitle() {
+    this.isCelebratingRound = false;
+    this.roundCelebrationTimer = 0;
+    this.lastCountdownSec = 0;
+    if (this.trophyMesh) this.trophyMesh.visible = false;
     this.appMode = "title";
     stopBGM();
     this.tournament.startNewTournament();
@@ -1018,6 +1144,8 @@ export class BouncebackEngine {
   }
 
   private updateCamera(dt: number) {
+    if (this.isCelebratingRound) return; // Celebration camera controls orientation and position
+
     const p = this.entities[0];
     if (!p) return;
 
@@ -1374,7 +1502,8 @@ export class BouncebackEngine {
             this.handleSkillEvent,
             this.gates
           );
-        }
+        },
+        this.skills.getActiveBoxes()
       );
 
       // Current round definition & modifiers
@@ -1511,6 +1640,95 @@ export class BouncebackEngine {
 
       // Match timer
       this.match.update(dt);
+    }
+
+    // ─── Final Seconds Countdown Tension (3, 2, 1) ───
+    if (this.appMode === "game" && this.match.started && !this.match.over && !this.isCelebratingRound) {
+      const rem = Math.ceil(this.match.timer);
+      if (rem <= 3 && rem >= 1 && rem !== this.lastCountdownSec) {
+        this.lastCountdownSec = rem;
+        sfxRoundCountdownTick(rem);
+      }
+    }
+
+    // ─── Round / Tournament Celebration Orchestrator ───
+    if (this.isCelebratingRound) {
+      this.roundCelebrationTimer -= dt;
+
+      if (this.isGrandChampionship) {
+        // Championship Gathering: Winning team members run to center trophy
+        const winTeam = this.celebrationWinner;
+        const teamStart = winTeam === 0 ? 0 : 5;
+        const offsets = [
+          { x: 0, z: -1.6 },      // Captain / MVP (front center)
+          { x: -2.4, z: -0.4 },   // Wing Left
+          { x: 2.4, z: -0.4 },    // Wing Right
+          { x: -1.6, z: 1.5 },    // Rear Left
+          { x: 1.6, z: 1.5 },     // Rear Right
+        ];
+
+        for (let k = 0; k < 5; k++) {
+          const ent = this.entities[teamStart + k];
+          if (!ent) continue;
+          const target = offsets[k];
+          const stepRate = Math.min(1.0, 5.0 * dt);
+          ent.x += (target.x - ent.x) * stepRate;
+          ent.z += (target.z - ent.z) * stepRate;
+          ent.vx = 0;
+          ent.vz = 0;
+
+          if (ent.mesh) {
+            const lookAngle = Math.atan2(-target.x, -target.z);
+            ent.mesh.rotation.y = lookAngle;
+          }
+        }
+
+        // Rotate trophy
+        if (this.trophyMesh) {
+          this.trophyMesh.visible = true;
+          this.trophyMesh.rotation.y += dt * 0.85;
+        }
+
+        // 360-degree Orbiting Championship Camera
+        this.titleCamAngle += dt * 0.38;
+        this.camera.position.set(
+          Math.sin(this.titleCamAngle) * 9.5,
+          4.2,
+          Math.cos(this.titleCamAngle) * 9.5
+        );
+        this.camera.lookAt(0, 1.4, 0);
+      } else {
+        // Regular Round Victory Camera: Frames winning team
+        const winZ = this.celebrationWinner === 0 ? -12.0 : 12.0;
+        this.camLookTarget.lerp(new THREE.Vector3(0, 1.4, winZ), Math.min(1.0, 5.0 * dt));
+        this.camera.position.lerp(
+          new THREE.Vector3(0, 4.5, winZ - (this.celebrationWinner === 0 ? 8.0 : -8.0)),
+          Math.min(1.0, 4.0 * dt)
+        );
+        this.camera.lookAt(this.camLookTarget);
+      }
+
+      // Check for celebration expiration
+      if (this.roundCelebrationTimer <= 0) {
+        this.isCelebratingRound = false;
+        if (this.isGrandChampionship) {
+          this.appMode = "result";
+          if (this.onTournamentEnd) {
+            this.onTournamentEnd(
+              this.tournament.tournamentWinner,
+              this.tournament.roundHistory,
+              this.tournament.roundWins
+            );
+          }
+          if (this.onMatchEnd) this.onMatchEnd(this.winningTeam, this.match.scores);
+        } else {
+          this.appMode = "round_recap";
+          if (this.onRoundEnd) {
+            const hist = this.tournament.roundHistory;
+            this.onRoundEnd(hist[hist.length - 1]);
+          }
+        }
+      }
     }
 
     // 3rd-person camera follow (stabilized tracking)
@@ -1669,6 +1887,44 @@ export class BouncebackEngine {
         // ─── Realistic Procedural Locomotion (Alternating Stride, Knee Bend, Arm Pump, Stance Push-Off) ───
         if (u.leftArm && u.rightArm && u.leftLeg && u.rightLeg && u.torso && !ent.launched) {
           const baseHipsY = u.baseHipsY ?? 0.52;
+
+          // In-Round Victory Celebration vs Defeat Slump
+          if (this.isCelebratingRound) {
+            if (ent.team === this.celebrationWinner) {
+              // Jump bounce
+              const bounce = Math.abs(Math.sin(now * 0.008 + i * 0.9)) * 0.72;
+              ent.mesh.position.y = groundH + footOffset + bounce;
+
+              // Fist pumping in air
+              u.leftArm.rotation.x = -2.6 + Math.sin(now * 0.009 + i) * 0.35;
+              u.leftArm.rotation.z = 0.42;
+              u.rightArm.rotation.x = -2.6 - Math.sin(now * 0.009 + i) * 0.35;
+              u.rightArm.rotation.z = -0.42;
+              if (u.leftForearm) u.leftForearm.rotation.x = -0.65;
+              if (u.rightForearm) u.rightForearm.rotation.x = -0.65;
+
+              // Cheering head & torso
+              if (u.head) u.head.rotation.x = -0.25;
+              u.torso.rotation.x = 0;
+              u.torso.rotation.y = Math.sin(now * 0.006 + i) * 0.15;
+              u.torso.rotation.z = Math.sin(now * 0.008) * 0.08;
+              continue;
+            } else {
+              // Defeated slump posture
+              ent.mesh.position.y = groundH + footOffset;
+              if (u.head) u.head.rotation.x = 0.55;
+              u.torso.rotation.x = 0.38;
+              u.torso.rotation.y = 0;
+              u.torso.rotation.z = 0;
+              u.leftArm.rotation.x = 0.35;
+              u.leftArm.rotation.z = 0.15;
+              u.rightArm.rotation.x = 0.35;
+              u.rightArm.rotation.z = -0.15;
+              if (u.leftForearm) u.leftForearm.rotation.x = -0.15;
+              if (u.rightForearm) u.rightForearm.rotation.x = -0.15;
+              continue;
+            }
+          }
           if (spd > 0.35 && !ent.stunTimer) {
             const isRun = spd > 7.0 || ent.dashTimer > 0 || (slot && slot.rocketTimer > 0);
 
@@ -1885,8 +2141,35 @@ export class BouncebackEngine {
     // Push game state to React (including player skill & reality TV disaster voting & 5-round tournament info)
     const pSlot = this.skillSlots[0];
     const currentRoundDef = this.tournament.getCurrentRoundDef();
+    const remSeconds = Math.ceil(this.match.timer);
+    const finalCountdown =
+      this.appMode === "game" &&
+      this.match.started &&
+      !this.match.over &&
+      !this.isCelebratingRound &&
+      remSeconds <= 3 &&
+      remSeconds >= 1
+        ? remSeconds
+        : 0;
+
+    const celebrationBanner = this.isCelebratingRound
+      ? {
+          isActive: true,
+          winner: this.celebrationWinner,
+          winnerName:
+            this.celebrationWinner === 0
+              ? "TEAM CYAN"
+              : this.celebrationWinner === 1
+                ? "TEAM CORAL"
+                : "DRAW",
+          isGrandChampionship: this.isGrandChampionship,
+        }
+      : null;
+
     this.onStateChange({
       timer: this.match.getTimerDisplay(),
+      rawTimer: this.match.timer,
+      finalCountdown,
       scores: [...this.match.scores] as [number, number],
       phase: this.match.phase,
       combo: [...this.match.combo] as [number, number],
@@ -1906,6 +2189,7 @@ export class BouncebackEngine {
       roundSubtitle: currentRoundDef.subtitle,
       roundBadge: currentRoundDef.badge,
       roundTheme: currentRoundDef.theme,
+      celebrationBanner,
     });
 
     this.renderer.render(this.scene, this.camera);

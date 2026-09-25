@@ -745,13 +745,287 @@ export function sfxWhistle() {
 
 export function sfxGameOver() {
   stopBGM();
-  playTone(440, 0.3, "sawtooth", 0.25);
-  setTimeout(() => playTone(330, 0.3, "sawtooth", 0.25), 300);
-  setTimeout(() => playTone(220, 0.6, "sawtooth", 0.3), 600);
+  sfxRoundBuzzer();
+  sfxCrowdCheer(1.6);
 }
 
 export function sfxCountBeep() {
   playTone(660, 0.12, "sine", 0.25);
+}
+
+// ─── High-Voltage Round Countdown & Finale SFX ───
+export function sfxRoundCountdownTick(remaining: number) {
+  if (!ctx || !sfxGain || muted) return;
+  try {
+    const t = ctx.currentTime;
+    // Escalating pitch on 3 -> 2 -> 1
+    const freqs: Record<number, number> = { 3: 587.33, 2: 698.46, 1: 880.0 };
+    const freq = freqs[remaining] || 660.0;
+
+    // 1. Sharp tension beep
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(freq, t);
+    gain.gain.setValueAtTime(0.42, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+    osc.connect(gain);
+    gain.connect(sfxGain);
+    osc.start(t);
+    osc.stop(t + 0.2);
+
+    // 2. Punchy dramatic sub kick
+    const subOsc = ctx.createOscillator();
+    const subGain = ctx.createGain();
+    subOsc.type = "sine";
+    subOsc.frequency.setValueAtTime(120, t);
+    subOsc.frequency.exponentialRampToValueAtTime(45, t + 0.15);
+    subGain.gain.setValueAtTime(0.55, t);
+    subGain.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+    subOsc.connect(subGain);
+    subGain.connect(sfxGain);
+    subOsc.start(t);
+    subOsc.stop(t + 0.18);
+  } catch {}
+}
+
+export function sfxRoundBuzzer() {
+  if (!ctx || !sfxGain || muted) return;
+  try {
+    const t = ctx.currentTime;
+    const dur = 1.35;
+
+    // Authentic dual-saw NBA stadium horn buzzer (174Hz and 185Hz dissonant horn)
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const filter = ctx.createBiquadFilter();
+    const gain = ctx.createGain();
+
+    osc1.type = "sawtooth";
+    osc1.frequency.setValueAtTime(174.61, t); // F3
+    osc2.type = "sawtooth";
+    osc2.frequency.setValueAtTime(185.0, t); // F#3 (dissonance)
+
+    filter.type = "bandpass";
+    filter.frequency.setValueAtTime(620, t);
+    filter.Q.setValueAtTime(2.2, t);
+
+    gain.gain.setValueAtTime(0.001, t);
+    gain.gain.linearRampToValueAtTime(0.65, t + 0.04);
+    gain.gain.setValueAtTime(0.65, t + dur - 0.25);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+
+    osc1.connect(filter);
+    osc2.connect(filter);
+    filter.connect(gain);
+    gain.connect(sfxGain);
+
+    osc1.start(t);
+    osc2.start(t);
+    osc1.stop(t + dur);
+    osc2.stop(t + dur);
+
+    // Deep sub-bass stadium resonance
+    const sub = ctx.createOscillator();
+    const subGain = ctx.createGain();
+    sub.type = "sine";
+    sub.frequency.setValueAtTime(85, t);
+    subGain.gain.setValueAtTime(0.5, t);
+    subGain.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
+    sub.connect(subGain);
+    subGain.connect(sfxGain);
+    sub.start(t);
+    sub.stop(t + 0.85);
+  } catch {}
+}
+
+export function sfxRoundVictoryFanfare(team: number) {
+  if (!ctx || !sfxGain || muted) return;
+  try {
+    sfxCrowdCheer(1.5);
+    const t = ctx.currentTime;
+
+    // Triumphant 4-note brass fanfare
+    const notes = team === 0
+      ? [392.0, 523.25, 659.25, 783.99] // G4, C5, E5, G5 (Cyan bright triumph)
+      : [349.23, 440.0, 523.25, 698.46]; // F4, A4, C5, F5 (Coral bold glory)
+
+    notes.forEach((freq, idx) => {
+      const noteStart = t + idx * 0.16;
+      const noteDur = idx === notes.length - 1 ? 0.75 : 0.22;
+
+      const osc = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(freq, noteStart);
+      osc2.type = "square";
+      osc2.frequency.setValueAtTime(freq * 1.002, noteStart);
+
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(1800, noteStart);
+
+      gain.gain.setValueAtTime(0.001, noteStart);
+      gain.gain.linearRampToValueAtTime(0.48, noteStart + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.001, noteStart + noteDur);
+
+      osc.connect(filter);
+      osc2.connect(filter);
+      filter.connect(gain);
+      gain.connect(sfxGain);
+
+      osc.start(noteStart);
+      osc2.start(noteStart);
+      osc.stop(noteStart + noteDur);
+      osc2.stop(noteStart + noteDur);
+    });
+  } catch {}
+}
+
+export function sfxStarDing(starIndex: number = 1) {
+  if (!ctx || !sfxGain || muted) return;
+  try {
+    const t = ctx.currentTime;
+    const baseFreq = 1046.5 * Math.pow(1.25, starIndex); // Sparkling pitch
+
+    // Chime sine bell
+    const osc = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(baseFreq, t);
+    osc2.type = "sine";
+    osc2.frequency.setValueAtTime(baseFreq * 2.756, t); // Shimmer harmonic
+
+    gain.gain.setValueAtTime(0.55, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.65);
+
+    osc.connect(gain);
+    osc2.connect(gain);
+    gain.connect(sfxGain);
+
+    osc.start(t);
+    osc2.start(t);
+    osc.stop(t + 0.7);
+    osc2.stop(t + 0.7);
+  } catch {}
+}
+
+export function sfxRoundTransitionWhoosh() {
+  if (!ctx || !sfxGain || muted) return;
+  try {
+    const t = ctx.currentTime;
+    const dur = 0.45;
+
+    // Filtered noise sweep
+    const bufferSize = ctx.sampleRate * dur;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.sin((i / bufferSize) * Math.PI);
+    }
+
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.setValueAtTime(250, t);
+    filter.frequency.exponentialRampToValueAtTime(3200, t + 0.22);
+    filter.frequency.exponentialRampToValueAtTime(450, t + dur);
+    filter.Q.setValueAtTime(2.0, t);
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.001, t);
+    gain.gain.linearRampToValueAtTime(0.55, t + 0.18);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(sfxGain);
+
+    noise.start(t);
+
+    // Deep sub bass drop
+    const sub = ctx.createOscillator();
+    const subGain = ctx.createGain();
+    sub.type = "sine";
+    sub.frequency.setValueAtTime(150, t);
+    sub.frequency.exponentialRampToValueAtTime(38, t + dur);
+    subGain.gain.setValueAtTime(0.5, t);
+    subGain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    sub.connect(subGain);
+    subGain.connect(sfxGain);
+    sub.start(t);
+    sub.stop(t + dur);
+  } catch {}
+}
+
+export function sfxGrandChampionshipVictory() {
+  if (!ctx || !sfxGain || muted) return;
+  try {
+    sfxCrowdCheer(2.0);
+    const t = ctx.currentTime;
+
+    // Multi-chord epic Grand Championship brass fanfare
+    const chords = [
+      [523.25, 659.25, 783.99], // C Major
+      [587.33, 739.99, 880.0],  // D Major
+      [659.25, 830.61, 987.77], // E Major
+      [783.99, 987.77, 1174.66, 1567.98] // Grand C Major Crescendo!
+    ];
+
+    chords.forEach((chord, step) => {
+      const stepTime = t + step * 0.28;
+      const stepDur = step === chords.length - 1 ? 1.6 : 0.32;
+
+      chord.forEach((freq) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sawtooth";
+        osc.frequency.setValueAtTime(freq, stepTime);
+
+        gain.gain.setValueAtTime(0.001, stepTime);
+        gain.gain.linearRampToValueAtTime(0.38 / chord.length, stepTime + 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.001, stepTime + stepDur);
+
+        osc.connect(gain);
+        gain.connect(sfxGain);
+        osc.start(stepTime);
+        osc.stop(stepTime + stepDur);
+      });
+    });
+
+    // Fireworks pops during fanfare
+    for (let f = 0; f < 5; f++) {
+      setTimeout(() => sfxConfettiPop(), 250 + f * 320);
+    }
+  } catch {}
+}
+
+export function sfxConfettiPop() {
+  if (!ctx || !sfxGain || muted) return;
+  try {
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(320, t);
+    osc.frequency.exponentialRampToValueAtTime(80, t + 0.08);
+
+    gain.gain.setValueAtTime(0.45, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
+
+    osc.connect(gain);
+    gain.connect(sfxGain);
+    osc.start(t);
+    osc.stop(t + 0.1);
+
+    playNoise(0.08, 0.4, 2500);
+  } catch {}
 }
 
 export function sfxMatchStart() {

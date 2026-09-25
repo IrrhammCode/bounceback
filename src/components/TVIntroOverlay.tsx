@@ -329,7 +329,7 @@ function OverheadBadge5v5({
     >
       <div className="badge-role-row">
         <span className={`badge-role-pill ${isCaptain ? "captain" : ""}`}>
-          {isCaptain ? "★ CAPTAIN ★" : slotRole}
+          {isCaptain ? "CAPTAIN" : slotRole}
         </span>
         <span className="badge-type-pill">
           {fighter.statPunch >= 5 ? "PWR" : fighter.statSpeed >= 5 ? "SPD" : "CHS"}

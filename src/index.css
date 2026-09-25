@@ -3671,3 +3671,193 @@ body,
 .col-win.draw {
   color: #ffd166;
 }
+
+/* ─────────────────────────────────────────────────────────────
+   FINAL SECONDS TENSION COUNTDOWN (3, 2, 1)
+   ───────────────────────────────────────────────────────────── */
+.final-countdown-overlay {
+  position: fixed;
+  top: 42%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.final-countdown-ring {
+  position: absolute;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 209, 102, 0.45);
+  box-shadow: 0 0 50px rgba(255, 82, 104, 0.45), inset 0 0 30px rgba(255, 209, 102, 0.35);
+  animation: countdownRingPulse 0.9s cubic-bezier(0.1, 0.9, 0.2, 1) infinite;
+}
+
+.final-countdown-number {
+  font-family: var(--font-head);
+  font-size: 8.5rem;
+  font-weight: 900;
+  line-height: 1;
+  color: #ffffff;
+  text-shadow:
+    0 0 20px #ffd166,
+    0 0 50px rgba(255, 107, 107, 0.85),
+    0 4px 12px rgba(0, 0, 0, 0.9);
+  letter-spacing: -0.04em;
+  filter: drop-shadow(0 0 24px rgba(255, 209, 102, 0.9));
+}
+
+.animate-countdown-pulse {
+  animation: countdownNumberPop 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.final-countdown-label {
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 900;
+  letter-spacing: 0.3em;
+  color: #ffd166;
+  text-transform: uppercase;
+  background: rgba(10, 15, 28, 0.85);
+  padding: 4px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 209, 102, 0.5);
+  box-shadow: 0 0 20px rgba(255, 209, 102, 0.4);
+}
+
+@keyframes countdownNumberPop {
+  0% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+  30% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  75% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.92);
+    opacity: 0.85;
+  }
+}
+
+@keyframes countdownRingPulse {
+  0% {
+    transform: scale(0.65);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.55);
+    opacity: 0;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   IN-GAME ROUND & GRAND CHAMPIONSHIP CELEBRATION BANNER
+   ───────────────────────────────────────────────────────────── */
+.round-celebration-banner {
+  position: fixed;
+  top: 112px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 85;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 16px 38px;
+  border-radius: 16px;
+  background: rgba(8, 12, 22, 0.92);
+  backdrop-filter: blur(20px);
+  border: 2px solid;
+  max-width: 90vw;
+}
+
+.animate-celebration-enter {
+  animation: celebrationBannerSlideDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.round-celebration-banner.team-cyan {
+  border-color: #27e5ff;
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.8),
+    0 0 40px rgba(39, 229, 255, 0.45),
+    inset 0 0 25px rgba(39, 229, 255, 0.2);
+}
+
+.round-celebration-banner.team-coral {
+  border-color: #ff5268;
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.8),
+    0 0 40px rgba(255, 82, 104, 0.45),
+    inset 0 0 25px rgba(255, 82, 104, 0.2);
+}
+
+.round-celebration-banner.draw {
+  border-color: #ffd166;
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.8),
+    0 0 40px rgba(255, 209, 102, 0.45),
+    inset 0 0 25px rgba(255, 209, 102, 0.2);
+}
+
+.celebration-badge {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  color: #ffd166;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.celebration-title {
+  font-family: var(--font-head);
+  font-size: 2.1rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1.15;
+  color: #ffffff;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.8);
+}
+
+.round-celebration-banner.team-cyan .celebration-title {
+  color: #27e5ff;
+  text-shadow: 0 0 20px rgba(39, 229, 255, 0.7);
+}
+
+.round-celebration-banner.team-coral .celebration-title {
+  color: #ff5268;
+  text-shadow: 0 0 20px rgba(255, 82, 104, 0.7);
+}
+
+.celebration-sub {
+  margin-top: 6px;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #cbd5e1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@keyframes celebrationBannerSlideDown {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -40px) scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}

@@ -1,6 +1,11 @@
 import { useState, useEffect } from "react";
 import { RoundResult, RoundDef, TOURNAMENT_ROUNDS } from "../game/tournament";
-import { sfxWhistle, sfxGoal } from "../game/audio";
+import {
+  sfxWhistle,
+  sfxRoundTransitionWhoosh,
+  sfxStarDing,
+  sfxConfettiPop,
+} from "../game/audio";
 
 interface RoundRecapOverlayProps {
   roundResult: RoundResult;
@@ -26,13 +31,24 @@ export default function RoundRecapOverlay({
     winner === 0 ? "#27e5ff" : winner === 1 ? "#ff5268" : "#ffd166";
 
   useEffect(() => {
-    sfxWhistle();
-    setTimeout(() => sfxGoal(), 300);
+    sfxRoundTransitionWhoosh();
+    setTimeout(() => {
+      sfxWhistle();
+      sfxConfettiPop();
+    }, 180);
+
+    const winningTeamIdx = winner === 0 ? 0 : winner === 1 ? 1 : -1;
+    if (winningTeamIdx >= 0) {
+      setTimeout(() => {
+        sfxStarDing(roundWins[winningTeamIdx]);
+      }, 550);
+    }
 
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
+          sfxRoundTransitionWhoosh();
           onNextRound();
           return 0;
         }
@@ -41,7 +57,12 @@ export default function RoundRecapOverlay({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [onNextRound]);
+  }, [onNextRound, winner, roundWins]);
+
+  const handleManualAdvance = () => {
+    sfxRoundTransitionWhoosh();
+    onNextRound();
+  };
 
   return (
     <div className="round-recap-screen animate-modal-zoom">
@@ -121,7 +142,7 @@ export default function RoundRecapOverlay({
 
         {/* Action Button & Countdown */}
         <div className="recap-actions-row">
-          <button className="btn-next-round" onClick={onNextRound}>
+          <button className="btn-next-round" onClick={handleManualAdvance}>
             START ROUND {nextRoundNumber} NOW ({countdown}s) →
           </button>
         </div>
