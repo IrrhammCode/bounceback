@@ -150,7 +150,7 @@ export class PlayerController {
         this.stickZ = 0;
       } else {
         const clamped = Math.min(dist, MAX);
-        this.stickX = (dx / dist) * (clamped / MAX);
+        this.stickX = (-dx / dist) * (clamped / MAX);
         this.stickZ = (-dy / dist) * (clamped / MAX);
       }
       if (nubEl) {
@@ -171,51 +171,84 @@ export class PlayerController {
       if (nubEl) nubEl.style.opacity = "0";
     };
 
-    // 1. Pointer Events (Modern standard for iOS / Android / Desktop)
-    stickZone.onpointerdown = (e: PointerEvent) => {
-      e.preventDefault();
-      try { stickZone.setPointerCapture?.(e.pointerId); } catch {}
-      handleStickStart(e.clientX, e.clientY, e.pointerId);
-    };
-    stickZone.onpointermove = (e: PointerEvent) => {
-      handleStickMove(e.clientX, e.clientY, e.pointerId);
-    };
-    stickZone.onpointerup = (e: PointerEvent) => {
-      handleStickEnd(e.pointerId);
-    };
-    stickZone.onpointercancel = (e: PointerEvent) => {
-      handleStickEnd(e.pointerId);
+    const startStick = (clientX: number, clientY: number, id: number, e?: Event) => {
+      if (e) {
+        try { e.preventDefault(); } catch {}
+      }
+      handleStickStart(clientX, clientY, id);
     };
 
-    // 2. Touch Events Fallback
+    // Attach down listeners to BOTH stick-zone and the visible stick circle
+    stickZone.onpointerdown = (e: PointerEvent) => startStick(e.clientX, e.clientY, e.pointerId, e);
     stickZone.ontouchstart = (ev: TouchEvent) => {
-      ev.preventDefault();
       const t = ev.changedTouches[0];
-      handleStickStart(t.clientX, t.clientY, t.identifier);
+      startStick(t.clientX, t.clientY, t.identifier, ev);
     };
-    stickZone.ontouchmove = (ev: TouchEvent) => {
+    stickZone.onmousedown = (e: MouseEvent) => startStick(e.clientX, e.clientY, -1, e);
+
+    if (stickEl && stickEl !== stickZone) {
+      stickEl.onpointerdown = (e: PointerEvent) => startStick(e.clientX, e.clientY, e.pointerId, e);
+      stickEl.ontouchstart = (ev: TouchEvent) => {
+        const t = ev.changedTouches[0];
+        startStick(t.clientX, t.clientY, t.identifier, ev);
+      };
+      stickEl.onmousedown = (e: MouseEvent) => startStick(e.clientX, e.clientY, -1, e);
+    }
+
+    // Attach drag/move and release listeners to WINDOW so thumb can move anywhere without losing track!
+    window.addEventListener("pointermove", (e: PointerEvent) => {
+      if (!this.stickActive || e.pointerId !== this.stickId) return;
+      handleStickMove(e.clientX, e.clientY, e.pointerId);
+    }, { passive: false });
+
+    window.addEventListener("pointerup", (e: PointerEvent) => {
+      if (e.pointerId === this.stickId) {
+        handleStickEnd(e.pointerId);
+      }
+    });
+
+    window.addEventListener("pointercancel", (e: PointerEvent) => {
+      if (e.pointerId === this.stickId) {
+        handleStickEnd(e.pointerId);
+      }
+    });
+
+    window.addEventListener("touchmove", (ev: TouchEvent) => {
       if (!this.stickActive) return;
       for (const t of Array.from(ev.changedTouches)) {
         if (t.identifier === this.stickId) {
-          ev.preventDefault();
+          try { ev.preventDefault(); } catch {}
           handleStickMove(t.clientX, t.clientY, t.identifier);
         }
       }
-    };
-    stickZone.ontouchend = (ev: TouchEvent) => {
+    }, { passive: false });
+
+    window.addEventListener("touchend", (ev: TouchEvent) => {
       for (const t of Array.from(ev.changedTouches)) {
         if (t.identifier === this.stickId) {
           handleStickEnd(t.identifier);
         }
       }
-    };
-    stickZone.ontouchcancel = (ev: TouchEvent) => {
+    });
+
+    window.addEventListener("touchcancel", (ev: TouchEvent) => {
       for (const t of Array.from(ev.changedTouches)) {
         if (t.identifier === this.stickId) {
           handleStickEnd(t.identifier);
         }
       }
-    };
+    });
+
+    window.addEventListener("mousemove", (e: MouseEvent) => {
+      if (!this.stickActive || this.stickId !== -1) return;
+      handleStickMove(e.clientX, e.clientY, -1);
+    });
+
+    window.addEventListener("mouseup", (e: MouseEvent) => {
+      if (this.stickId === -1) {
+        handleStickEnd(-1);
+      }
+    });
 
     // 3. Action Buttons Wire (Pointer + Touch + Mouse)
     const wireBtn = (id: string, onDown: () => void, onUp: () => void, hapticMs = 15) => {

@@ -618,16 +618,10 @@ body,
 
 /* ─── Touch Controls ─── */
 .touch-controls {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 240px;
+  position: fixed;
+  inset: 0;
   pointer-events: none;
   z-index: 50;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  padding-left: env(safe-area-inset-left, 0px);
-  padding-right: env(safe-area-inset-right, 0px);
   transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
@@ -647,14 +641,15 @@ body,
   pointer-events: auto;
 }
 
-.touch-controls.is-dormant .stick-zone {
+.touch-controls.is-dormant .stick-zone,
+.touch-controls.is-dormant #stick {
   display: none !important;
   pointer-events: none !important;
 }
 
 /* Full-left Dynamic Floating Touch Joystick Area */
 .stick-zone {
-  position: fixed;
+  position: absolute;
   top: 0;
   bottom: 0;
   left: 0;
