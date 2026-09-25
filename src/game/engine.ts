@@ -97,8 +97,6 @@ export class BouncebackEngine {
   private gates: GateData[] = [];
   private bumperMeshes: THREE.Object3D[] = [];
   private gateMeshes: THREE.Object3D[] = [];
-  private lethalCinematicTimer = 0;
-  private lethalTargetPos = new THREE.Vector3();
   private player!: PlayerController;
   private juice!: JuiceSystem;
   private match!: Match;
@@ -586,7 +584,6 @@ export class BouncebackEngine {
     if (this.appMode !== "game") return;
     if (this.skillSlots[0] && this.skillSlots[0].type !== SkillType.None) {
       sfxSkillActivate();
-      this.juice.addTrauma(0.42);
       this.skills.activateSkill(
         0,
         this.entities[0],
@@ -1047,30 +1044,31 @@ export class BouncebackEngine {
     }
 
     this.camTargetPos.set(targetX, targetY, targetZ);
-    this.camLookTarget.set(p.x * 0.5, pGroundY + 1.3, p.z + 8.0);
 
-    // Smash Bros-Style Cinematic Lethal Zoom Punch
-    if (this.lethalCinematicTimer > 0) {
-      this.camLookTarget.lerp(this.lethalTargetPos, Math.min(1.0, 15.0 * dt));
-    }
+    // Smooth Gimbal Look Target (interpolates smoothly to eliminate angular snap and jitter)
+    const desiredLookX = p.x * 0.45;
+    const desiredLookY = pGroundY + 1.35;
+    const desiredLookZ = p.z + 7.5;
+    const lookSpeed = Math.min(1.0, 9.0 * dt);
+    this.camLookTarget.x += (desiredLookX - this.camLookTarget.x) * lookSpeed;
+    this.camLookTarget.y += (desiredLookY - this.camLookTarget.y) * lookSpeed;
+    this.camLookTarget.z += (desiredLookZ - this.camLookTarget.z) * lookSpeed;
 
-    const lerpSpeed = Math.min(1.0, 5.0 * dt);
-    this.camera.position.lerp(this.camTargetPos, lerpSpeed);
+    // Smooth Gimbal Camera Position Tracking
+    const posSpeed = Math.min(1.0, 8.0 * dt);
+    this.camera.position.lerp(this.camTargetPos, posSpeed);
     this.camera.lookAt(this.camLookTarget);
 
-    // Dynamic FOV (gentle transitions + dramatic lethal punch zoom)
+    // Dynamic FOV (gentle, nausea-free transitions)
     const playerSlot = this.skillSlots[0];
-    if (this.lethalCinematicTimer > 0) {
-      this.lethalCinematicTimer = Math.max(0, this.lethalCinematicTimer - dt);
-      this.targetFov = 38; // Smash Bros-style dramatic punch-in zoom!
-    } else if (playerSlot && playerSlot.rocketTimer > 0) {
-      this.targetFov = 66; // Gentle boost during rocket
+    if (playerSlot && playerSlot.rocketTimer > 0) {
+      this.targetFov = 62;
     } else if (p.dashTimer > 0) {
-      this.targetFov = 62; // Gentle boost during dash
+      this.targetFov = 60;
     } else {
       this.targetFov = this.baseFov;
     }
-    this.camera.fov += (this.targetFov - this.camera.fov) * Math.min(1.0, 12 * dt);
+    this.camera.fov += (this.targetFov - this.camera.fov) * Math.min(1.0, 6.0 * dt);
     this.camera.updateProjectionMatrix();
 
     // Update juice baseCamPos for shake
@@ -1249,8 +1247,6 @@ export class BouncebackEngine {
 
             if (isLethal) {
               sfxLethalHit();
-              this.lethalCinematicTimer = 0.55;
-              this.lethalTargetPos.set(targetX, 1.2, targetZ);
               this.juice.trigger("lethal_finish", {
                 x: targetX,
                 y: 1.2,
@@ -1338,8 +1334,6 @@ export class BouncebackEngine {
 
             if (isLethal) {
               sfxLethalHit();
-              this.lethalCinematicTimer = 0.45;
-              this.lethalTargetPos.set(targetX, 1.2, targetZ);
               this.juice.trigger("lethal_finish", {
                 x: targetX,
                 y: 1.2,
@@ -1519,11 +1513,11 @@ export class BouncebackEngine {
       this.match.update(dt);
     }
 
-    // Juice
-    this.juice.update(dt);
-
-    // 3rd-person camera follow
+    // 3rd-person camera follow (stabilized tracking)
     this.updateCamera(dt);
+
+    // Juice (particles, shockwaves, comic popups, subtle micro-offset)
+    this.juice.update(dt);
 
     // Announcement timer
     if (this.announcementTimer > 0) {

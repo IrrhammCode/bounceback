@@ -51,9 +51,9 @@ export class JuiceSystem {
   baseCamPos: { x: number; y: number; z: number } | null = null;
   baseCamRotZ = 0;
 
-  // Screen Shake & Camera Trauma
+  // Screen Shake & Camera Trauma (Rock-solid, stabilized)
   trauma = 0; // 0 to 1, actual shake = trauma^2
-  shakeDecay = 2.4; // Decay per second
+  shakeDecay = 8.0; // Rapid decay per second for crisp, stable tactile feel
   rollTrauma = 0;
 
   // Hit-stop & Slow-motion
@@ -129,8 +129,8 @@ export class JuiceSystem {
 
     switch (type) {
       case "punch": {
-        this.addTrauma(0.55);
-        this.hitStopTimer = 0.05;
+        this.addTrauma(0.12);
+        this.hitStopTimer = 0.04;
         const comicHits = ["WHAM!!", "KAPOW!!", "BAM!!", "SMASH!!", "OUCH!!"];
         const hitText = d.text || comicHits[Math.floor(Math.random() * comicHits.length)];
         this.spawnComicPopup(hitText, x, y + 0.8, z, "crimson");
@@ -146,8 +146,8 @@ export class JuiceSystem {
       }
 
       case "lethal_finish": {
-        this.addTrauma(0.95);
-        this.hitStopTimer = 0.16; // Dramatic freeze frame!
+        this.addTrauma(0.22);
+        this.hitStopTimer = 0.08;
         this.triggerSlowMo(0.5, 0.25);
         this.spawnComicPopup("LETHAL FINISH!!", x, y + 1.2, z, "rainbow");
         this.spawnShockwave(x, 0.2, z, 0xff0033, 7.5);
@@ -162,7 +162,7 @@ export class JuiceSystem {
       }
 
       case "botpunch": {
-        this.addTrauma(0.35);
+        // Zero screen trauma for bot-on-bot punches so player camera remains rock solid
         const comicHits = ["BAM!!", "WHACK!!", "POW!!"];
         const hitText = comicHits[Math.floor(Math.random() * comicHits.length)];
         this.spawnComicPopup(hitText, x, y + 0.6, z, "gold");
@@ -178,26 +178,26 @@ export class JuiceSystem {
       }
 
       case "bumper": {
-        this.addTrauma(0.72);
+        this.addTrauma(0.08);
         const pinballTexts = ["BOING!", "+100 PTS!", "SUPER BOUNCE!", "PINBALL POP!", "JACKPOT!"];
         const randText = pinballTexts[Math.floor(Math.random() * pinballTexts.length)];
         this.spawnComicPopup(randText, x, y + 1.1, z, "gold");
-        // Dual concentric electric shockwave rings!
+        // Dual concentric electric shockwave rings
         this.spawnShockwave(x, y, z, 0xffd166, 3.5);
         this.spawnShockwave(x, y + 0.1, z, 0x27e5ff, 2.2);
-        // Explosive multi-colored pinball spark blast!
+        // Explosive multi-colored pinball spark blast
         this.spawnHitSparks(x, y + 0.4, z, 0xffaa00, 28);
         this.spawnHitSparks(x, y + 0.4, z, 0x27e5ff, 14);
         break;
       }
 
       case "dash":
-        this.addTrauma(0.18);
+        // Zero screen trauma for dashing so locomotion remains smooth
         this.spawnShockwave(x, 0.1, z, 0x00ffff, 1.2);
         break;
 
       case "whiff": {
-        this.addTrauma(0.12);
+        // Zero screen trauma for swing whiff
         this.spawnComicPopup("SWOOSH!", x, y + 0.5, z, "cyan");
         this.spawnShockwave(x, y, z, 0xffffff, 1.4);
         this.spawnHitSparks(x, y + 0.1, z, 0xf8fafc, 8);
@@ -211,15 +211,15 @@ export class JuiceSystem {
       }
 
       case "onepunch":
-        this.addTrauma(1.0);
-        this.hitStopTimer = 0.085;
+        this.addTrauma(0.25);
+        this.hitStopTimer = 0.06;
         this.spawnComicPopup("ONE PUNCH!!", x, y + 1.2, z, "rainbow");
         this.spawnShockwave(x, 0.2, z, 0xff002b, 6.5);
         this.spawnHitSparks(x, y + 0.6, z, 0xffd700, 42);
         break;
 
       case "ringout":
-        this.addTrauma(0.95);
+        this.addTrauma(0.20);
         this.triggerSlowMo(0.5, 0.2);
         this.spawnComicPopup("RING OUT! K.O.!!", x, y + 1.8, z, "rainbow");
         this.spawnShockwave(x, 0.2, z, (d.team ?? 0) === 0 ? 0x27e5ff : 0xff5268, 8.5);
@@ -228,7 +228,7 @@ export class JuiceSystem {
         break;
 
       case "goal":
-        this.addTrauma(0.95);
+        this.addTrauma(0.20);
         this.triggerSlowMo(0.75, 0.2);
         this.spawnComicPopup("GOAL!!", x, y + 2.0, z, "gold");
         this.spawnShockwave(x, 0.2, z, 0xffd700, 7.5);
@@ -237,7 +237,7 @@ export class JuiceSystem {
         break;
 
       case "combo": {
-        this.addTrauma(0.35);
+        this.addTrauma(0.08);
         const count = d.combo || 2;
         this.spawnComicPopup(`COMBO x${count}!`, x, y + 1.0, z, "violet");
         this.spawnShockwave(x, y, z, 0xa855f7, 2.8);
@@ -246,59 +246,59 @@ export class JuiceSystem {
       }
 
       case "overdrive":
-        this.addTrauma(0.65);
+        this.addTrauma(0.15);
         this.spawnComicPopup("OVERDRIVE!", 0, 3.5, 0, "hotpink");
         this.spawnShockwave(0, 0.2, 0, 0xff0077, 8.0);
         this.spawnHitSparks(0, 1.5, 0, 0xff1493, 35);
         break;
 
       case "gigafist":
-        this.addTrauma(0.7);
-        this.hitStopTimer = 0.06;
+        this.addTrauma(0.18);
+        this.hitStopTimer = 0.05;
         this.spawnComicPopup("GIGA FIST!!", x, y + 1.0, z, "crimson");
         this.spawnShockwave(x, y, z, 0xff2200, 3.5);
         this.spawnHitSparks(x, y + 0.5, z, 0xff4500, 24);
         break;
 
       case "banana_slip":
-        this.addTrauma(0.3);
+        // Zero screen trauma for slip
         this.spawnComicPopup("SLIP!!", x, y + 0.8, z, "gold");
         this.spawnHitSparks(x, y + 0.1, z, 0xfacc15, 12);
         break;
 
       case "rocket_hit":
-        this.addTrauma(0.55);
-        this.hitStopTimer = 0.05;
+        this.addTrauma(0.15);
+        this.hitStopTimer = 0.04;
         this.spawnComicPopup("KABOOM!", x, y + 0.9, z, "orange");
         this.spawnShockwave(x, y, z, 0xff6600, 3.0);
         this.spawnHitSparks(x, y + 0.5, z, 0xff3300, 25);
         break;
 
       case "rocket_start":
-        this.addTrauma(0.2);
+        // Zero screen trauma for rocket start
         break;
 
       case "magnet":
-        this.addTrauma(0.25);
+        // Zero screen trauma for magnet
         this.spawnShockwave(x, y, z, 0x06b6d4, 2.0);
         break;
 
       case "bomb_explode":
-        this.addTrauma(0.8);
-        this.hitStopTimer = 0.07;
+        this.addTrauma(0.18);
+        this.hitStopTimer = 0.05;
         this.spawnComicPopup("EXPLOSION!!", x, y + 1.2, z, "crimson");
         this.spawnShockwave(x, y, z, 0xff1100, 4.5);
         this.spawnHitSparks(x, y + 0.6, z, 0xffaa00, 35);
         break;
 
       case "shrink":
-        this.addTrauma(0.2);
+        // Zero screen trauma for shrink
         this.spawnComicPopup("ZAP!", x, y + 0.6, z, "cyan");
         this.spawnHitSparks(x, y + 0.2, z, 0x00f5ff, 12);
         break;
 
       case "pickup":
-        this.addTrauma(0.12);
+        // Zero screen trauma for power-up pickup
         this.spawnShockwave(x, y, z, 0x10b981, 1.2);
         this.spawnHitSparks(x, y + 0.3, z, 0x34d399, 10);
         break;
@@ -306,8 +306,8 @@ export class JuiceSystem {
   }
 
   addTrauma(amount: number) {
-    this.trauma = Math.min(this.trauma + amount, 1.0);
-    this.rollTrauma = Math.min(this.rollTrauma + amount * 0.7, 1.0);
+    this.trauma = Math.min(this.trauma + amount, 0.35);
+    this.rollTrauma = 0;
   }
 
   triggerSlowMo(duration = 0.8, minScale = 0.25) {
@@ -802,28 +802,19 @@ export class JuiceSystem {
       this.timeScale = 1.0;
     }
 
-    // 3. Screen Shake & Rotational Camera Trauma
+    // 3. Screen Shake & Rotational Camera Trauma (Gimbal-Stabilized, Zero Horizon Roll)
     if (this.trauma > 0.001) {
       this.trauma = Math.max(0, this.trauma - this.shakeDecay * dt);
       const shake = this.trauma * this.trauma; // Non-linear feel
-      const maxOffset = 0.55 * shake;
-      const maxRoll = 0.035 * (this.rollTrauma * this.rollTrauma);
+      const maxOffset = 0.04 * shake; // Subtle micro-rumble max 4cm
 
       const sx = (Math.random() - 0.5) * 2 * maxOffset;
       const sy = (Math.random() - 0.5) * 2 * maxOffset;
-      const roll = (Math.random() - 0.5) * 2 * maxRoll;
 
-      if (this.baseCamPos) {
-        this.camera.position.x = this.baseCamPos.x + sx;
-        this.camera.position.y = this.baseCamPos.y + sy;
-        this.camera.rotation.z = this.baseCamRotZ + roll;
-      }
-    } else if (this.baseCamPos) {
-      this.camera.position.x = this.baseCamPos.x;
-      this.camera.position.y = this.baseCamPos.y;
-      this.camera.rotation.z = this.baseCamRotZ;
+      this.camera.position.x += sx;
+      this.camera.position.y += sy;
     }
-    this.rollTrauma = Math.max(0, this.rollTrauma - this.shakeDecay * dt);
+    this.rollTrauma = 0;
 
     // 4. Update 3D Comic Popups
     for (let i = this.comicPopups.length - 1; i >= 0; i--) {
