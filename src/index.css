@@ -1277,12 +1277,12 @@ body,
 
 /* Sleek Broadcast Lower-Third Lineup */
 .tv-lower-third {
-  width: calc(100% - 32px);
-  max-width: 1060px;
-  margin: 0 auto 8px auto;
+  width: calc(100% - 24px);
+  max-width: 1240px;
+  margin: 0 auto 6px auto;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .animate-deck-appear {
@@ -1300,21 +1300,37 @@ body,
   }
 }
 
-.lower-third-header {
+.lower-third-header-bar {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 14px;
+  width: 100%;
+}
+.header-accent-line {
+  flex: 1;
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent 0%, rgba(39, 229, 255, 0.4) 100%);
+}
+.header-accent-line.right {
+  background: linear-gradient(90deg, rgba(39, 229, 255, 0.4) 0%, transparent 100%);
+}
+.lower-third-header-bar.coral .header-accent-line {
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 82, 104, 0.4) 100%);
+}
+.lower-third-header-bar.coral .header-accent-line.right {
+  background: linear-gradient(90deg, rgba(255, 82, 104, 0.4) 0%, transparent 100%);
 }
 
 .team-pill {
   font-family: var(--font-head);
   font-weight: 900;
-  font-size: 0.84rem;
+  font-size: 0.8rem;
   letter-spacing: 0.08em;
-  padding: 3px 14px;
+  padding: 2px 14px;
   border-radius: 20px;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 .team-pill.cyan {
   background: rgba(39, 229, 255, 0.2);
@@ -1328,39 +1344,43 @@ body,
   color: #ff5268;
   box-shadow: 0 0 14px rgba(255, 82, 104, 0.35);
 }
-.team-tagline {
+.team-meta-desc {
   font-family: var(--font-body);
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   font-weight: 600;
   color: #94a3b8;
   letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 
-.roster-chips-row {
+/* 5v5 Symmetrical Grid */
+.roster-grid-5v5 {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
   width: 100%;
+  align-items: stretch;
 }
 
-.fighter-chip {
+.fighter-card-5v5 {
   position: relative;
-  background: rgba(15, 23, 42, 0.88);
+  background: rgba(12, 18, 32, 0.90);
   backdrop-filter: blur(12px);
-  border-radius: 10px;
-  padding: 7px 12px;
-  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 6px 10px;
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
   display: flex;
-  align-items: center;
-  gap: 10px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
   transition: transform 0.2s, box-shadow 0.2s;
   animation: cardPopIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes cardPopIn {
   0% {
-    transform: scale(0.92);
+    transform: scale(0.94);
     opacity: 0;
   }
   100% {
@@ -1369,122 +1389,121 @@ body,
   }
 }
 
-.fighter-chip.cyan {
-  border-color: rgba(39, 229, 255, 0.35);
+.fighter-card-5v5.cyan {
+  border-color: rgba(39, 229, 255, 0.32);
 }
-.fighter-chip.coral {
-  border-color: rgba(255, 82, 104, 0.35);
-}
-.fighter-chip.captain-chip {
-  border-width: 2px;
-  box-shadow: 0 0 22px rgba(0, 0, 0, 0.6);
-}
-.fighter-chip.captain-chip.cyan {
-  border-color: #27e5ff;
-  background: linear-gradient(135deg, rgba(39, 229, 255, 0.2) 0%, rgba(15, 23, 42, 0.94) 100%);
-  box-shadow: 0 0 22px rgba(39, 229, 255, 0.35);
-}
-.fighter-chip.captain-chip.coral {
-  border-color: #ff5268;
-  background: linear-gradient(135deg, rgba(255, 82, 104, 0.2) 0%, rgba(15, 23, 42, 0.94) 100%);
-  box-shadow: 0 0 22px rgba(255, 82, 104, 0.35);
+.fighter-card-5v5.coral {
+  border-color: rgba(255, 82, 104, 0.32);
 }
 
-.chip-badge-col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  min-width: 42px;
+/* Captain card (center slot 3): distinctive gold border, subtle crown glow */
+.fighter-card-5v5.captain-card {
+  border-width: 2px;
+  background: linear-gradient(180deg, rgba(255, 209, 102, 0.12) 0%, rgba(12, 18, 32, 0.95) 100%);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
 }
-.chip-num {
+.fighter-card-5v5.captain-card.cyan {
+  border-color: #ffd166;
+  box-shadow: 0 0 16px rgba(39, 229, 255, 0.35), 0 0 8px rgba(255, 209, 102, 0.4);
+}
+.fighter-card-5v5.captain-card.coral {
+  border-color: #ffd166;
+  box-shadow: 0 0 16px rgba(255, 82, 104, 0.35), 0 0 8px rgba(255, 209, 102, 0.4);
+}
+
+.card-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+.jersey-num {
   font-family: var(--font-head);
   font-weight: 900;
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   line-height: 1;
 }
-.fighter-chip.cyan .chip-num {
+.fighter-card-5v5.cyan .jersey-num {
   color: #27e5ff;
-  text-shadow: 0 0 10px rgba(39, 229, 255, 0.6);
+  text-shadow: 0 0 8px rgba(39, 229, 255, 0.6);
 }
-.fighter-chip.coral .chip-num {
+.fighter-card-5v5.coral .jersey-num {
   color: #ff5268;
-  text-shadow: 0 0 10px rgba(255, 82, 104, 0.6);
+  text-shadow: 0 0 8px rgba(255, 82, 104, 0.6);
 }
-.chip-role {
+.role-badge {
   font-family: var(--font-mono);
-  font-size: 0.58rem;
+  font-size: 0.54rem;
   font-weight: 800;
   padding: 1px 5px;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.1);
-  color: #cbd5e1;
-  letter-spacing: 0.05em;
+  background: rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  letter-spacing: 0.06em;
   white-space: nowrap;
 }
-.fighter-chip.captain-chip .chip-role {
+.role-badge.captain {
   background: #ffd166;
   color: #0f172a;
-}
-.fighter-chip.captain-chip.coral .chip-role {
-  background: #ffd166;
-  color: #0f172a;
+  font-weight: 900;
+  box-shadow: 0 0 8px rgba(255, 209, 102, 0.4);
 }
 
-.chip-info-col {
-  flex: 1;
+.card-identity {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  overflow: hidden;
+  gap: 1px;
   text-align: left;
 }
-.chip-name-row {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-}
-.chip-name {
+.fighter-name {
   font-family: var(--font-head);
   font-weight: 900;
-  font-size: 0.94rem;
+  font-size: 0.88rem;
   color: #fff;
   letter-spacing: 0.04em;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.chip-title {
+.fighter-title {
   font-family: var(--font-mono);
-  font-size: 0.66rem;
+  font-size: 0.58rem;
   color: #94a3b8;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.chip-quote {
-  font-size: 0.72rem;
+
+.fighter-quote {
+  font-size: 0.64rem;
   font-style: italic;
   color: #ffd166;
-  margin: 0;
-  line-height: 1.25;
+  margin: 1px 0 0;
+  line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-align: left;
 }
 
-.chip-stat-col {
+.card-bottom-row {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  margin-top: 2px;
 }
-.chip-spec-tag {
+.archetype-tag {
   font-family: var(--font-mono);
-  font-size: 0.6rem;
+  font-size: 0.52rem;
   font-weight: 800;
-  padding: 3px 7px;
-  border-radius: 5px;
-  background: rgba(255, 255, 255, 0.08);
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
   color: #cbd5e1;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   white-space: nowrap;
 }
 
@@ -1615,21 +1634,20 @@ body,
   letter-spacing: 0.04em;
 }
 
-@media (max-width: 768px) {
-  .roster-chips-row {
-    gap: 6px;
+@media (max-width: 900px) {
+  .roster-grid-5v5 {
+    gap: 4px;
   }
-  .fighter-chip {
-    padding: 4px 8px;
-    gap: 6px;
+  .fighter-card-5v5 {
+    padding: 4px 6px;
   }
-  .chip-quote {
+  .fighter-quote {
     display: none;
   }
-  .chip-spec-tag {
+  .archetype-tag {
     display: none;
   }
-  .team-tagline {
+  .team-meta-desc {
     display: none;
   }
   .fighter-cards-grid {

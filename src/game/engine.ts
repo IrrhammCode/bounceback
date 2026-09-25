@@ -286,58 +286,90 @@ export class BouncebackEngine {
 
   private spawnEntities() {
     const halfL = C.ARENA_L * 0.5;
-    // 3v3 Official TV Broadcast Match Roster: 3 Cyan vs 3 Coral
-    // Compact inverted-V squad formation: Captain at center vanguard, wingmen shoulder-to-shoulder
+    // 5v5 Official TV Broadcast Match Roster: 5 Cyan vs 5 Coral
+    // Symmetrical 5-person chevron squad formation: Captain at center vanguard, inner flankers & outer wings
     const spawnPositions = [
-      // Team 0 (Cyan): YOU (#7), DJ BOUNCE (#1), NINJA BEAN (#2)
+      // Team 0 (Cyan): YOU (#7), DJ BOUNCE (#1), NINJA BEAN (#2), TURBO COPTER (#4), PARTY POPPER (#5)
       {
         x: 0,
-        z: -halfL * 0.60,
+        z: -halfL * 0.58,
         team: 0,
         isPlayer: true,
         number: C.ROSTER_CYAN[0].number,
         costume: C.ROSTER_CYAN[0].costume,
       },
       {
-        x: -1.75,
-        z: -halfL * 0.64,
+        x: -1.7,
+        z: -halfL * 0.62,
         team: 0,
         isPlayer: false,
         number: C.ROSTER_CYAN[1].number,
         costume: C.ROSTER_CYAN[1].costume,
       },
       {
-        x: 1.75,
-        z: -halfL * 0.64,
+        x: 1.7,
+        z: -halfL * 0.62,
         team: 0,
         isPlayer: false,
         number: C.ROSTER_CYAN[2].number,
         costume: C.ROSTER_CYAN[2].costume,
       },
-      // Team 1 (Coral): REX CRUSH (#1), HOPPER MAD (#2), SHADY VIP (#3)
+      {
+        x: -3.4,
+        z: -halfL * 0.66,
+        team: 0,
+        isPlayer: false,
+        number: C.ROSTER_CYAN[3].number,
+        costume: C.ROSTER_CYAN[3].costume,
+      },
+      {
+        x: 3.4,
+        z: -halfL * 0.66,
+        team: 0,
+        isPlayer: false,
+        number: C.ROSTER_CYAN[4].number,
+        costume: C.ROSTER_CYAN[4].costume,
+      },
+      // Team 1 (Coral): REX CRUSH (#1), HOPPER MAD (#2), SHADY VIP (#3), SPIKE TYRANT (#4), CYBER BEAST (#5)
       {
         x: 0,
-        z: halfL * 0.60,
+        z: halfL * 0.58,
         team: 1,
         isPlayer: false,
         number: C.ROSTER_CORAL[0].number,
         costume: C.ROSTER_CORAL[0].costume,
       },
       {
-        x: -1.75,
-        z: halfL * 0.64,
+        x: -1.7,
+        z: halfL * 0.62,
         team: 1,
         isPlayer: false,
         number: C.ROSTER_CORAL[1].number,
         costume: C.ROSTER_CORAL[1].costume,
       },
       {
-        x: 1.75,
-        z: halfL * 0.64,
+        x: 1.7,
+        z: halfL * 0.62,
         team: 1,
         isPlayer: false,
         number: C.ROSTER_CORAL[2].number,
         costume: C.ROSTER_CORAL[2].costume,
+      },
+      {
+        x: -3.4,
+        z: halfL * 0.66,
+        team: 1,
+        isPlayer: false,
+        number: C.ROSTER_CORAL[3].number,
+        costume: C.ROSTER_CORAL[3].costume,
+      },
+      {
+        x: 3.4,
+        z: halfL * 0.66,
+        team: 1,
+        isPlayer: false,
+        number: C.ROSTER_CORAL[4].number,
+        costume: C.ROSTER_CORAL[4].costume,
       },
     ];
 
@@ -475,19 +507,19 @@ export class BouncebackEngine {
         this.introLookTarget.set(0, 2.0, -4.0);
         break;
       case "cyan_team":
-        // Golden framing: 6.0m distance frames entire 3-person squad within center 33% of screen
-        this.introCamTarget.set(0, 1.55, -11.8);
-        this.introLookTarget.set(0, 0.95, -17.8);
+        // Golden 5v5 squad framing: 8.2m distance comfortably frames entire 5-person squad within center 48% of screen
+        this.introCamTarget.set(0, 1.95, -9.8);
+        this.introLookTarget.set(0, 1.15, -18.0);
         break;
       case "vs_clash":
         // Low-angle dramatic sweep over the elevated midfield battle deck looking across both teams
-        this.introCamTarget.set(-10.5, 3.2, 0);
+        this.introCamTarget.set(-11.5, 3.4, 0);
         this.introLookTarget.set(0, 1.4, 0);
         break;
       case "coral_team":
-        // Golden framing: 6.0m distance frames entire 3-person squad within center 33% of screen
-        this.introCamTarget.set(0, 1.55, 11.8);
-        this.introLookTarget.set(0, 0.95, 17.8);
+        // Golden 5v5 squad framing: 8.2m distance comfortably frames entire 5-person squad within center 48% of screen
+        this.introCamTarget.set(0, 1.95, 9.8);
+        this.introLookTarget.set(0, 1.15, 18.0);
         break;
       case "countdown":
         // Sweeping up and dropping into exact 3rd-person gameplay position behind player
@@ -504,7 +536,7 @@ export class BouncebackEngine {
     startBGM();
     this.match.start();
     this.disasterManager.reset();
-    this.showAnnouncement("3V3 ARENA MATCH START!");
+    this.showAnnouncement("5V5 ARENA MATCH START!");
 
     // Smoothly lock camera directly behind player into 3rd person follow
     this.camTargetPos.set(0, 8.5, -31.0);
@@ -524,12 +556,16 @@ export class BouncebackEngine {
   private resetEntitiesToSpawn() {
     const halfL = C.ARENA_L * 0.5;
     const spawnPositions = [
-      { x: 0, z: -halfL * 0.60 },
-      { x: -1.75, z: -halfL * 0.64 },
-      { x: 1.75, z: -halfL * 0.64 },
-      { x: 0, z: halfL * 0.60 },
-      { x: -1.75, z: halfL * 0.64 },
-      { x: 1.75, z: halfL * 0.64 },
+      { x: 0, z: -halfL * 0.58 },
+      { x: -1.7, z: -halfL * 0.62 },
+      { x: 1.7, z: -halfL * 0.62 },
+      { x: -3.4, z: -halfL * 0.66 },
+      { x: 3.4, z: -halfL * 0.66 },
+      { x: 0, z: halfL * 0.58 },
+      { x: -1.7, z: halfL * 0.62 },
+      { x: 1.7, z: halfL * 0.62 },
+      { x: -3.4, z: halfL * 0.66 },
+      { x: 3.4, z: halfL * 0.66 },
     ];
     for (let i = 0; i < this.entities.length && i < spawnPositions.length; i++) {
       const ent = this.entities[i];
@@ -591,7 +627,7 @@ export class BouncebackEngine {
       let rotX = 0;
       let rotZ = 0;
 
-      // ─── TEAM CYAN ANIMATIONS (Phase: cyan_team) ───
+      // ─── TEAM CYAN ANIMATIONS (Phase: cyan_team, indices 0..4) ───
       if (ent.team === 0) {
         const isCyanPhase = this.introPhase === "cyan_team";
         const animSpeed = isCyanPhase ? 1.0 : 0.45;
@@ -627,7 +663,7 @@ export class BouncebackEngine {
         } else if (i === 1) {
           // ── DJ BOUNCE (#1): Bouncing to the Beat & Waving Arm! ──
           jumpY = isCyanPhase ? Math.abs(Math.sin(t * 8.0)) * 0.28 : Math.abs(Math.sin(t * 3.0)) * 0.08;
-          rotY = (isCyanPhase ? 0.20 : 0) + Math.sin(t * 3.5) * 0.12;
+          rotY = (isCyanPhase ? 0.16 : 0) + Math.sin(t * 3.5) * 0.12;
 
           if (u.head) {
             u.head.rotation.x = Math.sin(t * 8.0) * 0.22;
@@ -645,7 +681,7 @@ export class BouncebackEngine {
         } else if (i === 2) {
           // ── NINJA BEAN (#2): Low Agile Ninja Crouch & Rapid Hand Seals! ──
           jumpY = isCyanPhase ? Math.abs(Math.sin(t * 5.0)) * 0.2 : 0;
-          rotY = isCyanPhase ? -0.20 : 0;
+          rotY = isCyanPhase ? -0.16 : 0;
           const sealCycle = Math.sin(t * 11.0);
 
           if (u.leftArm) {
@@ -661,19 +697,50 @@ export class BouncebackEngine {
           if (u.head) {
             u.head.rotation.y = Math.sin(t * 4.0) * 0.18;
           }
+        } else if (i === 3) {
+          // ── TURBO COPTER (#4): Propeller Spinning & Rapid Aerial Hops! ──
+          jumpY = isCyanPhase ? Math.abs(Math.sin(t * 9.0)) * 0.24 : 0;
+          rotY = (isCyanPhase ? 0.28 : 0);
+          if (u.propeller) {
+            u.propeller.rotation.y += 0.55;
+          }
+          if (u.leftArm) {
+            u.leftArm.rotation.set(-1.5 + Math.sin(t * 7.0) * 0.3, 0.3, 0.5);
+          }
+          if (u.rightArm) {
+            u.rightArm.rotation.set(-1.5 - Math.sin(t * 7.0) * 0.3, -0.3, -0.5);
+          }
+          if (u.head) {
+            u.head.rotation.z = Math.sin(t * 5.0) * 0.15;
+          }
+        } else if (i === 4) {
+          // ── PARTY POPPER (#5): Confetti Cannon Victory Pump & Celebrations! ──
+          jumpY = isCyanPhase ? Math.abs(Math.sin(t * 7.0)) * 0.26 : 0;
+          rotY = (isCyanPhase ? -0.28 : 0);
+          const pump = Math.sin(t * 8.0);
+          if (u.leftArm) {
+            u.leftArm.rotation.set(-1.8 + pump * 0.4, 0, 0.3);
+          }
+          if (u.rightArm) {
+            u.rightArm.rotation.set(-1.8 + pump * 0.4, 0, -0.3);
+          }
+          if (u.torso) {
+            u.torso.rotation.x = -pump * 0.1;
+          }
         }
       }
 
-      // ─── TEAM CORAL ANIMATIONS (Phase: coral_team) ───
+      // ─── TEAM CORAL ANIMATIONS (Phase: coral_team, indices 5..9) ───
       else if (ent.team === 1) {
         const isCoralPhase = this.introPhase === "coral_team";
         const animSpeed = isCoralPhase ? 1.0 : 0.45;
         const t = now * animSpeed;
 
-        if (i === 3) {
+        if (i === 5) {
           // ── REX CRUSH (#1): Massive Gorilla Chest Pounding & Stomps! ──
           const poundCycle = Math.sin(t * 9.0);
           jumpY = isCoralPhase ? Math.abs(Math.sin(t * 6.0)) * 0.16 : 0;
+          rotY = Math.PI;
 
           if (u.leftArm) {
             u.leftArm.rotation.set(-1.5 + poundCycle * 0.5, 0.5, 0.3);
@@ -687,10 +754,10 @@ export class BouncebackEngine {
           if (u.head) {
             u.head.rotation.x = -0.25 + Math.sin(t * 4.5) * 0.18;
           }
-        } else if (i === 4) {
+        } else if (i === 6) {
           // ── HOPPER MAD (#2): Wild Bouncing & Flailing Joy! ──
           jumpY = isCoralPhase ? Math.abs(Math.sin(t * 11.0)) * 0.42 : Math.abs(Math.sin(t * 4.0)) * 0.1;
-          rotY = isCoralPhase ? (Math.PI - 0.20) : Math.PI;
+          rotY = isCoralPhase ? (Math.PI - 0.16) : Math.PI;
           const flail = Math.sin(t * 11.0);
 
           if (u.leftArm) {
@@ -705,10 +772,10 @@ export class BouncebackEngine {
           if (u.propeller) {
             u.propeller.rotation.y += 0.45;
           }
-        } else if (i === 5) {
+        } else if (i === 7) {
           // ── SHADY VIP (#3): Cool Confident Arms-Crossed Swagger! ──
           jumpY = isCoralPhase ? Math.sin(t * 3.0) * 0.05 : 0;
-          rotY = (isCoralPhase ? (Math.PI + 0.20) : Math.PI) + Math.sin(t * 2.0) * 0.10;
+          rotY = (isCoralPhase ? (Math.PI + 0.16) : Math.PI) + Math.sin(t * 2.0) * 0.10;
 
           if (u.leftArm) {
             u.leftArm.rotation.set(-1.1, 0.7, 0.4);
@@ -721,6 +788,33 @@ export class BouncebackEngine {
           }
           if (u.torso) {
             u.torso.rotation.y = Math.sin(t * 2.0) * 0.1;
+          }
+        } else if (i === 8) {
+          // ── SPIKE TYRANT (#4): Brutal Heavy Boxer Intimidation Sway! ──
+          jumpY = isCoralPhase ? Math.abs(Math.sin(t * 5.0)) * 0.12 : 0;
+          rotY = isCoralPhase ? (Math.PI - 0.28) : Math.PI;
+          const punch = Math.sin(t * 6.0);
+          if (u.leftArm) {
+            u.leftArm.rotation.set(-1.2 - punch * 0.5, 0.4, 0.4);
+          }
+          if (u.rightArm) {
+            u.rightArm.rotation.set(-1.2 + punch * 0.5, -0.4, -0.4);
+          }
+          if (u.torso) {
+            u.torso.rotation.y = punch * 0.25;
+          }
+        } else if (i === 9) {
+          // ── CYBER BEAST (#5): Calculated Robotic Guard Stance! ──
+          jumpY = isCoralPhase ? Math.sin(t * 4.0) * 0.06 : 0;
+          rotY = isCoralPhase ? (Math.PI + 0.28) : Math.PI;
+          if (u.leftArm) {
+            u.leftArm.rotation.set(-1.3, 0.6, 0.2);
+          }
+          if (u.rightArm) {
+            u.rightArm.rotation.set(-0.6, -0.3, -0.6);
+          }
+          if (u.head) {
+            u.head.rotation.x = Math.sin(t * 3.0) * 0.1;
           }
         }
       }

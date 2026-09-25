@@ -122,7 +122,7 @@ export default function TitleScreenOverlay({ onStartMatch }: TitleScreenOverlayP
         <div className="title-feature-pills animate-fade-in-delayed">
           <div className="feature-pill">
             <span className="pill-dot cyan" />
-            <span className="pill-text">3V3 ARENA BRAWLER</span>
+            <span className="pill-text">5V5 ARENA BRAWLER</span>
           </div>
           <div className="feature-pill">
             <span className="pill-dot coral" />

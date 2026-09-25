@@ -105,7 +105,7 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
           <span className="live-dot" />
           <span className="live-text">LIVE BROADCAST</span>
         </div>
-        <div className="tv-channel-title">BOUNCE TV // 3v3 REALITY SHOWDOWN</div>
+        <div className="tv-channel-title">BOUNCE TV // 5v5 REALITY SHOWDOWN</div>
         <button className="tv-skip-btn" onClick={onSkip} title="Skip Intro (Space / Esc)">
           SKIP INTRO <span className="key-hint">[SPACE]</span>
         </button>
@@ -116,9 +116,9 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
         {/* Phase 1: Opener Banner */}
         {phase === "opener" && (
           <div className="tv-opener-banner animate-pop">
-            <div className="tv-badge-pill">OFFICIAL MATCH #420</div>
+            <div className="tv-badge-pill">OFFICIAL 5V5 MATCH #420</div>
             <h1 className="tv-hero-title">RING-OUT K.O. CHAMPIONSHIP</h1>
-            <p className="tv-hero-subtitle">3 VS 3 OLYMPIC ARENA CLASH</p>
+            <p className="tv-hero-subtitle">5 VS 5 OLYMPIC ARENA CLASH</p>
           </div>
         )}
 
@@ -131,7 +131,7 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
               <h1 className="vs-text">VS</h1>
             </div>
             <div className="vs-lightning-right" />
-            <div className="vs-caption">TEAM CYAN  vs  TEAM CORAL // WHO SURVIVES THE RING?!</div>
+            <div className="vs-caption">TEAM CYAN  vs  TEAM CORAL // 5v5 RING-OUT SHOWDOWN!</div>
           </div>
         )}
 
@@ -154,71 +154,113 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
         )}
       </div>
 
-      {/* Bottom Broadcast Hub (Docked Lower-Third & News Ticker) */}
+      {/* Bottom Broadcast Hub (Docked 5v5 Lower-Third & News Ticker) */}
       <div className="tv-bottom-hub">
-        {/* Phase 2: Team Cyan Presentation — Docked Lower-Third aligned with 3D models */}
+        {/* Phase 2: Team Cyan Presentation — Symmetrical 5-Fighter Lineup */}
         {phase === "cyan_team" && (
           <div className="tv-lower-third cyan animate-deck-appear">
-            <div className="lower-third-header">
+            <div className="lower-third-header-bar cyan">
+              <div className="header-accent-line left" />
               <span className="team-pill cyan">TEAM CYAN // THE BOUNCING BLUES</span>
-              <span className="team-tagline">North Deck Defenders • Fast, Punchy &amp; Relentless</span>
+              <span className="team-meta-desc">North Deck Defenders • 5v5 Fast &amp; Relentless</span>
+              <div className="header-accent-line right" />
             </div>
 
-            <div className="roster-chips-row">
-              {/* Left 3D Model: DJ BOUNCE (#01) */}
-              <FighterChip
-                fighter={ROSTER_CYAN[1]}
+            <div className="roster-grid-5v5">
+              {/* Slot 1 (Far Left 3D): TURBO COPTER (#04) */}
+              <FighterChip5v5
+                fighter={ROSTER_CYAN[3]}
                 delay={0.05}
                 team="cyan"
                 isCaptain={false}
+                slotRole="WINGMAN"
               />
-              {/* Center 3D Model: YOU (#07) Captain */}
-              <FighterChip
+              {/* Slot 2 (Left Inner 3D): DJ BOUNCE (#01) */}
+              <FighterChip5v5
+                fighter={ROSTER_CYAN[1]}
+                delay={0.10}
+                team="cyan"
+                isCaptain={false}
+                slotRole="STRIKER"
+              />
+              {/* Slot 3 (Center Vanguard 3D): YOU (#07) CAPTAIN */}
+              <FighterChip5v5
                 fighter={ROSTER_CYAN[0]}
                 delay={0.15}
                 team="cyan"
                 isCaptain={true}
+                slotRole="CAPTAIN"
               />
-              {/* Right 3D Model: NINJA BEAN (#02) */}
-              <FighterChip
+              {/* Slot 4 (Right Inner 3D): NINJA BEAN (#02) */}
+              <FighterChip5v5
                 fighter={ROSTER_CYAN[2]}
+                delay={0.20}
+                team="cyan"
+                isCaptain={false}
+                slotRole="FLANKER"
+              />
+              {/* Slot 5 (Far Right 3D): PARTY POPPER (#05) */}
+              <FighterChip5v5
+                fighter={ROSTER_CYAN[4]}
                 delay={0.25}
                 team="cyan"
                 isCaptain={false}
+                slotRole="FINISHER"
               />
             </div>
           </div>
         )}
 
-        {/* Phase 4: Team Coral Presentation — Docked Lower-Third aligned with 3D models */}
+        {/* Phase 4: Team Coral Presentation — Symmetrical 5-Fighter Lineup */}
         {phase === "coral_team" && (
           <div className="tv-lower-third coral animate-deck-appear">
-            <div className="lower-third-header">
+            <div className="lower-third-header-bar coral">
+              <div className="header-accent-line left" />
               <span className="team-pill coral">TEAM CORAL // THE RED CRUSHERS</span>
-              <span className="team-tagline">South Deck Challengers • Heavy Hitters &amp; Chaos Bringers</span>
+              <span className="team-meta-desc">South Deck Challengers • 5v5 Heavy Hitters &amp; Chaos</span>
+              <div className="header-accent-line right" />
             </div>
 
-            <div className="roster-chips-row">
-              {/* Left 3D Model: HOPPER MAD (#02) */}
-              <FighterChip
-                fighter={ROSTER_CORAL[1]}
+            <div className="roster-grid-5v5">
+              {/* Slot 1 (Far Left 3D): SPIKE TYRANT (#04) */}
+              <FighterChip5v5
+                fighter={ROSTER_CORAL[3]}
                 delay={0.05}
                 team="coral"
                 isCaptain={false}
+                slotRole="BRUISER"
               />
-              {/* Center 3D Model: REX CRUSH (#01) Rival Captain */}
-              <FighterChip
+              {/* Slot 2 (Left Inner 3D): HOPPER MAD (#02) */}
+              <FighterChip5v5
+                fighter={ROSTER_CORAL[1]}
+                delay={0.10}
+                team="coral"
+                isCaptain={false}
+                slotRole="STRIKER"
+              />
+              {/* Slot 3 (Center Vanguard 3D): REX CRUSH (#01) CAPTAIN */}
+              <FighterChip5v5
                 fighter={ROSTER_CORAL[0]}
                 delay={0.15}
                 team="coral"
                 isCaptain={true}
+                slotRole="CAPTAIN"
               />
-              {/* Right 3D Model: SHADY VIP (#03) */}
-              <FighterChip
+              {/* Slot 4 (Right Inner 3D): SHADY VIP (#03) */}
+              <FighterChip5v5
                 fighter={ROSTER_CORAL[2]}
+                delay={0.20}
+                team="coral"
+                isCaptain={false}
+                slotRole="DEFENDER"
+              />
+              {/* Slot 5 (Far Right 3D): CYBER BEAST (#05) */}
+              <FighterChip5v5
+                fighter={ROSTER_CORAL[4]}
                 delay={0.25}
                 team="coral"
                 isCaptain={false}
+                slotRole="SWEEPER"
               />
             </div>
           </div>
@@ -229,7 +271,7 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
           <div className="ticker-label">BREAKING:</div>
           <div className="ticker-content">
             <span>
-              TARGET OBJECTIVE: KNOCK OPPONENTS OFF THE ARENA INTO THE ABYSS • AUTO-AIM PUNCH LOCKS TARGETS • BEWARE THE ROTATING SWEEPER ARM • AUDIENCE DISASTER VOTES FIRE EVERY 30 SECONDS!
+              5VS5 ARENA OBJECTIVE: KNOCK OPPONENTS OFF THE ARENA INTO THE ABYSS • AUTO-AIM PUNCH LOCKS TARGETS • BEWARE ROTATING SWEEPER ARM • AUDIENCE DISASTER VOTES FIRE EVERY 30 SECONDS!
             </span>
           </div>
         </div>
@@ -238,39 +280,42 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
   );
 }
 
-function FighterChip({
+function FighterChip5v5({
   fighter,
   delay,
   team,
   isCaptain,
+  slotRole,
 }: {
   fighter: FighterProfile;
   delay: number;
   team: "cyan" | "coral";
   isCaptain: boolean;
+  slotRole: string;
 }) {
   return (
     <div
-      className={`fighter-chip ${team} ${isCaptain ? "captain-chip" : ""} animate-card-pop`}
+      className={`fighter-card-5v5 ${team} ${isCaptain ? "captain-card" : ""}`}
       style={{ animationDelay: `${delay}s` }}
     >
-      <div className="chip-badge-col">
-        <span className="chip-num">#{fighter.number < 10 ? `0${fighter.number}` : fighter.number}</span>
-        <span className="chip-role">{isCaptain ? "CAPTAIN" : "FIGHTER"}</span>
+      <div className="card-top-row">
+        <span className="jersey-num">#{fighter.number < 10 ? `0${fighter.number}` : fighter.number}</span>
+        <span className={`role-badge ${isCaptain ? "captain" : ""}`}>
+          {isCaptain ? "★ CAPTAIN" : slotRole}
+        </span>
       </div>
 
-      <div className="chip-info-col">
-        <div className="chip-name-row">
-          <span className="chip-name">{fighter.name}</span>
-          <span className="chip-title">{fighter.title}</span>
-        </div>
-        <p className="chip-quote">"{fighter.quote}"</p>
+      <div className="card-identity">
+        <span className="fighter-name">{fighter.name}</span>
+        <span className="fighter-title">{fighter.title}</span>
       </div>
 
-      <div className="chip-stat-col">
-        <div className="chip-spec-tag">
-          {fighter.statPunch >= 5 ? "POWER HITTER" : fighter.statSpeed >= 5 ? "HIGH AGILITY" : "BALANCED"}
-        </div>
+      <p className="fighter-quote">"{fighter.quote}"</p>
+
+      <div className="card-bottom-row">
+        <span className="archetype-tag">
+          {fighter.statPunch >= 5 ? "POWER" : fighter.statSpeed >= 5 ? "AGILE" : "CHAOS"}
+        </span>
       </div>
     </div>
   );
