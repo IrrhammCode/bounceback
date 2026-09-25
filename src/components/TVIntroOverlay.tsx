@@ -116,7 +116,7 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
       {phase === "opener" && (
         <div className="tv-opener-banner animate-pop">
           <div className="tv-badge-pill">OFFICIAL MATCH #420</div>
-          <h1 className="tv-hero-title">BATTLE GONG CHAMPIONSHIP</h1>
+          <h1 className="tv-hero-title">RING-OUT K.O. CHAMPIONSHIP</h1>
           <p className="tv-hero-subtitle">3 VS 3 REALITY TV TOURNAMENT</p>
         </div>
       )}
@@ -127,7 +127,7 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
           <div className="team-banner cyan animate-slide-down">
             <span className="team-tag">TEAM CYAN</span>
             <h2 className="team-name">THE BOUNCING BLUES</h2>
-            <p className="team-slogan">Defending the West Gong • Fast, Punchy & Relentless</p>
+            <p className="team-slogan">Defending North Platform • Fast, Punchy & Relentless</p>
           </div>
 
           <div className="fighter-cards-grid">
@@ -147,7 +147,7 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
             <h1 className="vs-text">VS</h1>
           </div>
           <div className="vs-lightning-right" />
-          <div className="vs-caption">WHO WILL RING THE GONG?!</div>
+          <div className="vs-caption">WHO WILL SURVIVE THE RING?!</div>
         </div>
       )}
 
@@ -157,7 +157,7 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
           <div className="team-banner coral animate-slide-down">
             <span className="team-tag">TEAM CORAL</span>
             <h2 className="team-name">THE RED CRUSHERS</h2>
-            <p className="team-slogan">Defending the East Gong • Heavy Hitters & Chaos Bringers</p>
+            <p className="team-slogan">Defending South Platform • Heavy Hitters & Chaos Bringers</p>
           </div>
 
           <div className="fighter-cards-grid">
@@ -191,7 +191,7 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
         <div className="ticker-label">BREAKING:</div>
         <div className="ticker-content">
           <span>
-            TARGET GOAL: SMASH OPPONENTS INTO THEIR GIANT GONG • PUNCH TO LAUNCH ENEMIES • BEWARE OF THE ROTATING SWEEPER ARM • AUDIENCE DISASTER VOTES TRIGGER EVERY 30 SECONDS!
+            TARGET GOAL: KNOCK OPPONENTS OFF THE ARENA • PUNCH WITH AUTO-AIM ASSIST • BEWARE OF THE ROTATING SWEEPER ARM • AUDIENCE DISASTER VOTES TRIGGER EVERY 30 SECONDS!
           </span>
         </div>
       </div>

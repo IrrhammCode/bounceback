@@ -223,18 +223,27 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     ctx.strokeStyle = "#ffffff";
     ctx.lineWidth = 26;
     ctx.beginPath();
-    ctx.arc(1024, 2048, 340, 0, Math.PI * 2);
+    ctx.arc(1024, 2048, 360, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Court Text: Rotated 180° so it reads right-side up to camera
+    ctx.strokeStyle = "#ffd166";
+    ctx.lineWidth = 14;
+    ctx.beginPath();
+    ctx.arc(1024, 2048, 410, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Center Court Battle Text (Rotated 180° so right-side up to camera)
     ctx.save();
     ctx.translate(1024, 2048);
     ctx.rotate(Math.PI);
     ctx.fillStyle = "#ffffff";
-    ctx.font = "900 112px Outfit, sans-serif";
+    ctx.font = "900 96px Outfit, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("★ BATTLE ARENA ★", 0, 0);
+    ctx.fillText("RING-OUT BATTLE DECK", 0, -35);
+    ctx.font = "800 46px Outfit, sans-serif";
+    ctx.fillStyle = "#ffd166";
+    ctx.fillText("KNOCK RIVALS INTO THE VOID", 0, 45);
     ctx.restore();
 
     // Goal zone arcs
@@ -248,9 +257,84 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     ctx.arc(1024, 3976, 520, Math.PI, Math.PI * 2);
     ctx.stroke();
 
-    ctx.lineWidth = 36;
+    // ─── BATAS DALAM: BOLD HIGH-VISIBILITY SAFETY HAZARD APRON (Outer 1.5m) ───
+    // Diagonal safety hazard stripes pattern (Yellow & Charcoal)
+    const stripeC = document.createElement("canvas");
+    stripeC.width = 48;
+    stripeC.height = 48;
+    const sctx = stripeC.getContext("2d");
+    if (sctx) {
+      sctx.fillStyle = "#ffd166";
+      sctx.fillRect(0, 0, 48, 48);
+      sctx.fillStyle = "#111827";
+      sctx.beginPath();
+      sctx.moveTo(0, 48);
+      sctx.lineTo(48, 0);
+      sctx.lineTo(24, 0);
+      sctx.lineTo(0, 24);
+      sctx.closePath();
+      sctx.fill();
+      sctx.beginPath();
+      sctx.moveTo(24, 48);
+      sctx.lineTo(48, 24);
+      sctx.lineTo(48, 48);
+      sctx.closePath();
+      sctx.fill();
+
+      const hazardPat = ctx.createPattern(stripeC, "repeat");
+      if (hazardPat) {
+        ctx.lineWidth = 110;
+        ctx.strokeStyle = hazardPat;
+        ctx.strokeRect(55, 55, 1938, 3986);
+      }
+    }
+
+    // Glowing Neon Inner Demarcation Line ("Batas Dalam" Safe Border)
+    ctx.lineWidth = 18;
     ctx.strokeStyle = "#ffffff";
-    ctx.strokeRect(36, 36, 1976, 4024);
+    ctx.strokeRect(114, 114, 1820, 3868);
+
+    // Glowing Cyan border glow on North half
+    ctx.lineWidth = 8;
+    ctx.strokeStyle = "#00f0ff";
+    ctx.strokeRect(124, 124, 1800, 1900);
+
+    // Glowing Coral border glow on South half
+    ctx.strokeStyle = "#ff2a6d";
+    ctx.strokeRect(124, 2048, 1800, 1924);
+
+    // Stencil Warning Text decals along all 4 perimeter hazard aprons
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "900 44px Outfit, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    // West sideline
+    ctx.save();
+    ctx.translate(160, 2048);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText(">>> DANGER: RING-OUT EDGE <<<", 0, 0);
+    ctx.restore();
+
+    // East sideline
+    ctx.save();
+    ctx.translate(1888, 2048);
+    ctx.rotate(Math.PI / 2);
+    ctx.fillText(">>> DANGER: RING-OUT EDGE <<<", 0, 0);
+    ctx.restore();
+
+    // North endline (Cyan side)
+    ctx.save();
+    ctx.translate(1024, 160);
+    ctx.fillText(">>> DANGER: RING-OUT EDGE <<<", 0, 0);
+    ctx.restore();
+
+    // South endline (Coral side)
+    ctx.save();
+    ctx.translate(1024, 3936);
+    ctx.rotate(Math.PI);
+    ctx.fillText(">>> DANGER: RING-OUT EDGE <<<", 0, 0);
+    ctx.restore();
   });
 
   const floorMat = new THREE.MeshStandardMaterial({
@@ -280,34 +364,36 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     opacity: 0.85,
   });
 
-  // Base foundation slab safely 30cm below floor to prevent Z-fighting
-  const baseSlab = new THREE.Mesh(new THREE.BoxGeometry(W + 18, 2.0, L + 24), foundationMat);
-  baseSlab.position.y = -1.3;
+  // ─── 4. FLOATING COLOSSEUM ISLAND FOUNDATION & CORE ─────
+  // Base foundation slab directly hugging court platform (W x L) to expose the 6m drop abyss around it!
+  const baseSlab = new THREE.Mesh(new THREE.BoxGeometry(W, 2.2, L), foundationMat);
+  baseSlab.position.y = -1.1;
   baseSlab.receiveShadow = true;
   root.add(baseSlab);
 
-  const keelStep1 = new THREE.Mesh(new THREE.BoxGeometry(W + 12, 2.5, L + 16), coliseumStoneMat);
+  // Undercarriage floating keel steps (tapering inwards to reveal the open chasm)
+  const keelStep1 = new THREE.Mesh(new THREE.BoxGeometry(W - 2.5, 2.5, L - 3), coliseumStoneMat);
   keelStep1.position.y = -3.25;
   keelStep1.receiveShadow = true;
   root.add(keelStep1);
 
-  const keelStep2 = new THREE.Mesh(new THREE.BoxGeometry(W + 4, 3.0, L + 6), coliseumStoneMat);
+  const keelStep2 = new THREE.Mesh(new THREE.BoxGeometry(W - 6.5, 3.0, L - 8), coliseumStoneMat);
   keelStep2.position.y = -6.0;
   keelStep2.receiveShadow = true;
   root.add(keelStep2);
 
-  const keelStep3 = new THREE.Mesh(new THREE.BoxGeometry(W - 6, 3.5, L - 10), coliseumStoneMat);
+  const keelStep3 = new THREE.Mesh(new THREE.BoxGeometry(W - 10.5, 3.5, L - 13), coliseumStoneMat);
   keelStep3.position.y = -9.25;
   keelStep3.receiveShadow = true;
   root.add(keelStep3);
 
   // Central Anti-Gravity Floating Thruster Core
   const thrusterRing = new THREE.Mesh(
-    new THREE.TorusGeometry(6.0, 0.5, 12, 32),
+    new THREE.TorusGeometry(5.5, 0.5, 12, 32),
     new THREE.MeshStandardMaterial({
       color: 0x06b6d4,
       emissive: 0x06b6d4,
-      emissiveIntensity: 0.8,
+      emissiveIntensity: 0.9,
       roughness: 0.2,
       metalness: 0.8,
     })
@@ -316,6 +402,23 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   thrusterRing.position.y = -11.5;
   root.add(thrusterRing);
 
+  // Deep Abyss Cyber Laser Grid (Visible across the entire 4-6m chasm around the platform)
+  const abyssGrid = new THREE.GridHelper(96, 48, 0x00f0ff, 0x9333ea);
+  abyssGrid.position.y = -18;
+  root.add(abyssGrid);
+
+  // Platform Edge Metallic Coping Rim (Beveled gold/chrome molding)
+  for (const side of [-1, 1]) {
+    const sideRim = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.3, L), goldDecoMat);
+    sideRim.position.set(side * (hW + 0.08), 0.08, 0);
+    root.add(sideRim);
+  }
+  for (const end of [-1, 1]) {
+    const endRim = new THREE.Mesh(new THREE.BoxGeometry(W + 0.5, 0.3, 0.35), goldDecoMat);
+    endRim.position.set(0, 0.08, end * (hL + 0.08));
+    root.add(endRim);
+  }
+
   // Raised Center Gold Ring Rim (r = 4.4m)
   const daisRingGeo = new THREE.TorusGeometry(4.4, 0.08, 12, 48);
   daisRingGeo.rotateX(Math.PI / 2);
@@ -323,68 +426,220 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   daisRing.position.set(0, 1.24, 0);
   root.add(daisRing);
 
-  // ─── 5. SEAMLESS INFLATABLE PERIMETER BARRIER WALLS ─────
-  const wallMat = new THREE.MeshStandardMaterial({
-    color: 0xf8fafc,
-    roughness: 0.20,
-    metalness: 0.05,
+  // ─── 5. BATAS LUAR: 4 CHAMPIONSHIP TURNBUCKLE CORNER PYLONS & 3-TIER GLOWING ROPES ─────
+  const pylonMat = new THREE.MeshStandardMaterial({
+    color: 0x0f172a,
+    roughness: 0.2,
+    metalness: 0.85,
+  });
+  const chromeMat = new THREE.MeshStandardMaterial({
+    color: 0xf1f5f9,
+    roughness: 0.1,
+    metalness: 0.95,
   });
 
-  const wallR = 0.45;
-  const numSamplePts = 48;
+  const pylonPositions = [
+    { x: -hW, z: -hL, color: C.TEAM_CYAN },
+    { x: hW, z: -hL, color: C.TEAM_CYAN },
+    { x: -hW, z: hL, color: C.TEAM_CORAL },
+    { x: hW, z: hL, color: C.TEAM_CORAL },
+  ];
 
-  for (const side of [-1, 1]) {
-    const wx = side * (hW + 0.35);
-    const pts: THREE.Vector3[] = [];
-    const neonPts: THREE.Vector3[] = [];
+  const beaconMeshes: THREE.Mesh[] = [];
 
-    for (let i = 0; i <= numSamplePts; i++) {
-      const z = -hL + (i / numSamplePts) * L;
-      const y = getArenaHeight(0, z) + wallR + 0.05;
-      pts.push(new THREE.Vector3(wx, y, z));
-      neonPts.push(new THREE.Vector3(wx, y + wallR + 0.02, z));
+  for (const pp of pylonPositions) {
+    const pGroup = new THREE.Group();
+    pGroup.position.set(pp.x, 0, pp.z);
+
+    // Main heavy post (height 2.4m)
+    const postGeo = new THREE.CylinderGeometry(0.32, 0.38, 2.4, 12);
+    const postMesh = new THREE.Mesh(postGeo, pylonMat);
+    postMesh.position.y = 1.2;
+    postMesh.castShadow = true;
+    pGroup.add(postMesh);
+
+    // Hazard stripes ring on post
+    const bandGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.35, 12);
+    const bandMat = new THREE.MeshStandardMaterial({
+      color: 0xfbbf24,
+      emissive: 0xf59e0b,
+      emissiveIntensity: 0.4,
+      roughness: 0.3,
+    });
+    const bandMesh = new THREE.Mesh(bandGeo, bandMat);
+    bandMesh.position.y = 1.6;
+    pGroup.add(bandMesh);
+
+    // Turnbuckle cable eyelets (3 tiers)
+    for (const ry of [0.22, 0.65, 1.15]) {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.36, 0.05, 8, 24), goldDecoMat);
+      ring.rotation.x = Math.PI / 2;
+      ring.position.y = ry;
+      pGroup.add(ring);
     }
 
-    const curve = new THREE.CatmullRomCurve3(pts);
-    const tubeGeo = new THREE.TubeGeometry(curve, 64, wallR, 16, false);
-    const tubeMesh = new THREE.Mesh(tubeGeo, wallMat);
-    tubeMesh.castShadow = true;
-    tubeMesh.receiveShadow = true;
-    root.add(tubeMesh);
-
-    const neonCurve = new THREE.CatmullRomCurve3(neonPts);
-    const neonGeo = new THREE.TubeGeometry(neonCurve, 64, 0.08, 10, false);
-    const neonMat = new THREE.MeshStandardMaterial({
-      color: side < 0 ? C.TEAM_CYAN : C.TEAM_CORAL,
-      emissive: side < 0 ? C.TEAM_CYAN : C.TEAM_CORAL,
-      emissiveIntensity: 0.6,
+    // Top Flashing Hazard Beacon
+    const beaconGeo = new THREE.SphereGeometry(0.24, 12, 10);
+    const beaconMat = new THREE.MeshStandardMaterial({
+      color: pp.color,
+      emissive: pp.color,
+      emissiveIntensity: 1.0,
+      roughness: 0.1,
     });
-    const neonMesh = new THREE.Mesh(neonGeo, neonMat);
-    root.add(neonMesh);
+    const beaconMesh = new THREE.Mesh(beaconGeo, beaconMat);
+    beaconMesh.position.y = 2.48;
+    pGroup.add(beaconMesh);
+    beaconMeshes.push(beaconMesh);
+
+    root.add(pGroup);
   }
 
-  // End Barriers (North Cyan & South Coral)
-  const addEndBarrier = (pz: number, color: number) => {
-    const geo = new THREE.CapsuleGeometry(wallR, W + 0.7, 14, 24);
-    geo.rotateZ(Math.PI / 2);
-    const m = new THREE.Mesh(geo, wallMat);
-    m.position.set(0, wallR + 0.05, pz);
-    m.castShadow = true;
-    root.add(m);
+  // Intermediate support stanchions along perimeter
+  const stanchionPositions = [
+    { x: -hW, z: -13.5 },
+    { x: -hW, z: 0 },
+    { x: -hW, z: 13.5 },
+    { x: hW, z: -13.5 },
+    { x: hW, z: 0 },
+    { x: hW, z: 13.5 },
+    { x: -7, z: -hL },
+    { x: 7, z: -hL },
+    { x: -7, z: hL },
+    { x: 7, z: hL },
+  ];
 
-    const sGeo = new THREE.CylinderGeometry(0.09, 0.09, W + 0.7, 12);
-    sGeo.rotateZ(Math.PI / 2);
-    const sMesh = new THREE.Mesh(
-      sGeo,
-      new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.6 })
+  for (const sp of stanchionPositions) {
+    const postH = 1.5;
+    const post = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.08, 0.1, postH, 8),
+      chromeMat
     );
-    sMesh.position.set(0, wallR * 2 + 0.07, pz);
-    root.add(sMesh);
+    post.position.set(sp.x, postH / 2 + getArenaHeight(sp.x, sp.z), sp.z);
+    post.castShadow = true;
+    root.add(post);
+  }
+
+  // 3-Tier Elastic Glowing Perimeter Ropes:
+  // West & East ropes (sampled along the longitudinal ramp curve)
+  for (const side of [-1, 1]) {
+    const wx = side * hW;
+    const numPts = 32;
+
+    const topPts: THREE.Vector3[] = [];
+    const midPts: THREE.Vector3[] = [];
+    const botPts: THREE.Vector3[] = [];
+
+    for (let i = 0; i <= numPts; i++) {
+      const z = -hL + (i / numPts) * L;
+      const yh = getArenaHeight(0, z);
+      topPts.push(new THREE.Vector3(wx, yh + 1.15, z));
+      midPts.push(new THREE.Vector3(wx, yh + 0.65, z));
+      botPts.push(new THREE.Vector3(wx, yh + 0.22, z));
+    }
+
+    // Top Rope: Glowing team neon
+    const topCurve = new THREE.CatmullRomCurve3(topPts);
+    const topGeo = new THREE.TubeGeometry(topCurve, 48, 0.07, 10, false);
+    const topMat = new THREE.MeshStandardMaterial({
+      color: side < 0 ? C.TEAM_CYAN : C.TEAM_CORAL,
+      emissive: side < 0 ? C.TEAM_CYAN : C.TEAM_CORAL,
+      emissiveIntensity: 0.8,
+      roughness: 0.2,
+    });
+    root.add(new THREE.Mesh(topGeo, topMat));
+
+    // Mid Rope: Golden laser cable
+    const midCurve = new THREE.CatmullRomCurve3(midPts);
+    const midGeo = new THREE.TubeGeometry(midCurve, 48, 0.05, 8, false);
+    const midMat = new THREE.MeshStandardMaterial({
+      color: C.GOLD,
+      emissive: C.GOLD,
+      emissiveIntensity: 0.7,
+      roughness: 0.2,
+    });
+    root.add(new THREE.Mesh(midGeo, midMat));
+
+    // Bottom Bumper Rail: Solid chrome rebound bar
+    const botCurve = new THREE.CatmullRomCurve3(botPts);
+    const botGeo = new THREE.TubeGeometry(botCurve, 48, 0.09, 10, false);
+    const botMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      roughness: 0.3,
+      metalness: 0.7,
+    });
+    root.add(new THREE.Mesh(botGeo, botMat));
+  }
+
+  // North & South Endline Ropes
+  const addEndRopes = (pz: number, color: number) => {
+    // Top Rope
+    const tMesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.07, 0.07, W, 12),
+      new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.85, roughness: 0.2 })
+    );
+    tMesh.rotateZ(Math.PI / 2);
+    tMesh.position.set(0, 1.15, pz);
+    root.add(tMesh);
+
+    // Mid Rope
+    const mMesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.05, 0.05, W, 10),
+      new THREE.MeshStandardMaterial({ color: C.GOLD, emissive: C.GOLD, emissiveIntensity: 0.75, roughness: 0.2 })
+    );
+    mMesh.rotateZ(Math.PI / 2);
+    mMesh.position.set(0, 0.65, pz);
+    root.add(mMesh);
+
+    // Bottom Rail
+    const bMesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.09, 0.09, W, 12),
+      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3, metalness: 0.7 })
+    );
+    bMesh.rotateZ(Math.PI / 2);
+    bMesh.position.set(0, 0.22, pz);
+    root.add(bMesh);
   };
-  addEndBarrier(-hL - 0.35, C.TEAM_CYAN);
-  addEndBarrier(hL + 0.35, C.TEAM_CORAL);
+
+  addEndRopes(-hL, C.TEAM_CYAN);
+  addEndRopes(hL, C.TEAM_CORAL);
+
+  // Floating Holographic Warning Signs hovering above the abyss
+  const signTex = makeCanvasTex(512, 128, (ctx) => {
+    ctx.fillStyle = "rgba(15, 23, 42, 0.9)";
+    ctx.fillRect(0, 0, 512, 128);
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = "#ffd166";
+    ctx.strokeRect(6, 6, 500, 116);
+
+    ctx.fillStyle = "#ff0055";
+    ctx.font = "900 36px Outfit, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("RING-OUT ZONE", 256, 42);
+    ctx.fillStyle = "#38bdf8";
+    ctx.font = "800 24px Outfit, sans-serif";
+    ctx.fillText("2X SCORE ON K.O.", 256, 88);
+  });
+
+  const signMat = new THREE.MeshBasicMaterial({ map: signTex, transparent: true, opacity: 0.92, side: THREE.DoubleSide });
+  const holoSigns: THREE.Mesh[] = [];
+
+  for (const side of [-1, 1]) {
+    const s1 = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 0.9), signMat);
+    s1.position.set(side * (hW + 1.2), 1.6, -10);
+    s1.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
+    root.add(s1);
+    holoSigns.push(s1);
+
+    const s2 = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 0.9), signMat);
+    s2.position.set(side * (hW + 1.2), 1.6, 10);
+    s2.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
+    root.add(s2);
+    holoSigns.push(s2);
+  }
 
   // ─── 6. DYNAMIC 360° SCROLLING LED RIBBON VIDEO BOARDS ───
+  // Attached to the bleacher facade across the abyss
   const ribbonTex = makeCanvasTex(2048, 128, (ctx) => {
     ctx.fillStyle = "#09090b";
     ctx.fillRect(0, 0, 2048, 128);
@@ -398,10 +653,10 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     ctx.textBaseline = "middle";
 
     const messages = [
-      { text: "⚡ BOUNCEBACK CHAMPIONSHIP ⚡", color: "#fef08a" },
-      { text: "★ SMASH & SCORE ★", color: "#38bdf8" },
-      { text: ">>> SPEED RUSH >>>", color: "#f43f5e" },
-      { text: "👑 OVERDRIVE READY 👑", color: "#a855f7" },
+      { text: "BOUNCEBACK CHAMPIONSHIP", color: "#fef08a" },
+      { text: "RING-OUT K.O. ARENA", color: "#38bdf8" },
+      { text: "SMASH RIVALS INTO THE VOID", color: "#f43f5e" },
+      { text: "OVERDRIVE 3X POINTS", color: "#a855f7" },
     ];
 
     let curX = 40;
@@ -420,7 +675,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   const ribbonMat = new THREE.MeshBasicMaterial({ map: ribbonTex });
   for (const side of [-1, 1]) {
     const ribbonMesh = new THREE.Mesh(new THREE.PlaneGeometry(L + 4, 0.9), ribbonMat);
-    ribbonMesh.position.set(side * (hW + 1.15), 1.9, 0);
+    ribbonMesh.position.set(side * (hW + 2.1), 1.9, 0);
     ribbonMesh.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
     root.add(ribbonMesh);
   }
@@ -1897,6 +2152,17 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   function update(dt: number, time: number) {
     // 1. Scroll LED Ribbon Boards
     ribbonTex.offset.x -= dt * 0.12;
+
+    // 1b. Pulsing Corner Beacon Hazard Lights & Floating Signs
+    for (let bi = 0; bi < beaconMeshes.length; bi++) {
+      const bm = beaconMeshes[bi];
+      const pulse = 0.6 + 0.4 * Math.sin(time * 6.0 + bi * 1.5);
+      (bm.material as THREE.MeshStandardMaterial).emissiveIntensity = pulse * 1.4;
+    }
+    for (let hi = 0; hi < holoSigns.length; hi++) {
+      const hs = holoSigns[hi];
+      hs.position.y = 1.6 + Math.sin(time * 2.5 + hi) * 0.15;
+    }
 
     // 2. Rotate Windmill Blades & Ferris Wheel
     windmillBlades.rotation.z += dt * 0.9;

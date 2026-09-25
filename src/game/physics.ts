@@ -23,8 +23,10 @@ export interface GateData {
 export class Entity {
   x: number;
   z: number;
+  y = 0;
   vx = 0;
   vz = 0;
+  vy = 0;
   radius = C.PLAYER_RADIUS;
   team: number;
   isPlayer: boolean;
@@ -35,6 +37,8 @@ export class Entity {
   bounceCount = 0;
   lastHitBy = -1;
   stunTimer = 0;
+  isFalling = false;
+  respawning = false;
   mesh: THREE.Object3D | null = null;
   role: string | null = null;
   fsm = "idle";
@@ -103,7 +107,38 @@ export function updatePhysics(
     if (e.punchCd > 0) e.punchCd -= dt;
     if (e.dashTimer > 0) e.dashTimer -= dt;
 
-    // Apply velocity
+    // 1. Ring-Out Abyss Fall State
+    if (e.isFalling) {
+      e.vy -= 42.0 * dt;
+      e.y += e.vy * dt;
+      e.x += e.vx * dt;
+      e.z += e.vz * dt;
+
+      if (e.y < -10.0) {
+        // TRIGGER RING-OUT K.O. SCORE
+        const scoringTeam =
+          e.lastHitBy >= 0 && entities[e.lastHitBy]
+            ? entities[e.lastHitBy].team
+            : 1 - e.team;
+        scoreCallback(scoringTeam, 2, Math.max(1, e.bounceCount), i);
+        respawnEntity(e, halfW, halfL);
+      }
+      continue;
+    }
+
+    // 2. Sky Drop Respawn Descent
+    if (e.respawning) {
+      e.y += e.vy * dt;
+      if (e.y <= 0) {
+        e.y = 0;
+        e.vy = 0;
+        e.respawning = false;
+        e.immuneTimer = C.IMMUNITY_DUR;
+      }
+      continue;
+    }
+
+    // Apply horizontal velocity
     e.x += e.vx * dt;
     e.z += e.vz * dt;
 
@@ -114,14 +149,13 @@ export function updatePhysics(
       e.vx *= decay;
       e.vz *= decay;
       const spd = Math.sqrt(e.vx * e.vx + e.vz * e.vz);
-      // Auto-recover after max 3.0s, or when speed drops below threshold after 0.8s
       if (e.launchTimer >= 3.0 || (e.launchTimer > 0.8 && spd < C.LAUNCH_THRESHOLD)) {
         e.launched = false;
         e.bounceCount = 0;
         e.launchSpeed = 0;
         e.launchTimer = 0;
         e.stunTimer = 0;
-        e.immuneTimer = 0.8; // Brief landing grace period
+        e.immuneTimer = 0.8;
       }
     } else {
       e.launchTimer = 0;
@@ -132,27 +166,43 @@ export function updatePhysics(
 
     e.speed = Math.sqrt(e.vx * e.vx + e.vz * e.vz);
 
-    // Wall bounces
-    if (e.x - e.radius < -halfW) {
-      e.x = -halfW + e.radius;
-      e.vx = Math.abs(e.vx) * C.WALL_RESTITUTION;
-    }
-    if (e.x + e.radius > halfW) {
-      e.x = halfW - e.radius;
-      e.vx = -Math.abs(e.vx) * C.WALL_RESTITUTION;
-    }
-    if (e.z - e.radius < -halfL) {
-      e.z = -halfL + e.radius;
-      e.vz = Math.abs(e.vz) * C.WALL_RESTITUTION;
-    }
-    if (e.z + e.radius > halfL) {
-      e.z = halfL - e.radius;
-      e.vz = -Math.abs(e.vz) * C.WALL_RESTITUTION;
+    // 3. Perimeter Boundary Check (Elastic Ropes vs Ring-Out Vault)
+    const beyondWest = e.x - e.radius < -halfW;
+    const beyondEast = e.x + e.radius > halfW;
+    const beyondNorth = e.z - e.radius < -halfL;
+    const beyondSouth = e.z + e.radius > halfL;
+
+    if (beyondWest || beyondEast || beyondNorth || beyondSouth) {
+      const isHighVelocity = e.launched || e.launchSpeed > 10.0 || e.speed > 11.0;
+      if (isHighVelocity) {
+        // Vault over boundary ropes into the void abyss!
+        e.isFalling = true;
+        e.vy = 5.0; // Initial upward arc over rope
+        e.launched = true;
+      } else {
+        // Elastic rebound off ring ropes
+        if (beyondWest) {
+          e.x = -halfW + e.radius;
+          e.vx = Math.abs(e.vx) * C.WALL_RESTITUTION;
+        }
+        if (beyondEast) {
+          e.x = halfW - e.radius;
+          e.vx = -Math.abs(e.vx) * C.WALL_RESTITUTION;
+        }
+        if (beyondNorth) {
+          e.z = -halfL + e.radius;
+          e.vz = Math.abs(e.vz) * C.WALL_RESTITUTION;
+        }
+        if (beyondSouth) {
+          e.z = halfL - e.radius;
+          e.vz = -Math.abs(e.vz) * C.WALL_RESTITUTION;
+        }
+      }
     }
 
     // Bumper collisions
     for (const b of bumpers) {
-      if (e.immuneTimer > 0) continue; // Respect immunity window
+      if (e.immuneTimer > 0) continue;
       const bx = b.x,
         bz = b.z,
         br = C.BUMPER_RADIUS + e.radius;
@@ -169,12 +219,12 @@ export function updatePhysics(
         e.vx = (e.vx - 2 * dot * bnx) * C.BUMPER_MULT;
         e.vz = (e.vz - 2 * dot * bnz) * C.BUMPER_MULT;
         e.bounceCount = Math.min((e.bounceCount || 0) + 1, 3);
-        e.immuneTimer = 0.45; // 0.45s immunity so adjacent bumpers don't ping-pong every frame
+        e.immuneTimer = 0.45;
         b.hitFlash = 1.0;
       }
     }
 
-    // Gate scoring
+    // Goal/Gate scoring support
     if (e.launched) {
       for (const gate of gates) {
         if (!gate.active) continue;
@@ -211,11 +261,11 @@ export function updatePhysics(
   // Entity-entity domino collisions
   for (let i = 0; i < entities.length; i++) {
     const a = entities[i];
-    if (!a.launched) continue;
+    if (!a.launched || a.isFalling) continue;
     for (let j = 0; j < entities.length; j++) {
       if (i === j) continue;
       const b = entities[j];
-      if (b.immuneTimer > 0) continue;
+      if (b.immuneTimer > 0 || b.isFalling) continue;
       if (b.launched) continue;
       if (a.team === b.team) continue;
       const dx = b.x - a.x,
@@ -242,14 +292,19 @@ export function updatePhysics(
 
 function respawnEntity(e: Entity, halfW: number, halfL: number) {
   const side = e.team === 0 ? -1 : 1;
-  e.x = (Math.random() - 0.5) * (C.ARENA_W * 0.6);
-  e.z = side * (halfL * 0.3 + Math.random() * halfL * 0.3);
+  e.x = (Math.random() - 0.5) * (halfW * 1.1);
+  e.z = side * (halfL * 0.35 + Math.random() * halfL * 0.35);
+  e.y = 12.0; // Drops from the sky!
+  e.vy = -18.0;
   e.vx = 0;
   e.vz = 0;
+  e.isFalling = false;
+  e.respawning = true;
   e.launched = false;
   e.launchTimer = 0;
   e.launchSpeed = 0;
   e.bounceCount = 0;
-  e.immuneTimer = C.IMMUNITY_DUR;
-  e.stunTimer = 0.5;
+  e.immuneTimer = C.IMMUNITY_DUR + 0.4;
+  e.stunTimer = 0.35;
+  e.lastHitBy = -1;
 }

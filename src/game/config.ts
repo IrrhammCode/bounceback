@@ -23,10 +23,10 @@ export const PLAYER_SPEED = 8.0;
 export const DASH_SPEED = 18.0;
 export const DASH_DUR = 0.18;
 export const DASH_CD = 0.8;
-export const PUNCH_IMPULSE = 32.0;
-export const CHARGE_IMPULSE = 46.0;
+export const PUNCH_IMPULSE = 35.0;
+export const CHARGE_IMPULSE = 50.0;
 export const CHARGE_TIME = 0.55;
-export const PUNCH_RANGE = 2.6;
+export const PUNCH_RANGE = 3.4;
 export const PUNCH_CD = 0.28;
 
 // Launch/bounce physics
@@ -40,7 +40,7 @@ export const IMMUNITY_DUR = 1.2;
 // Bumper
 export const BUMPER_RADIUS = 0.9;
 
-// Giant Battle Gong (Replaces standard gates)
+// Giant Battle Gong / Ring-Out Gate Configuration
 export const GATE_WIDTH = 5.4;
 export const GATE_DEPTH = 1.2;
 
@@ -55,7 +55,7 @@ export const GATE_SCORE_3X = 3;
 // Bot AI
 export const BOT_REACTION = 0.15;
 export const MAX_PURSUERS = 2;
-export const BOT_PUNCH_RANGE = 1.8;
+export const BOT_PUNCH_RANGE = 2.8;
 
 // Combo
 export const COMBO_WINDOW = 3.0;

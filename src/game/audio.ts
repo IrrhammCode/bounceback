@@ -13,6 +13,8 @@ let sfxGain: GainNode | null = null;
 let muted = false;
 
 // BGM State
+let bgmAudio: HTMLAudioElement | null = null;
+let bgmSourceNode: MediaElementAudioSourceNode | null = null;
 let bgmInterval: number | null = null;
 let bgmStep = 0;
 let bgmPlaying = false;
@@ -27,7 +29,7 @@ export function initAudio() {
   masterGain.connect(ctx.destination);
 
   bgmGain = ctx.createGain();
-  bgmGain.gain.value = 0.22;
+  bgmGain.gain.value = 0.32;
   bgmGain.connect(masterGain);
 
   sfxGain = ctx.createGain();
@@ -40,12 +42,18 @@ export function resumeAudio() {
   if (ctx && ctx.state === "suspended") {
     ctx.resume();
   }
+  if (bgmPlaying && bgmAudio && bgmAudio.paused) {
+    bgmAudio.play().catch(() => {});
+  }
 }
 
 export function setMuted(v: boolean) {
   muted = v;
   if (masterGain) {
     masterGain.gain.value = v ? 0 : 0.45;
+  }
+  if (bgmAudio) {
+    bgmAudio.muted = v;
   }
 }
 
@@ -106,12 +114,59 @@ function playNoise(dur: number, vol = 0.2, filterFreq = 800) {
   }
 }
 
-// ─── Procedural Fall Guys Arcade BGM Loop ───
+// ─── Yellow Shell Hustle BGM Player (HTML5 Audio + WebAudio routing) ───
 export function startBGM() {
   if (!ctx) initAudio();
   resumeAudio();
   if (bgmPlaying) return;
   bgmPlaying = true;
+
+  try {
+    if (!bgmAudio) {
+      bgmAudio = new Audio("/Yellow_Shell_Hustle.mp3");
+      bgmAudio.loop = true;
+      bgmAudio.preload = "auto";
+      bgmAudio.volume = muted ? 0 : 0.65;
+      if (ctx && bgmGain) {
+        try {
+          bgmSourceNode = ctx.createMediaElementSource(bgmAudio);
+          bgmSourceNode.connect(bgmGain);
+          bgmAudio.volume = 1.0;
+        } catch {
+          // Fallback to direct HTML5 audio volume if media element source cannot attach
+        }
+      }
+    }
+    const p = bgmAudio.play();
+    if (p !== undefined) {
+      p.catch((err) => {
+        console.warn("BGM autoplay postponed until user gesture, falling back to procedural", err);
+        startProceduralBGM();
+      });
+    }
+  } catch (err) {
+    console.warn("HTML5 audio playback error, falling back to procedural", err);
+    startProceduralBGM();
+  }
+}
+
+export function stopBGM() {
+  bgmPlaying = false;
+  if (bgmAudio) {
+    bgmAudio.pause();
+    bgmAudio.currentTime = 0;
+  }
+  if (bgmInterval !== null) {
+    clearInterval(bgmInterval);
+    bgmInterval = null;
+  }
+}
+
+// ─── Procedural Fall Guys Arcade BGM Loop (Zero-Asset Fallback) ───
+export function startProceduralBGM() {
+  if (!ctx) initAudio();
+  resumeAudio();
+  if (bgmInterval !== null) return;
   bgmStep = 0;
 
   // 128 BPM = 16th note interval ~ 117.18ms
@@ -263,14 +318,6 @@ export function startBGM() {
 
     bgmStep++;
   }, stepMs);
-}
-
-export function stopBGM() {
-  bgmPlaying = false;
-  if (bgmInterval !== null) {
-    clearInterval(bgmInterval);
-    bgmInterval = null;
-  }
 }
 
 // ─── Realistic Crowd Cheering ("Woooo-YEAAAH!") ───
@@ -501,6 +548,18 @@ export function sfxGoal() {
   setTimeout(() => {
     playTone(554, 0.6, "sawtooth", 0.25);
   }, 200);
+}
+
+export function sfxRingOut() {
+  sfxGongHit();
+  sfxStadiumAirhorn();
+  sfxCrowdCheer(1.8);
+  playTone(220, 0.3, "sawtooth", 0.35, false);
+  playTone(330, 0.3, "sawtooth", 0.3, false);
+  playTone(440, 0.45, "sawtooth", 0.35);
+  setTimeout(() => {
+    playTone(660, 0.55, "sawtooth", 0.35);
+  }, 140);
 }
 
 export function sfxDash() {

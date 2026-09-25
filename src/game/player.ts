@@ -359,7 +359,7 @@ export class PlayerController {
     if (punch && player.punchCd <= 0 && !player.launched) {
       player.punchCd = C.PUNCH_CD;
 
-      // Determine punch facing direction
+      // Determine default punch facing direction
       let fnx = player.vx;
       let fnz = player.vz;
       if (Math.hypot(fnx, fnz) < 0.2) {
@@ -373,12 +373,10 @@ export class PlayerController {
       fnx /= fLen;
       fnz /= fLen;
 
-      // Forward lunge momentum on punch
-      player.vx += fnx * 4.2;
-      player.vz += fnz * 4.2;
-
-      let bestDist = C.PUNCH_RANGE;
+      // Smart Target Acquisition: search up to 4.2m in front cone or 2.2m proximity
+      let bestScore = -Infinity;
       let bestIdx = -1;
+
       for (let i = 0; i < entities.length; i++) {
         const t = entities[i];
         if (t === player || t.team === player.team) continue;
@@ -386,14 +384,34 @@ export class PlayerController {
         const dx = t.x - player.x;
         const dz = t.z - player.z;
         const dist = Math.sqrt(dx * dx + dz * dz);
+        if (dist > 4.2) continue;
+
         const dot = (dx * fnx + dz * fnz) / (dist || 1);
-        if (dist < bestDist && dot > -0.35) {
-          bestDist = dist;
-          bestIdx = i;
+        // Valid if in forward cone (dot > 0.05) or very close (dist < 2.2)
+        if (dot > 0.05 || dist < 2.2) {
+          const score = (1.0 - dist / 4.2) * 2.2 + dot;
+          if (score > bestScore) {
+            bestScore = score;
+            bestIdx = i;
+          }
         }
       }
+
       if (bestIdx >= 0) {
         const target = entities[bestIdx];
+        const tdx = target.x - player.x;
+        const tdz = target.z - player.z;
+        const tDist = Math.hypot(tdx, tdz) || 1;
+        // Snap punch facing direction toward locked target
+        fnx = tdx / tDist;
+        fnz = tdz / tDist;
+
+        // Magnetic Lunge: close distance instantly so the punch feels like a heat-seeking strike!
+        player.vx = fnx * 12.5;
+        player.vz = fnz * 12.5;
+        player.x += fnx * Math.min(0.6, tDist * 0.4);
+        player.z += fnz * Math.min(0.6, tDist * 0.4);
+
         const result = applyPunch(player, target, false);
         target.lastHitBy = entities.indexOf(player);
         if (juiceFn) {
@@ -410,6 +428,9 @@ export class PlayerController {
           });
         }
       } else {
+        // Forward lunge momentum on whiff
+        player.vx += fnx * 5.0;
+        player.vz += fnz * 5.0;
         if (juiceFn) {
           juiceFn("whiff", {
             x: player.x + fnx * 1.5,

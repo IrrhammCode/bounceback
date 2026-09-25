@@ -115,7 +115,7 @@ export default function TitleScreenOverlay({ onStartMatch }: TitleScreenOverlayP
         </h1>
 
         <p className="title-tagline animate-fade-in-delayed">
-          PUNCH OPPONENTS INTO GIANT GONGS • SURVIVE LIVE AUDIENCE DISASTERS
+          PUNCH OPPONENTS OFF THE ARENA • SURVIVE LIVE AUDIENCE DISASTERS
         </p>
 
         {/* Feature Highlight Pills */}
@@ -130,7 +130,7 @@ export default function TitleScreenOverlay({ onStartMatch }: TitleScreenOverlayP
           </div>
           <div className="feature-pill">
             <span className="pill-dot gold" />
-            <span className="pill-text">GIANT GONG SLAM GOALS</span>
+            <span className="pill-text">RING-OUT K.O. SYSTEM</span>
           </div>
         </div>
 
@@ -156,7 +156,7 @@ export default function TitleScreenOverlay({ onStartMatch }: TitleScreenOverlayP
         <div className="ticker-badge">LIVE TICKER</div>
         <div className="ticker-track">
           <span>
-            NEXT LIVE ARENA POLL IN 30 SECONDS • AUDIENCE DISASTERS: TWISTER TORNADO, METEOR STRIKE, SEISMIC QUAKE, ORBITAL LASER, GRAVITY SINGULARITY • SMASH MYSTERY BOXES FOR POWER SKILLS • HIT ENEMY GONG TO SCORE POINTS!
+            NEXT LIVE ARENA POLL IN 30 SECONDS • AUDIENCE DISASTERS: TWISTER TORNADO, METEOR STRIKE, SEISMIC QUAKE, ORBITAL LASER, GRAVITY SINGULARITY • SMASH MYSTERY BOXES FOR POWER SKILLS • KNOCK FOES OFF THE ARENA TO SCORE POINTS!
           </span>
         </div>
       </footer>
@@ -183,17 +183,17 @@ export default function TitleScreenOverlay({ onStartMatch }: TitleScreenOverlayP
             </div>
 
             <div className="guide-sections-grid">
-              {/* Section 1: Objective & Gong Scoring */}
+              {/* Section 1: Objective & Ring-Out Scoring */}
               <div className="guide-card">
                 <div className="guide-card-header cyan">
                   <span className="card-num">01</span>
-                  <h3>THE GONG GOAL</h3>
+                  <h3>RING-OUT K.O. GOAL</h3>
                 </div>
                 <p>
-                  Punch opponents with high velocity to launch them flying across the stadium turf! Knocking an enemy into their Giant Gong scores points with crowd combo multipliers.
+                  Punch opponents with high velocity to launch them flying over the perimeter ropes into the void abyss! Vaulting an enemy off the arena scores points with crowd combo multipliers.
                 </p>
                 <div className="guide-callout">
-                  <strong>TIP:</strong> More bumper bounces before hitting the gong awards up to 3x bonus points!
+                  <strong>TIP:</strong> Use auto-aim magnetic punches and bumper ricochets to blast rivals over the edge for up to 3x bonus points!
                 </div>
               </div>
 

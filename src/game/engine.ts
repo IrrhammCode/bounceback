@@ -32,6 +32,7 @@ import {
   sfxWhiff,
   sfxDash,
   sfxGoal,
+  sfxRingOut,
   sfxBumperHit,
   sfxOverdrive,
   sfxCombo,
@@ -184,28 +185,27 @@ export class BouncebackEngine {
     // Match
     this.match = new Match();
     this.match.onGoal = (team, points, combo, bounces) => {
-      sfxGoal();
+      sfxRingOut();
       if (combo > 1) sfxCombo(combo);
       const defTeam = 1 - team;
       // Trigger violent cartoon pendulum swing on the defending team's gong that got struck!
       const struckGong = this.gongs.find((g) => g.team === defTeam);
       if (struckGong) struckGong.hit();
 
-      const goalZ = defTeam === 0 ? -C.ARENA_L * 0.5 + 2.2 : C.ARENA_L * 0.5 - 2.2;
-      this.juice.trigger("gong", { team, x: 0, y: 3.0, z: goalZ });
+      this.juice.trigger("ringout", { team, x: 0, y: 1.5, z: 0 });
       this.arenaController?.onGoalCelebration(team);
-      const teamName = team === 0 ? "CYAN" : "CORAL";
-      let txt = `${teamName} GONG SCORE +${points}!`;
-      if (bounces >= 2) txt += ` ${bounces}x BOUNCE!`;
-      if (combo > 1) txt += ` COMBO x${combo}!`;
+      const teamName = team === 0 ? "TEAM CYAN" : "TEAM CORAL";
+      let txt = `${teamName} RING OUT K.O.! +${points}`;
+      if (bounces >= 2) txt += ` [${bounces}x BOUNCE]`;
+      if (combo > 1) txt += ` [COMBO x${combo}]`;
       this.showAnnouncement(txt);
     };
     this.match.onPhaseChange = (phase) => {
       if (phase === 2) {
-        this.showAnnouncement("PHASE 2 — DOUBLE GONG VALUE!");
+        this.showAnnouncement("PHASE 2 — DOUBLE K.O. VALUE!");
         this.activatePhase2();
       } else if (phase === 3) {
-        this.showAnnouncement("OVERDRIVE — TRIPLE GONG!");
+        this.showAnnouncement("OVERDRIVE — TRIPLE K.O. POINTS!");
       }
     };
     this.match.onOverdrive = () => {
@@ -1042,8 +1042,30 @@ export class BouncebackEngine {
         ent.mesh.position.z = ent.z;
         ent.mesh.rotation.order = "YXZ";
 
-        // Visual bounce & comedic tumble on Y when launched
-        if (ent.launched) {
+        // Visual bounce, comedic abyss tumble, or sky drop
+        if (ent.isFalling) {
+          // Plunging down into the bottomless abyss!
+          ent.mesh.position.y = ent.y + footOffset;
+          ent.mesh.rotation.x += dt * 24.0;
+          ent.mesh.rotation.z += dt * 20.0;
+          if (u.leftArm && u.rightArm) {
+            u.leftArm.rotation.set(-2.8, Math.sin(now * 0.05) * 1.5, 1.4);
+            u.rightArm.rotation.set(-2.8, -Math.sin(now * 0.05) * 1.5, -1.4);
+          }
+          if (u.leftLeg && u.rightLeg) {
+            u.leftLeg.rotation.x = Math.sin(now * 0.06) * 1.8;
+            u.rightLeg.rotation.x = -Math.sin(now * 0.06) * 1.8;
+          }
+        } else if (ent.respawning) {
+          // Dropping in from sky on respawn
+          ent.mesh.position.y = groundH + ent.y + footOffset;
+          ent.mesh.rotation.x = 0;
+          ent.mesh.rotation.z = 0;
+          if (u.leftArm && u.rightArm) {
+            u.leftArm.rotation.set(0, 0, 1.4);
+            u.rightArm.rotation.set(0, 0, -1.4);
+          }
+        } else if (ent.launched) {
           // High dramatic over-the-top parabolic flight arc (lasts ~2.4s, hard cap 3.0s max)
           const launchDuration = 2.4;
           const tProgress = Math.min(1.0, (ent.launchTimer || 0) / launchDuration);

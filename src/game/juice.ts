@@ -190,16 +190,25 @@ export class JuiceSystem {
       case "onepunch":
         this.addTrauma(1.0);
         this.hitStopTimer = 0.085;
-        this.spawnComicPopup("💥 ONE PUNCH!!", x, y + 1.2, z, "rainbow");
+        this.spawnComicPopup("ONE PUNCH!!", x, y + 1.2, z, "rainbow");
         this.spawnShockwave(x, 0.2, z, 0xff002b, 6.5);
         this.spawnHitSparks(x, y + 0.6, z, 0xffd700, 42);
+        break;
+
+      case "ringout":
+        this.addTrauma(0.95);
+        this.triggerSlowMo(0.5, 0.2);
+        this.spawnComicPopup("RING OUT! K.O.!!", x, y + 1.8, z, "rainbow");
+        this.spawnShockwave(x, 0.2, z, (d.team ?? 0) === 0 ? 0x27e5ff : 0xff5268, 8.5);
+        this.spawnHitSparks(x, y + 0.5, z, 0xffd700, 45);
+        this.spawnGoalCelebration(d.team ?? 0, x, z);
         break;
 
       case "gong":
       case "goal":
         this.addTrauma(0.95);
         this.triggerSlowMo(0.75, 0.2);
-        this.spawnComicPopup("🔔 GONG!!", x, y + 2.0, z, "gold");
+        this.spawnComicPopup("GONG!!", x, y + 2.0, z, "gold");
         this.spawnShockwave(x, 0.2, z, 0xffd700, 7.5);
         this.spawnHitSparks(x, y + 0.5, z, 0xffea00, 38);
         this.spawnGoalCelebration(d.team ?? 0, x, z);
