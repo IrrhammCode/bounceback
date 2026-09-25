@@ -298,16 +298,16 @@ export class BouncebackEngine {
         costume: C.ROSTER_CYAN[0].costume,
       },
       {
-        x: -6.5,
-        z: -halfL * 0.44,
+        x: -2.8,
+        z: -halfL * 0.56,
         team: 0,
         isPlayer: false,
         number: C.ROSTER_CYAN[1].number,
         costume: C.ROSTER_CYAN[1].costume,
       },
       {
-        x: 6.5,
-        z: -halfL * 0.44,
+        x: 2.8,
+        z: -halfL * 0.56,
         team: 0,
         isPlayer: false,
         number: C.ROSTER_CYAN[2].number,
@@ -323,16 +323,16 @@ export class BouncebackEngine {
         costume: C.ROSTER_CORAL[0].costume,
       },
       {
-        x: -6.5,
-        z: halfL * 0.44,
+        x: -2.8,
+        z: halfL * 0.56,
         team: 1,
         isPlayer: false,
         number: C.ROSTER_CORAL[1].number,
         costume: C.ROSTER_CORAL[1].costume,
       },
       {
-        x: 6.5,
-        z: halfL * 0.44,
+        x: 2.8,
+        z: halfL * 0.56,
         team: 1,
         isPlayer: false,
         number: C.ROSTER_CORAL[2].number,
@@ -474,23 +474,23 @@ export class BouncebackEngine {
         this.introLookTarget.set(0, 2.0, -4.0);
         break;
       case "cyan_team":
-        // Dynamic low-angle hero showcase in front of Team Cyan
-        this.introCamTarget.set(0, 3.4, -9.8);
-        this.introLookTarget.set(0, 1.4, -16.74);
+        // Dynamic close-up hero showcase directly in front of Team Cyan
+        this.introCamTarget.set(0, 1.85, -13.5);
+        this.introLookTarget.set(0, 1.35, -17.8);
         break;
       case "vs_clash":
-        // Midfield sweep over rotating sweeper arm
-        this.introCamTarget.set(0, 3.5, 0);
-        this.introLookTarget.set(0, 2.0, 14.0);
+        // Low-angle dramatic sweep over the elevated midfield battle deck looking across both teams
+        this.introCamTarget.set(-10.5, 3.2, 0);
+        this.introLookTarget.set(0, 1.4, 0);
         break;
       case "coral_team":
-        // Dynamic rival showcase in front of Team Coral
-        this.introCamTarget.set(0, 3.4, 9.8);
-        this.introLookTarget.set(0, 1.4, 16.74);
+        // Dynamic close-up rival showcase directly in front of Team Coral
+        this.introCamTarget.set(0, 1.85, 13.5);
+        this.introLookTarget.set(0, 1.35, 17.8);
         break;
       case "countdown":
         // Sweeping up and dropping into exact 3rd-person gameplay position behind player
-        this.introCamTarget.set(0, 8.5, -31.0);
+        this.introCamTarget.set(0, 9.0, -C.ARENA_L * 0.5 - 2.0);
         this.introLookTarget.set(0, 1.2, -11.0);
         break;
     }
@@ -524,11 +524,11 @@ export class BouncebackEngine {
     const halfL = C.ARENA_L * 0.5;
     const spawnPositions = [
       { x: 0, z: -halfL * 0.62 },
-      { x: -6.5, z: -halfL * 0.44 },
-      { x: 6.5, z: -halfL * 0.44 },
+      { x: -2.8, z: -halfL * 0.56 },
+      { x: 2.8, z: -halfL * 0.56 },
       { x: 0, z: halfL * 0.62 },
-      { x: -6.5, z: halfL * 0.44 },
-      { x: 6.5, z: halfL * 0.44 },
+      { x: -2.8, z: halfL * 0.56 },
+      { x: 2.8, z: halfL * 0.56 },
     ];
     for (let i = 0; i < this.entities.length && i < spawnPositions.length; i++) {
       const ent = this.entities[i];
@@ -546,6 +546,16 @@ export class BouncebackEngine {
         const footOffset = u.footOffset || 0.25;
         ent.mesh.position.set(sp.x, getArenaHeight(sp.x, sp.z) + footOffset, sp.z);
         ent.mesh.rotation.set(0, ent.team === 1 ? Math.PI : 0, 0);
+        if (u.leftArm) {
+          u.leftArm.position.set(-0.36, 0.06, 0.06);
+          u.leftArm.rotation.set(-0.25, 0, 0.35);
+        }
+        if (u.rightArm) {
+          u.rightArm.position.set(0.36, 0.06, 0.06);
+          u.rightArm.rotation.set(-0.25, 0, -0.35);
+        }
+        if (u.torso) u.torso.rotation.set(0, 0, 0);
+        if (u.head) u.head.rotation.set(0, 0, 0);
       }
     }
   }
@@ -576,19 +586,144 @@ export class BouncebackEngine {
       const baseH = getArenaHeight(ent.x, ent.z);
 
       let jumpY = 0;
-      if (this.introPhase === "cyan_team" && ent.team === 0) {
-        jumpY = Math.abs(Math.sin(now * 6.0 + i * 1.5)) * 0.35;
-      } else if (this.introPhase === "coral_team" && ent.team === 1) {
-        jumpY = Math.abs(Math.sin(now * 6.0 + i * 1.5)) * 0.35;
+      let rotY = ent.team === 1 ? Math.PI : 0;
+      let rotX = 0;
+      let rotZ = 0;
+
+      // ─── TEAM CYAN ANIMATIONS (Phase: cyan_team) ───
+      if (ent.team === 0) {
+        const isCyanPhase = this.introPhase === "cyan_team";
+        const animSpeed = isCyanPhase ? 1.0 : 0.45;
+        const t = now * animSpeed;
+
+        if (i === 0) {
+          // ── PLAYER (Captain #7 YOU): Martial Arts Shadowboxing Combo & Flex! ──
+          const punchCycle = (t * 5.0) % (Math.PI * 2);
+          const leftPunch = Math.max(0, Math.sin(punchCycle));
+          const rightPunch = Math.max(0, -Math.sin(punchCycle));
+          jumpY = isCyanPhase ? Math.abs(Math.sin(t * 7.5)) * 0.12 : 0;
+
+          if (u.leftArm) {
+            u.leftArm.position.z = 0.06 + leftPunch * 0.75;
+            u.leftArm.rotation.set(-0.25 - leftPunch * 0.8, leftPunch * 0.35, 0.35);
+          }
+          if (u.rightArm) {
+            u.rightArm.position.z = 0.06 + rightPunch * 0.85;
+            u.rightArm.rotation.set(-0.25 - rightPunch * 0.8, -rightPunch * 0.35, -0.35);
+          }
+          if (u.torso) {
+            u.torso.rotation.y = (leftPunch - rightPunch) * 0.35;
+          }
+          if (u.head) {
+            u.head.rotation.x = Math.sin(t * 5.0) * 0.1;
+            u.head.rotation.y = -(leftPunch - rightPunch) * 0.15;
+          }
+          if (u.flames && u.flames.length >= 2) {
+            const flameScale = 1.0 + (leftPunch + rightPunch) * 2.2;
+            u.flames[0].scale.set(flameScale, flameScale, flameScale);
+            u.flames[1].scale.set(flameScale, flameScale, flameScale);
+          }
+        } else if (i === 1) {
+          // ── DJ BOUNCE (#1): Bouncing to the Beat & Waving Arm! ──
+          jumpY = isCyanPhase ? Math.abs(Math.sin(t * 8.0)) * 0.28 : Math.abs(Math.sin(t * 3.0)) * 0.08;
+          rotY += Math.sin(t * 3.5) * 0.15;
+
+          if (u.head) {
+            u.head.rotation.x = Math.sin(t * 8.0) * 0.22;
+            u.head.rotation.z = Math.sin(t * 4.0) * 0.14;
+          }
+          if (u.leftArm) {
+            u.leftArm.rotation.set(-1.8 + Math.sin(t * 8.0) * 0.3, 0.2, 0.4 + Math.cos(t * 8.0) * 0.25);
+          }
+          if (u.rightArm) {
+            u.rightArm.rotation.set(-0.8, Math.sin(t * 8.0) * 0.4, -0.6);
+          }
+          if (u.torso) {
+            u.torso.rotation.z = Math.sin(t * 4.0) * 0.1;
+          }
+        } else if (i === 2) {
+          // ── NINJA BEAN (#2): Low Agile Ninja Crouch & Rapid Hand Seals! ──
+          jumpY = isCyanPhase ? Math.abs(Math.sin(t * 5.0)) * 0.2 : 0;
+          const sealCycle = Math.sin(t * 11.0);
+
+          if (u.leftArm) {
+            u.leftArm.rotation.set(-1.2 + sealCycle * 0.4, 0.6, 0.3);
+          }
+          if (u.rightArm) {
+            u.rightArm.rotation.set(-1.2 - sealCycle * 0.4, -0.6, -0.3);
+          }
+          if (u.torso) {
+            u.torso.rotation.y = Math.sin(t * 6.0) * 0.22;
+            u.torso.rotation.x = 0.12;
+          }
+          if (u.head) {
+            u.head.rotation.y = Math.sin(t * 4.0) * 0.18;
+          }
+        }
       }
 
-      ent.mesh.position.set(
-        ent.x,
-        baseH + footOffset + jumpY,
-        ent.z
-      );
-      const baseRotY = ent.team === 1 ? Math.PI : 0;
-      ent.mesh.rotation.set(0, baseRotY, 0);
+      // ─── TEAM CORAL ANIMATIONS (Phase: coral_team) ───
+      else if (ent.team === 1) {
+        const isCoralPhase = this.introPhase === "coral_team";
+        const animSpeed = isCoralPhase ? 1.0 : 0.45;
+        const t = now * animSpeed;
+
+        if (i === 3) {
+          // ── REX CRUSH (#1): Massive Gorilla Chest Pounding & Stomps! ──
+          const poundCycle = Math.sin(t * 9.0);
+          jumpY = isCoralPhase ? Math.abs(Math.sin(t * 6.0)) * 0.16 : 0;
+
+          if (u.leftArm) {
+            u.leftArm.rotation.set(-1.5 + poundCycle * 0.5, 0.5, 0.3);
+          }
+          if (u.rightArm) {
+            u.rightArm.rotation.set(-1.5 - poundCycle * 0.5, -0.5, -0.3);
+          }
+          if (u.torso) {
+            u.torso.rotation.x = Math.sin(t * 4.5) * 0.15;
+          }
+          if (u.head) {
+            u.head.rotation.x = -0.25 + Math.sin(t * 4.5) * 0.18;
+          }
+        } else if (i === 4) {
+          // ── HOPPER MAD (#2): Wild Bouncing & Flailing Joy! ──
+          jumpY = isCoralPhase ? Math.abs(Math.sin(t * 11.0)) * 0.42 : Math.abs(Math.sin(t * 4.0)) * 0.1;
+          const flail = Math.sin(t * 11.0);
+
+          if (u.leftArm) {
+            u.leftArm.rotation.set(-0.8 + flail * 0.7, 0, 0.8 + flail * 0.35);
+          }
+          if (u.rightArm) {
+            u.rightArm.rotation.set(-0.8 - flail * 0.7, 0, -0.8 - flail * 0.35);
+          }
+          if (u.bunnyEars) {
+            u.bunnyEars.rotation.z = flail * 0.3;
+          }
+          if (u.propeller) {
+            u.propeller.rotation.y += 0.45;
+          }
+        } else if (i === 5) {
+          // ── SHADY VIP (#3): Cool Confident Arms-Crossed Swagger! ──
+          jumpY = isCoralPhase ? Math.sin(t * 3.0) * 0.05 : 0;
+          rotY += Math.sin(t * 2.0) * 0.12;
+
+          if (u.leftArm) {
+            u.leftArm.rotation.set(-1.1, 0.7, 0.4);
+          }
+          if (u.rightArm) {
+            u.rightArm.rotation.set(-1.1, -0.7, -0.4);
+          }
+          if (u.head) {
+            u.head.rotation.set(0.08, Math.sin(t * 2.5) * 0.2, 0.08);
+          }
+          if (u.torso) {
+            u.torso.rotation.y = Math.sin(t * 2.0) * 0.1;
+          }
+        }
+      }
+
+      ent.mesh.position.set(ent.x, baseH + footOffset + jumpY, ent.z);
+      ent.mesh.rotation.set(rotX, rotY, rotZ);
     }
   }
 
@@ -815,9 +950,15 @@ export class BouncebackEngine {
 
     // ─── 2. TV Intro Cutscene Camera Swoops ───
     if (this.appMode === "intro") {
-      const lerpSpeed = Math.min(1.0, (this.introPhase === "vs_clash" ? 6.5 : 4.2) * dt);
-      this.camera.position.lerp(this.introCamTarget, lerpSpeed);
-      this.camLookTarget.lerp(this.introLookTarget, lerpSpeed);
+      const lerpSpeed = Math.min(1.0, (this.introPhase === "vs_clash" ? 6.5 : 4.5) * dt);
+      const camTarget = this.introCamTarget.clone();
+      const lookTarget = this.introLookTarget.clone();
+      if (this.introPhase === "cyan_team" || this.introPhase === "coral_team") {
+        camTarget.x += Math.sin(now * 0.001 * 1.4) * 0.75;
+        camTarget.y += Math.cos(now * 0.001 * 1.0) * 0.12;
+      }
+      this.camera.position.lerp(camTarget, lerpSpeed);
+      this.camLookTarget.lerp(lookTarget, lerpSpeed);
       this.camera.lookAt(this.camLookTarget);
 
       this.arenaController?.update(dt, now * 0.001);

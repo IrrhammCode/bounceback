@@ -1,13 +1,12 @@
 /**
  * BOUNCE TV — 3v3 Live Broadcast Match Intro Cutscene & Roster Showcase
  *
- * Features:
- * - Retro-arcade TV scanlines, "ON AIR" broadcast badges, and lower-third ticker
- * - Cinematic sequential presentation of Team Cyan (our team) and Team Coral (rivals)
- * - Animated fighter cards with portraits, nicknames, quotes, and quirky stats
- * - Dynamic "VS" clash explosion with lightning sparks
- * - Dramatic 3... 2... 1... BOUNCE!! countdown with broadcast SFX
- * - Instant Skip button via mouse or Space/Esc key
+ * Professional Esports / Fighting Game Broadcast Intro:
+ * - Unobstructed 3D viewport showcasing the live animated 3D characters
+ * - Floating holographic overhead nameplates pointing to each player model
+ * - Sleek broadcast lower-third lineup ticker docked to the bottom
+ * - High-impact VS clash & dramatic 3... 2... 1... BOUNCE!! countdown
+ * - 100% English broadcast dialog and quotes
  */
 import { useEffect, useState, useCallback } from "react";
 import { ROSTER_CYAN, ROSTER_CORAL, type FighterProfile } from "../game/config";
@@ -55,20 +54,20 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
     let t: NodeJS.Timeout;
 
     if (phase === "opener") {
-      t = setTimeout(() => setPhase("cyan_team"), 1200);
+      t = setTimeout(() => setPhase("cyan_team"), 1300);
     } else if (phase === "cyan_team") {
       t = setTimeout(() => {
         setPhase("vs_clash");
         sfxBoxingBell();
-      }, 3000);
+      }, 3400);
     } else if (phase === "vs_clash") {
-      t = setTimeout(() => setPhase("coral_team"), 1200);
+      t = setTimeout(() => setPhase("coral_team"), 1300);
     } else if (phase === "coral_team") {
       t = setTimeout(() => {
         setPhase("countdown");
         setCountdownNum(3);
         sfxTVCountdown(3);
-      }, 3000);
+      }, 3400);
     } else if (phase === "countdown") {
       if (countdownNum > 1) {
         t = setTimeout(() => {
@@ -106,36 +105,61 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
           <span className="live-dot" />
           <span className="live-text">LIVE BROADCAST</span>
         </div>
-        <div className="tv-channel-title">BOUNCE TV: 3v3 REALITY SHOWDOWN</div>
+        <div className="tv-channel-title">BOUNCE TV // 3v3 REALITY SHOWDOWN</div>
         <button className="tv-skip-btn" onClick={onSkip} title="Skip Intro (Space / Esc)">
           SKIP INTRO <span className="key-hint">[SPACE]</span>
         </button>
       </div>
 
-      {/* Phase 1: Opener Card */}
+      {/* Phase 1: Opener Banner (Minimalist, doesn't block viewport) */}
       {phase === "opener" && (
         <div className="tv-opener-banner animate-pop">
           <div className="tv-badge-pill">OFFICIAL MATCH #420</div>
           <h1 className="tv-hero-title">RING-OUT K.O. CHAMPIONSHIP</h1>
-          <p className="tv-hero-subtitle">3 VS 3 REALITY TV TOURNAMENT</p>
+          <p className="tv-hero-subtitle">3 VS 3 OLYMPIC ARENA CLASH</p>
         </div>
       )}
 
-      {/* Phase 2: Team Cyan Presentation */}
+      {/* Phase 2: Team Cyan Presentation — 3D Character Spotlight with Floating Badges & Sleek Lower-Third */}
       {phase === "cyan_team" && (
-        <div className="tv-roster-showcase cyan-theme">
-          <div className="team-banner cyan animate-slide-down">
-            <span className="team-tag">TEAM CYAN</span>
-            <h2 className="team-name">THE BOUNCING BLUES</h2>
-            <p className="team-slogan">Defending North Platform • Fast, Punchy & Relentless</p>
+        <>
+          {/* Floating Overhead Holographic Tags Pointing Directly to the 3D Players */}
+          <div className="tv-overhead-markers">
+            <div className="overhead-tag left animate-pop">
+              <span className="tag-label">DJ BOUNCE #01</span>
+              <span className="tag-arrow">▼</span>
+            </div>
+            <div className="overhead-tag center captain animate-pop">
+              <span className="captain-star">★ CAPTAIN ★</span>
+              <span className="tag-label">YOU #07</span>
+              <span className="tag-arrow">▼</span>
+            </div>
+            <div className="overhead-tag right animate-pop">
+              <span className="tag-label">NINJA BEAN #02</span>
+              <span className="tag-arrow">▼</span>
+            </div>
           </div>
 
-          <div className="fighter-cards-grid">
-            {ROSTER_CYAN.map((f, idx) => (
-              <FighterCard key={f.id} fighter={f} delay={idx * 0.15} team="cyan" />
-            ))}
+          {/* Sleek Broadcast Lower-Third Lineup (Docked at bottom, unobstructed 3D view) */}
+          <div className="tv-lower-third cyan animate-slide-up">
+            <div className="lower-third-header">
+              <span className="team-pill cyan">TEAM CYAN // THE BOUNCING BLUES</span>
+              <span className="team-tagline">North Deck Defenders • Fast, Punchy &amp; Relentless</span>
+            </div>
+
+            <div className="roster-chips-row">
+              {ROSTER_CYAN.map((f, idx) => (
+                <FighterChip
+                  key={f.id}
+                  fighter={f}
+                  delay={idx * 0.1}
+                  team="cyan"
+                  isCaptain={idx === 0}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* Phase 3: Explosive VS Clash */}
@@ -147,25 +171,50 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
             <h1 className="vs-text">VS</h1>
           </div>
           <div className="vs-lightning-right" />
-          <div className="vs-caption">WHO WILL SURVIVE THE RING?!</div>
+          <div className="vs-caption">TEAM CYAN  vs  TEAM CORAL // WHO SURVIVES THE RING?!</div>
         </div>
       )}
 
-      {/* Phase 4: Team Coral Presentation */}
+      {/* Phase 4: Team Coral Presentation — 3D Character Spotlight with Floating Badges & Sleek Lower-Third */}
       {phase === "coral_team" && (
-        <div className="tv-roster-showcase coral-theme">
-          <div className="team-banner coral animate-slide-down">
-            <span className="team-tag">TEAM CORAL</span>
-            <h2 className="team-name">THE RED CRUSHERS</h2>
-            <p className="team-slogan">Defending South Platform • Heavy Hitters & Chaos Bringers</p>
+        <>
+          {/* Floating Overhead Holographic Tags Pointing Directly to the 3D Players */}
+          <div className="tv-overhead-markers coral">
+            <div className="overhead-tag left animate-pop">
+              <span className="tag-label">HOPPER MAD #02</span>
+              <span className="tag-arrow">▼</span>
+            </div>
+            <div className="overhead-tag center captain coral animate-pop">
+              <span className="captain-star">★ RIVAL CAPTAIN ★</span>
+              <span className="tag-label">REX CRUSH #01</span>
+              <span className="tag-arrow">▼</span>
+            </div>
+            <div className="overhead-tag right animate-pop">
+              <span className="tag-label">SHADY VIP #03</span>
+              <span className="tag-arrow">▼</span>
+            </div>
           </div>
 
-          <div className="fighter-cards-grid">
-            {ROSTER_CORAL.map((f, idx) => (
-              <FighterCard key={f.id} fighter={f} delay={idx * 0.15} team="coral" />
-            ))}
+          {/* Sleek Broadcast Lower-Third Lineup */}
+          <div className="tv-lower-third coral animate-slide-up">
+            <div className="lower-third-header">
+              <span className="team-pill coral">TEAM CORAL // THE RED CRUSHERS</span>
+              <span className="team-tagline">South Deck Challengers • Heavy Hitters &amp; Chaos Bringers</span>
+            </div>
+
+            <div className="roster-chips-row">
+              {ROSTER_CORAL.map((f, idx) => (
+                <FighterChip
+                  key={f.id}
+                  fighter={f}
+                  delay={idx * 0.1}
+                  team="coral"
+                  isCaptain={idx === 0}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* Phase 5: Live Dramatic Countdown */}
@@ -191,7 +240,7 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
         <div className="ticker-label">BREAKING:</div>
         <div className="ticker-content">
           <span>
-            TARGET GOAL: KNOCK OPPONENTS OFF THE ARENA • PUNCH WITH AUTO-AIM ASSIST • BEWARE OF THE ROTATING SWEEPER ARM • AUDIENCE DISASTER VOTES TRIGGER EVERY 30 SECONDS!
+            TARGET OBJECTIVE: KNOCK OPPONENTS OFF THE ARENA INTO THE ABYSS • AUTO-AIM PUNCH LOCKS TARGETS • BEWARE THE ROTATING SWEEPER ARM • AUDIENCE DISASTER VOTES FIRE EVERY 30 SECONDS!
           </span>
         </div>
       </div>
@@ -199,55 +248,38 @@ export default function TVIntroOverlay({ onComplete, onSkip, onPhaseChange }: TV
   );
 }
 
-function FighterCard({
+function FighterChip({
   fighter,
   delay,
   team,
+  isCaptain,
 }: {
   fighter: FighterProfile;
   delay: number;
   team: "cyan" | "coral";
+  isCaptain: boolean;
 }) {
   return (
     <div
-      className={`fighter-card ${team} animate-card-pop`}
+      className={`fighter-chip ${team} ${isCaptain ? "captain-chip" : ""} animate-card-pop`}
       style={{ animationDelay: `${delay}s` }}
     >
-      <div className="card-top">
-        <span className="fighter-jersey">#{fighter.number}</span>
-        <span className="fighter-badge">{fighter.id === "cyan_player" ? "CAPTAIN" : "FIGHTER"}</span>
+      <div className="chip-badge-col">
+        <span className="chip-num">#{fighter.number < 10 ? `0${fighter.number}` : fighter.number}</span>
+        <span className="chip-role">{isCaptain ? "CAPTAIN" : "FIGHTER"}</span>
       </div>
 
-      <div className="card-avatar-wrap">
-        <div className="card-avatar-halo" />
-        <span className="card-avatar-icon font-mono font-bold text-2xl tracking-wider">{fighter.avatarIcon}</span>
-      </div>
-
-      <div className="card-info">
-        <h3 className="card-name">{fighter.name}</h3>
-        <p className="card-title">{fighter.title}</p>
-        <p className="card-quote">"{fighter.quote}"</p>
-      </div>
-
-      {/* Fighter Mini Stats */}
-      <div className="card-stats">
-        <div className="stat-row">
-          <span>PUNCH</span>
-          <div className="stat-bars">
-            <div className="stat-meter" style={{ width: `${fighter.statPunch * 20}%` }} />
-          </div>
+      <div className="chip-info-col">
+        <div className="chip-name-row">
+          <span className="chip-name">{fighter.name}</span>
+          <span className="chip-title">{fighter.title}</span>
         </div>
-        <div className="stat-row">
-          <span>SPEED</span>
-          <div className="stat-bars">
-            <div className="stat-meter" style={{ width: `${fighter.statSpeed * 20}%` }} />
-          </div>
-        </div>
-        <div className="stat-row">
-          <span>CHAOS</span>
-          <div className="stat-bars">
-            <div className="stat-meter" style={{ width: `${fighter.statChaos * 20}%` }} />
-          </div>
+        <p className="chip-quote">"{fighter.quote}"</p>
+      </div>
+
+      <div className="chip-stat-col">
+        <div className="chip-spec-tag">
+          {fighter.statPunch >= 5 ? "POWER HITTER" : fighter.statSpeed >= 5 ? "HIGH AGILITY" : "BALANCED"}
         </div>
       </div>
     </div>

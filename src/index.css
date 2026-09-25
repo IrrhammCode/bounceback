@@ -1098,9 +1098,11 @@ body,
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  background: radial-gradient(circle at center, rgba(17, 24, 39, 0.88) 0%, rgba(5, 8, 16, 0.98) 100%);
+  /* Crystal-clear center so the 3D player models and animations are 100% visible */
+  background: linear-gradient(180deg, rgba(8, 12, 22, 0.45) 0%, transparent 18%, transparent 66%, rgba(8, 12, 22, 0.8) 100%);
   overflow: hidden;
   user-select: none;
+  pointer-events: auto;
   animation: tvFadeIn 0.3s ease-out;
 }
 
@@ -1111,20 +1113,20 @@ body,
   pointer-events: none;
   background: repeating-linear-gradient(
     0deg,
-    rgba(0, 0, 0, 0.22) 0px,
-    rgba(0, 0, 0, 0.22) 1px,
+    rgba(0, 0, 0, 0.16) 0px,
+    rgba(0, 0, 0, 0.16) 1px,
     transparent 1px,
     transparent 3px
   );
   z-index: 2;
-  opacity: 0.65;
+  opacity: 0.55;
 }
 
 .tv-vignette {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.9), inset 0 0 40px rgba(39, 229, 255, 0.15);
+  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.75), inset 0 0 35px rgba(39, 229, 255, 0.12);
   z-index: 2;
 }
 
@@ -1252,191 +1254,274 @@ body,
   margin-top: 8px;
 }
 
-/* Phase 2 & 4: Roster Showcase */
-.tv-roster-showcase {
-  position: relative;
-  z-index: 10;
-  width: 100%;
-  max-width: 1000px;
-  margin: auto 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  padding: 0 20px;
-}
-
-.team-banner {
-  text-align: center;
-  padding: 8px 24px;
-  border-radius: 12px;
-}
-.team-banner.cyan {
-  background: linear-gradient(135deg, rgba(39, 229, 255, 0.2) 0%, rgba(39, 229, 255, 0.04) 100%);
-  border: 1.5px solid rgba(39, 229, 255, 0.5);
-  box-shadow: 0 0 30px rgba(39, 229, 255, 0.25);
-}
-.team-banner.coral {
-  background: linear-gradient(135deg, rgba(255, 82, 104, 0.2) 0%, rgba(255, 82, 104, 0.04) 100%);
-  border: 1.5px solid rgba(255, 82, 104, 0.5);
-  box-shadow: 0 0 30px rgba(255, 82, 104, 0.25);
-}
-
-.team-banner .team-tag {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.15em;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-.team-banner.cyan .team-tag {
-  color: #27e5ff;
-}
-.team-banner.coral .team-tag {
-  color: #ff5268;
-}
-
-.team-banner .team-name {
-  font-family: var(--font-head);
-  font-size: clamp(1.4rem, 3.2vw, 2.2rem);
-  font-weight: 900;
-  letter-spacing: 0.04em;
-  margin: 2px 0 0;
-  color: #fff;
-}
-.team-banner .team-slogan {
-  font-size: 0.84rem;
-  color: var(--color-bb-muted);
-  margin-top: 2px;
-}
-
-.fighter-cards-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  width: 100%;
-}
-
-.fighter-card {
-  position: relative;
-  background: rgba(15, 23, 42, 0.85);
-  border-radius: 16px;
-  padding: 16px;
-  border: 2px solid;
-  backdrop-filter: blur(12px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
-  transition: transform 0.2s;
-}
-.fighter-card.cyan {
-  border-color: rgba(39, 229, 255, 0.6);
-  box-shadow: 0 0 25px rgba(39, 229, 255, 0.25);
-}
-.fighter-card.coral {
-  border-color: rgba(255, 82, 104, 0.6);
-  box-shadow: 0 0 25px rgba(255, 82, 104, 0.25);
-}
-
-.fighter-card .card-top {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 800;
-  margin-bottom: 6px;
-}
-.fighter-card.cyan .fighter-jersey {
-  color: #27e5ff;
-}
-.fighter-card.coral .fighter-jersey {
-  color: #ff5268;
-}
-.fighter-card .fighter-badge {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 2px 8px;
-  border-radius: 10px;
-  color: #ffd166;
-}
-
-.card-avatar-wrap {
-  position: relative;
-  width: 72px;
-  height: 72px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 4px 0 10px;
-}
-.card-avatar-halo {
+/* Floating Overhead 3D Player Name Tags */
+.tv-overhead-markers {
   position: absolute;
   inset: 0;
-  border-radius: 50%;
-  filter: blur(8px);
+  pointer-events: none;
+  z-index: 12;
 }
-.fighter-card.cyan .card-avatar-halo {
-  background: rgba(39, 229, 255, 0.4);
+.overhead-tag {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  transform: translate(-50%, -50%);
+  animation: tagBob 2.2s infinite ease-in-out;
 }
-.fighter-card.coral .card-avatar-halo {
-  background: rgba(255, 82, 104, 0.4);
+.overhead-tag.left {
+  left: 27%;
+  top: 36%;
 }
-.card-avatar-icon {
-  position: relative;
-  font-size: 2.8rem;
-  z-index: 2;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+.overhead-tag.center {
+  left: 50%;
+  top: 26%;
+}
+.overhead-tag.right {
+  left: 73%;
+  top: 36%;
+}
+.overhead-tag .tag-badge,
+.overhead-tag .captain-star {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #ffd166;
+  color: #0f172a;
+  letter-spacing: 0.08em;
+  box-shadow: 0 0 10px rgba(255, 209, 102, 0.5);
+  margin-bottom: 2px;
+}
+.overhead-tag.coral .captain-star {
+  background: #f43f5e;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(244, 63, 94, 0.6);
+}
+.overhead-tag .tag-label {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  padding: 4px 14px;
+  border-radius: 20px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1.5px solid #27e5ff;
+  color: #fff;
+  box-shadow: 0 0 16px rgba(39, 229, 255, 0.4);
+  white-space: nowrap;
+}
+.overhead-tag.coral .tag-label,
+.tv-overhead-markers.coral .overhead-tag .tag-label {
+  border-color: #ff5268;
+  box-shadow: 0 0 16px rgba(255, 82, 104, 0.4);
+}
+.overhead-tag .tag-arrow {
+  font-size: 0.72rem;
+  color: #27e5ff;
+  filter: drop-shadow(0 0 6px rgba(39, 229, 255, 0.8));
+  animation: arrowPulse 1s infinite alternate;
+}
+.overhead-tag.coral .tag-arrow,
+.tv-overhead-markers.coral .overhead-tag .tag-arrow {
+  color: #ff5268;
+  filter: drop-shadow(0 0 6px rgba(255, 82, 104, 0.8));
 }
 
-.card-info {
-  width: 100%;
-  margin-bottom: 12px;
+@keyframes tagBob {
+  0%, 100% {
+    transform: translate(-50%, -50%);
+  }
+  50% {
+    transform: translate(-50%, -56%);
+  }
 }
-.card-name {
+@keyframes arrowPulse {
+  0% {
+    transform: translateY(0);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(3px);
+    opacity: 1;
+  }
+}
+
+/* Sleek Broadcast Lower-Third Lineup (Unobstructed View) */
+.tv-lower-third {
+  position: absolute;
+  bottom: 38px;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0 24px;
+  z-index: 15;
+}
+.lower-third-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.team-pill {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 0.88rem;
+  letter-spacing: 0.08em;
+  padding: 4px 16px;
+  border-radius: 20px;
+  text-transform: uppercase;
+}
+.team-pill.cyan {
+  background: rgba(39, 229, 255, 0.2);
+  border: 1.5px solid #27e5ff;
+  color: #27e5ff;
+  box-shadow: 0 0 14px rgba(39, 229, 255, 0.35);
+}
+.team-pill.coral {
+  background: rgba(255, 82, 104, 0.2);
+  border: 1.5px solid #ff5268;
+  color: #ff5268;
+  box-shadow: 0 0 14px rgba(255, 82, 104, 0.35);
+}
+.team-tagline {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #94a3b8;
+  letter-spacing: 0.04em;
+}
+
+.roster-chips-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+  max-width: 1100px;
+}
+
+.fighter-chip {
+  position: relative;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  border-radius: 12px;
+  padding: 8px 14px;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.fighter-chip.cyan {
+  border-color: rgba(39, 229, 255, 0.4);
+}
+.fighter-chip.coral {
+  border-color: rgba(255, 82, 104, 0.4);
+}
+.fighter-chip.captain-chip.cyan {
+  border-color: #27e5ff;
+  background: linear-gradient(135deg, rgba(39, 229, 255, 0.16) 0%, rgba(15, 23, 42, 0.9) 100%);
+  box-shadow: 0 0 20px rgba(39, 229, 255, 0.3);
+}
+.fighter-chip.captain-chip.coral {
+  border-color: #ff5268;
+  background: linear-gradient(135deg, rgba(255, 82, 104, 0.16) 0%, rgba(15, 23, 42, 0.9) 100%);
+  box-shadow: 0 0 20px rgba(255, 82, 104, 0.3);
+}
+
+.chip-badge-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 44px;
+}
+.chip-num {
   font-family: var(--font-head);
   font-weight: 900;
   font-size: 1.15rem;
-  color: #fff;
-  margin: 0;
+  line-height: 1;
 }
-.card-title {
-  font-size: 0.78rem;
-  color: #94a3b8;
-  margin: 2px 0 6px;
+.fighter-chip.cyan .chip-num {
+  color: #27e5ff;
+  text-shadow: 0 0 10px rgba(39, 229, 255, 0.6);
 }
-.card-quote {
-  font-size: 0.75rem;
-  font-style: italic;
+.fighter-chip.coral .chip-num {
+  color: #ff5268;
+  text-shadow: 0 0 10px rgba(255, 82, 104, 0.6);
+}
+.chip-role {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
   color: #ffd166;
-  background: rgba(0, 0, 0, 0.35);
-  padding: 6px 8px;
-  border-radius: 8px;
-  line-height: 1.3;
+  letter-spacing: 0.05em;
 }
 
-.card-stats {
-  width: 100%;
+.chip-info-col {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
+  overflow: hidden;
+  text-align: left;
+}
+.chip-name-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.chip-name {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 0.96rem;
+  color: #fff;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.chip-title {
   font-family: var(--font-mono);
   font-size: 0.68rem;
-  background: rgba(0, 0, 0, 0.25);
-  padding: 6px 8px;
-  border-radius: 8px;
+  color: #94a3b8;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
-.stat-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #cbd5e1;
-}
-.stat-row .stars {
+.chip-quote {
+  font-size: 0.72rem;
+  font-style: italic;
   color: #ffd166;
-  letter-spacing: 2px;
+  margin: 0;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chip-stat-col {
+  display: flex;
+  align-items: center;
+}
+.chip-spec-tag {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
 }
 
 /* Phase 3: VS Clash */
