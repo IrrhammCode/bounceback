@@ -1734,8 +1734,9 @@ export class BouncebackEngine {
               this.tournament.roundHistory,
               this.tournament.roundWins
             );
+          } else if (this.onMatchEnd) {
+            this.onMatchEnd(this.winningTeam, this.match.scores);
           }
-          if (this.onMatchEnd) this.onMatchEnd(this.winningTeam, this.match.scores);
         } else {
           this.appMode = "round_recap";
           if (this.onRoundEnd) {
