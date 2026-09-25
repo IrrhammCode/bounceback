@@ -267,7 +267,7 @@ export class BouncebackEngine {
       this.activateOverdrive();
     };
     this.match.onMatchEnd = (winner, scores) => {
-      sfxRoundBuzzer();
+      sfxWhistle();
       sfxCrowdCheer(1.8);
 
       const roundResult = this.tournament.recordRoundResult(
@@ -282,7 +282,7 @@ export class BouncebackEngine {
       this.celebrationWinner = winner;
       this.isGrandChampionship = this.tournament.isTournamentOver;
       this.isCelebratingRound = true;
-      this.roundCelebrationTimer = this.isGrandChampionship ? 5.2 : 3.0;
+      this.roundCelebrationTimer = this.isGrandChampionship ? 5.2 : 3.6;
 
       if (this.isGrandChampionship) {
         this.winningTeam = this.tournament.tournamentWinner;
@@ -818,6 +818,12 @@ export class BouncebackEngine {
       this.startMatch(this.tournament.currentRound);
     } else {
       this.appMode = "result";
+    }
+  }
+
+  public skipRoundCelebration() {
+    if (this.isCelebratingRound && !this.isGrandChampionship) {
+      this.advanceToNextRound();
     }
   }
 
@@ -1691,12 +1697,11 @@ export class BouncebackEngine {
       this.match.update(dt);
     }
 
-    // ─── Final Seconds Countdown Tension (3, 2, 1) ───
+    // Final Seconds countdown tracking (audio alarm silenced per user request)
     if (this.appMode === "game" && this.match.started && !this.match.over && !this.isCelebratingRound) {
       const rem = Math.ceil(this.match.timer);
       if (rem <= 3 && rem >= 1 && rem !== this.lastCountdownSec) {
         this.lastCountdownSec = rem;
-        sfxRoundCountdownTick(rem);
       }
     }
 
@@ -1772,11 +1777,8 @@ export class BouncebackEngine {
             this.onMatchEnd(this.winningTeam, this.match.scores);
           }
         } else {
-          this.appMode = "round_recap";
-          if (this.onRoundEnd) {
-            const hist = this.tournament.roundHistory;
-            this.onRoundEnd(hist[hist.length - 1]);
-          }
+          // Seamlessly flow directly to the next round with camera dive!
+          this.advanceToNextRound();
         }
       }
     }

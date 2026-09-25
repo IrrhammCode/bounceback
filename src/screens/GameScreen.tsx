@@ -5,7 +5,7 @@ import SkillIcon, { ActionPunchIcon, ActionDashIcon } from "../components/SkillI
 import TitleScreenOverlay from "../components/TitleScreenOverlay";
 import TVIntroOverlay, { type IntroPhase } from "../components/TVIntroOverlay";
 import DisasterVoteOverlay from "../components/DisasterVoteOverlay";
-import RoundRecapOverlay from "../components/RoundRecapOverlay";
+import RoundVictoryOverlay from "../components/RoundVictoryOverlay";
 import ResultScreen from "./ResultScreen";
 import { type RoundResult } from "../game/tournament";
 import { sfxWhistle, sfxGoal, sfxMatchStart } from "../game/audio";
@@ -15,7 +15,7 @@ interface GameScreenProps {
   onExit?: () => void;
 }
 
-type AppMode = "title" | "intro" | "game" | "result" | "round_recap";
+type AppMode = "title" | "intro" | "game" | "result";
 
 const initialState: GameState = {
   timer: "3:00",
@@ -60,7 +60,6 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
   const engineRef = useRef<BouncebackEngine | null>(null);
   const [gameState, setGameState] = useState<GameState>(initialState);
   const [appMode, setAppMode] = useState<AppMode>("title");
-  const [currentRoundResult, setCurrentRoundResult] = useState<RoundResult | null>(null);
   const [seriesResult, setSeriesResult] = useState<{
     winner: number;
     scores: [number, number];
@@ -95,9 +94,8 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
     [onMatchEnd]
   );
 
-  const handleRoundEnd = useCallback((result: RoundResult) => {
-    setCurrentRoundResult(result);
-    setAppMode("round_recap");
+  const handleRoundEnd = useCallback((_result: RoundResult) => {
+    // Round victory celebration is now directly animated in-arena
   }, []);
 
   const handleTournamentEnd = useCallback(
@@ -130,10 +128,9 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
     };
   }, [handleStateChange, handleEngineMatchEnd, handleRoundEnd, handleTournamentEnd]);
 
-  // Advance to next tournament round from round recap
-  const handleNextRound = useCallback(() => {
-    setAppMode("game");
-    engineRef.current?.advanceToNextRound();
+  // Skip victory celebration and immediately dive into next round
+  const handleSkipCelebration = useCallback(() => {
+    engineRef.current?.skipRoundCelebration();
   }, []);
 
   // Transition from Title Screen into 3v3 TV Intro Cutscene with camera dive
@@ -257,16 +254,7 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
         />
       )}
 
-      {/* 4. Round Recap Overlay between 5 Championship Rounds */}
-      {appMode === "round_recap" && currentRoundResult && (
-        <RoundRecapOverlay
-          roundResult={currentRoundResult}
-          roundWins={gameState.roundWins || [0, 0]}
-          onNextRound={handleNextRound}
-        />
-      )}
-
-      {/* 5. Grand Championship Result Overlay */}
+      {/* 4. Grand Championship Result Overlay */}
       {appMode === "result" && (
         <ResultScreen
           winner={seriesResult.winner}
@@ -401,33 +389,35 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
             </div>
           )}
 
-          {/* In-Game Round & Championship Celebration Broadcast Banner */}
+          {/* In-Game Animated Round Victory Broadcast Overlay */}
           {gameState.celebrationBanner?.isActive && (
-            <div
-              className={`round-celebration-banner ${
-                gameState.celebrationBanner.winner === 0
-                  ? "team-cyan"
-                  : gameState.celebrationBanner.winner === 1
-                    ? "team-coral"
-                    : "draw"
-              } animate-celebration-enter`}
-            >
-              <div className="celebration-badge">
-                {gameState.celebrationBanner.isGrandChampionship
-                  ? "GRAND CHAMPIONSHIP FINALE"
-                  : `ROUND ${gameState.currentRound} CONCLUSION`}
+            gameState.celebrationBanner.isGrandChampionship ? (
+              <div
+                className={`round-celebration-banner ${
+                  gameState.celebrationBanner.winner === 0
+                    ? "team-cyan"
+                    : gameState.celebrationBanner.winner === 1
+                      ? "team-coral"
+                      : "draw"
+                } animate-celebration-enter`}
+              >
+                <div className="celebration-badge">GRAND CHAMPIONSHIP FINALE</div>
+                <div className="celebration-title">
+                  {gameState.celebrationBanner.winnerName} WINS THE TOURNAMENT!
+                </div>
+                <div className="celebration-sub">THE CHAMPIONS HOIST THE GOLDEN TROPHY!</div>
               </div>
-              <div className="celebration-title">
-                {gameState.celebrationBanner.isGrandChampionship
-                  ? `${gameState.celebrationBanner.winnerName} WINS THE TOURNAMENT!`
-                  : `${gameState.celebrationBanner.winnerName} TAKES ROUND ${gameState.currentRound}!`}
-              </div>
-              <div className="celebration-sub">
-                {gameState.celebrationBanner.isGrandChampionship
-                  ? "THE CHAMPIONS HOIST THE GOLDEN TROPHY!"
-                  : "VICTORY CELEBRATION IN PROGRESS..."}
-              </div>
-            </div>
+            ) : (
+              <RoundVictoryOverlay
+                winner={gameState.celebrationBanner.winner}
+                winnerName={gameState.celebrationBanner.winnerName}
+                currentRound={gameState.currentRound}
+                scores={gameState.scores}
+                roundWins={gameState.roundWins}
+                totalRounds={gameState.totalRounds}
+                onContinue={handleSkipCelebration}
+              />
+            )
           )}
 
           {/* Broadcast Center Announcement */}

@@ -569,7 +569,6 @@ export function sfxWhistle() {
 
 export function sfxGameOver() {
   stopBGM();
-  sfxRoundBuzzer();
   sfxCrowdCheer(1.6);
 }
 
@@ -578,89 +577,14 @@ export function sfxCountBeep() {
 }
 
 // ─── High-Voltage Round Countdown & Finale SFX ───
-export function sfxRoundCountdownTick(remaining: number) {
-  if (!ctx || !sfxGain || muted) return;
-  try {
-    const t = ctx.currentTime;
-    // Escalating pitch on 3 -> 2 -> 1
-    const freqs: Record<number, number> = { 3: 587.33, 2: 698.46, 1: 880.0 };
-    const freq = freqs[remaining] || 660.0;
-
-    // 1. Sharp tension beep
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "triangle";
-    osc.frequency.setValueAtTime(freq, t);
-    gain.gain.setValueAtTime(0.42, t);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
-    osc.connect(gain);
-    gain.connect(sfxGain);
-    osc.start(t);
-    osc.stop(t + 0.2);
-
-    // 2. Punchy dramatic sub kick
-    const subOsc = ctx.createOscillator();
-    const subGain = ctx.createGain();
-    subOsc.type = "sine";
-    subOsc.frequency.setValueAtTime(120, t);
-    subOsc.frequency.exponentialRampToValueAtTime(45, t + 0.15);
-    subGain.gain.setValueAtTime(0.55, t);
-    subGain.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
-    subOsc.connect(subGain);
-    subGain.connect(sfxGain);
-    subOsc.start(t);
-    subOsc.stop(t + 0.18);
-  } catch {}
+export function sfxRoundCountdownTick(_remaining: number) {
+  // Silenced per user request: removed annoying loud countdown reminder alarm
+  return;
 }
 
 export function sfxRoundBuzzer() {
-  if (!ctx || !sfxGain || muted) return;
-  try {
-    const t = ctx.currentTime;
-    const dur = 1.35;
-
-    // Authentic dual-saw NBA stadium horn buzzer (174Hz and 185Hz dissonant horn)
-    const osc1 = ctx.createOscillator();
-    const osc2 = ctx.createOscillator();
-    const filter = ctx.createBiquadFilter();
-    const gain = ctx.createGain();
-
-    osc1.type = "sawtooth";
-    osc1.frequency.setValueAtTime(174.61, t); // F3
-    osc2.type = "sawtooth";
-    osc2.frequency.setValueAtTime(185.0, t); // F#3 (dissonance)
-
-    filter.type = "bandpass";
-    filter.frequency.setValueAtTime(620, t);
-    filter.Q.setValueAtTime(2.2, t);
-
-    gain.gain.setValueAtTime(0.001, t);
-    gain.gain.linearRampToValueAtTime(0.65, t + 0.04);
-    gain.gain.setValueAtTime(0.65, t + dur - 0.25);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
-
-    osc1.connect(filter);
-    osc2.connect(filter);
-    filter.connect(gain);
-    gain.connect(sfxGain);
-
-    osc1.start(t);
-    osc2.start(t);
-    osc1.stop(t + dur);
-    osc2.stop(t + dur);
-
-    // Deep sub-bass stadium resonance
-    const sub = ctx.createOscillator();
-    const subGain = ctx.createGain();
-    sub.type = "sine";
-    sub.frequency.setValueAtTime(85, t);
-    subGain.gain.setValueAtTime(0.5, t);
-    subGain.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
-    sub.connect(subGain);
-    subGain.connect(sfxGain);
-    sub.start(t);
-    sub.stop(t + 0.85);
-  } catch {}
+  // Silenced per user request: removed harsh horn buzzer alarm
+  return;
 }
 
 export function sfxRoundVictoryFanfare(team: number) {
@@ -708,34 +632,9 @@ export function sfxRoundVictoryFanfare(team: number) {
   } catch {}
 }
 
-export function sfxStarDing(starIndex: number = 1) {
-  if (!ctx || !sfxGain || muted) return;
-  try {
-    const t = ctx.currentTime;
-    const baseFreq = 1046.5 * Math.pow(1.25, starIndex); // Sparkling pitch
-
-    // Chime sine bell
-    const osc = ctx.createOscillator();
-    const osc2 = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(baseFreq, t);
-    osc2.type = "sine";
-    osc2.frequency.setValueAtTime(baseFreq * 2.756, t); // Shimmer harmonic
-
-    gain.gain.setValueAtTime(0.55, t);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.65);
-
-    osc.connect(gain);
-    osc2.connect(gain);
-    gain.connect(sfxGain);
-
-    osc.start(t);
-    osc2.start(t);
-    osc.stop(t + 0.7);
-    osc2.stop(t + 0.7);
-  } catch {}
+export function sfxStarDing(_starIndex: number = 1) {
+  // Silenced per user request: removed piercing high chime bell
+  return;
 }
 
 export function sfxRoundTransitionWhoosh() {
@@ -990,18 +889,14 @@ export function sfxTVCountdown(step: number) {
     playTone(f * 2, 0.08, "triangle", 0.25);
   } else {
     // 0 = GO / BOUNCE!!
-    sfxBoxingBell();
     playTone(1046.5, 0.45, "sawtooth", 0.45);
     sfxCrowdCheer(1.3);
   }
 }
 
 export function sfxBoxingBell() {
-  if (!ctx || !sfxGain || muted) return;
-  // High resonant brass ring bell
-  playTone(2093, 0.35, "sine", 0.35);
-  setTimeout(() => playTone(2093, 0.35, "sine", 0.35), 110);
-  setTimeout(() => playTone(2093, 0.55, "sine", 0.4), 220);
+  // Silenced per user request: removed loud ringing bell
+  return;
 }
 
 export function sfxCommentatorGasp() {
