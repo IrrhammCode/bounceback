@@ -57,10 +57,15 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   root.name = "UltraHDFallGuysWorld";
   scene.add(root);
 
-  const W = C.ARENA_W; // 28
-  const L = C.ARENA_L; // 54
-  const hW = W / 2;    // 14
-  const hL = L / 2;    // 27
+  const W = C.ARENA_W; // 30m
+  const L = C.ARENA_L; // 58m
+  const hW = W / 2;    // 15m
+  const hL = L / 2;    // 29m
+
+  // Grand Abyss Chasm Gap (8.5m on East/West sides, 10.0m on North/South ends)
+  // Makes the floating island aesthetic immediately visible with clear Ring-Out drop objective!
+  const chasmX = 8.5;
+  const chasmZ = 10.0;
 
   const texLoader = new THREE.TextureLoader();
 
@@ -365,7 +370,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   });
 
   // ─── 4. FLOATING COLOSSEUM ISLAND FOUNDATION & CORE ─────
-  // Base foundation slab directly hugging court platform (W x L) to expose the 6m drop abyss around it!
+  // Base foundation slab directly hugging court platform (W x L) to expose the 8.5m drop abyss around it!
   const baseSlab = new THREE.Mesh(new THREE.BoxGeometry(W, 2.2, L), foundationMat);
   baseSlab.position.y = -1.1;
   baseSlab.receiveShadow = true;
@@ -389,11 +394,11 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
 
   // Central Anti-Gravity Floating Thruster Core
   const thrusterRing = new THREE.Mesh(
-    new THREE.TorusGeometry(5.5, 0.5, 12, 32),
+    new THREE.TorusGeometry(6.5, 0.6, 12, 32),
     new THREE.MeshStandardMaterial({
       color: 0x06b6d4,
       emissive: 0x06b6d4,
-      emissiveIntensity: 0.9,
+      emissiveIntensity: 0.95,
       roughness: 0.2,
       metalness: 0.8,
     })
@@ -402,10 +407,37 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   thrusterRing.position.y = -11.5;
   root.add(thrusterRing);
 
-  // Deep Abyss Cyber Laser Grid (Visible across the entire 4-6m chasm around the platform)
-  const abyssGrid = new THREE.GridHelper(96, 48, 0x00f0ff, 0x9333ea);
-  abyssGrid.position.y = -18;
-  root.add(abyssGrid);
+  // Deep Abyss Cyber Laser Grid (Double-tiered, spanning 160m across the canyon void)
+  const abyssGridTop = new THREE.GridHelper(160, 48, 0x00f0ff, 0x9333ea);
+  abyssGridTop.position.y = -18;
+  root.add(abyssGridTop);
+
+  const abyssGridBottom = new THREE.GridHelper(180, 40, 0xff0055, 0x06b6d4);
+  abyssGridBottom.position.y = -34;
+  root.add(abyssGridBottom);
+
+  // Holographic Warning Signs floating across the open chasm drop gap
+  const chasmSignTex = makeCanvasTex(1024, 128, (ctx) => {
+    ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+    ctx.fillRect(0, 0, 1024, 128);
+    ctx.strokeStyle = "#ef4444";
+    ctx.lineWidth = 8;
+    ctx.strokeRect(4, 4, 1016, 120);
+
+    ctx.font = "900 42px Outfit, sans-serif";
+    ctx.fillStyle = "#fef08a";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("DANGER: 8.5M CHASM DROP // RING-OUT ZONE", 512, 64);
+  });
+  const chasmSignMat = new THREE.MeshBasicMaterial({ map: chasmSignTex, side: THREE.DoubleSide, transparent: true });
+
+  for (const side of [-1, 1]) {
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(16, 2.0), chasmSignMat);
+    sign.position.set(side * (hW + chasmX * 0.45), -4.5, 0);
+    sign.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
+    root.add(sign);
+  }
 
   // Platform Edge Metallic Coping Rim (Beveled gold/chrome molding)
   for (const side of [-1, 1]) {
@@ -674,8 +706,8 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
 
   const ribbonMat = new THREE.MeshBasicMaterial({ map: ribbonTex });
   for (const side of [-1, 1]) {
-    const ribbonMesh = new THREE.Mesh(new THREE.PlaneGeometry(L + 4, 0.9), ribbonMat);
-    ribbonMesh.position.set(side * (hW + 2.1), 1.9, 0);
+    const ribbonMesh = new THREE.Mesh(new THREE.PlaneGeometry(L + chasmZ, 0.9), ribbonMat);
+    ribbonMesh.position.set(side * (hW + chasmX - 0.2), 1.9, 0);
     ribbonMesh.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
     root.add(ribbonMesh);
   }
@@ -684,8 +716,8 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   const coliseumShellGroup = new THREE.Group();
   root.add(coliseumShellGroup);
 
-  const wallW = W + 20; // 48m
-  const wallL = L + 22; // 76m
+  const wallW = W + chasmX * 2 + 16;
+  const wallL = L + chasmZ * 2 + 16;
 
   // 7.1 Massive Outer Colosseum Walls (Height 17m, wrapping behind all bleachers)
   const outerWallMat = new THREE.MeshStandardMaterial({
@@ -701,7 +733,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
 
   // West & East Colosseum Facade Walls
   for (const side of [-1, 1]) {
-    const fx = side * (hW + 10.5); // ±24.5m
+    const fx = side * (hW + chasmX + 9.5);
     const facadeMesh = new THREE.Mesh(new THREE.BoxGeometry(2.0, 16.5, wallL), outerWallMat);
     facadeMesh.position.set(fx, 8.25, 0);
     facadeMesh.receiveShadow = true;
@@ -713,7 +745,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     coliseumShellGroup.add(cornice);
 
     // Classical Arched Windows & Roman Pillars along facade
-    for (let pz = -30; pz <= 30; pz += 10) {
+    for (let pz = -35; pz <= 35; pz += 10) {
       const colPillar = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 1.0, 16, 12), arcadePillarMat);
       colPillar.position.set(fx - side * 0.7, 8.0, pz);
       coliseumShellGroup.add(colPillar);
@@ -804,14 +836,13 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   });
 
   // 1. Sideline Cantilevered Bleacher Canopies (West & East)
-  // These sit atop the outer walls (y = 16.8m) and cantilever inward to y = 18.8m over the stands
   for (const side of [-1, 1]) {
     const sideCanopy = new THREE.Mesh(
-      new THREE.BoxGeometry(10.5, 0.45, wallL + 6),
+      new THREE.BoxGeometry(11.5, 0.45, wallL + 6),
       canopyRoofMat
     );
-    sideCanopy.position.set(side * 20.0, 18.2, 0);
-    sideCanopy.rotation.z = side * 0.16; // Tilted upward toward the field (lowest at outer wall = 17.3m, lip = 19.1m)
+    sideCanopy.position.set(side * (hW + chasmX + 4.5), 18.2, 0);
+    sideCanopy.rotation.z = side * 0.16; // Tilted upward toward the field
     sideCanopy.castShadow = true;
     sideCanopy.receiveShadow = true;
     stadiumRoofGroup.add(sideCanopy);
@@ -821,7 +852,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
       new THREE.BoxGeometry(0.3, 0.65, wallL + 6),
       darkFasciaMat
     );
-    edgeTrim.position.set(side * 14.8, 19.1, 0);
+    edgeTrim.position.set(side * (hW + chasmX - 0.5), 19.1, 0);
     stadiumRoofGroup.add(edgeTrim);
 
     // Accent LED strip under the canopy edge
@@ -829,18 +860,17 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
       new THREE.BoxGeometry(0.12, 0.12, wallL + 6),
       new THREE.MeshBasicMaterial({ color: side < 0 ? 0x38bdf8 : 0xf43f5e })
     );
-    ledStrip.position.set(side * 14.85, 18.8, 0);
+    ledStrip.position.set(side * (hW + chasmX - 0.45), 18.8, 0);
     stadiumRoofGroup.add(ledStrip);
   }
 
   // 2. Endzone Cantilevered Bleacher Canopies (North & South)
-  // Behind Cyan and Coral goals, sheltering endzone bleachers at y = 17.3m to 19.1m
   for (const end of [-1, 1]) {
     const endCanopy = new THREE.Mesh(
-      new THREE.BoxGeometry(34.0, 0.45, 10.5),
+      new THREE.BoxGeometry(wallW - 2, 0.45, 11.5),
       canopyRoofMat
     );
-    endCanopy.position.set(0, 18.2, end * 32.8);
+    endCanopy.position.set(0, 18.2, end * (hL + chasmZ + 4.5));
     endCanopy.rotation.x = -end * 0.16; // Tilted upward toward field
     endCanopy.castShadow = true;
     endCanopy.receiveShadow = true;
@@ -1013,21 +1043,21 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
         color: tierColors[tier % tierColors.length],
         roughness: 0.35,
       });
-      const tierX = side * (hW + 2.2 + tier * 1.5);
+      const tierX = side * (hW + chasmX + tier * 1.5);
       const tierY = 1.7 + tier * 0.75;
 
-      const bench = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.3, L + 6), tierSeatMat);
+      const bench = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.3, L + 12), tierSeatMat);
       bench.position.set(tierX, tierY, 0);
       bench.receiveShadow = true;
       root.add(bench);
 
       const riserH = tierY - 0.15;
-      const riser = new THREE.Mesh(new THREE.BoxGeometry(1.36, riserH, L + 6), riserMat);
+      const riser = new THREE.Mesh(new THREE.BoxGeometry(1.36, riserH, L + 12), riserMat);
       riser.position.set(tierX, riserH / 2, 0);
       riser.receiveShadow = true;
       root.add(riser);
 
-      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.5, L + 6), railMat);
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.5, L + 12), railMat);
       rail.position.set(tierX - side * 0.65, tierY + 0.4, 0);
       root.add(rail);
     }
@@ -1039,9 +1069,9 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
       color: tierColors[(tier + 2) % tierColors.length],
       roughness: 0.35,
     });
-    const tierZ = hL + 2.6 + tier * 1.5;
+    const tierZ = hL + chasmZ + tier * 1.5;
     const tierY = 1.8 + tier * 0.75;
-    const benchW = W + 8;
+    const benchW = W + chasmX * 2 + 4;
 
     const bench = new THREE.Mesh(new THREE.BoxGeometry(benchW, 0.3, 1.4), tierSeatMat);
     bench.position.set(0, tierY, tierZ);
@@ -1065,9 +1095,9 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
       color: tierColors[(tier + 1) % tierColors.length],
       roughness: 0.35,
     });
-    const tierZ = -hL - 2.6 - tier * 1.5;
+    const tierZ = -hL - chasmZ - tier * 1.5;
     const tierY = 1.8 + tier * 0.75;
-    const benchW = W + 6;
+    const benchW = W + chasmX * 2 + 2;
 
     const bench = new THREE.Mesh(new THREE.BoxGeometry(benchW, 0.3, 1.4), tierSeatMat);
     bench.position.set(0, tierY, tierZ);
@@ -1195,7 +1225,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
       const perRow = 35;
       for (let r = 0; r < perRow; r++) {
         const z = -hL + 2.0 + (r / (perRow - 1)) * (L - 4);
-        const x = side * (hW + 2.2 + tier * 1.5);
+        const x = side * (hW + chasmX + tier * 1.5);
         const y = 1.7 + tier * 0.75 + 0.38;
         const rotY = side < 0 ? Math.PI / 2 : -Math.PI / 2;
         const fOffX = side < 0 ? 0.23 : -0.23;
@@ -1207,10 +1237,10 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   // 2. South Endzone (150 spectators directly in front of camera view!)
   for (let tier = 0; tier < 5; tier++) {
     const perRow = 30;
-    const tierZ = hL + 2.6 + tier * 1.5;
+    const tierZ = hL + chasmZ + tier * 1.5;
     const tierY = 1.8 + tier * 0.75 + 0.38;
     for (let r = 0; r < perRow; r++) {
-      const x = -hW - 2.5 + (r / (perRow - 1)) * (W + 5);
+      const x = -hW - chasmX * 0.65 + (r / (perRow - 1)) * (W + chasmX * 1.3);
       const rotY = Math.PI;
       addSpecBean(x, tierY, tierZ, rotY, 0, -0.23);
     }
@@ -1219,10 +1249,10 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   // 3. North Endzone (100 spectators behind Cyan goal)
   for (let tier = 0; tier < 4; tier++) {
     const perRow = 25;
-    const tierZ = -hL - 2.6 - tier * 1.5;
+    const tierZ = -hL - chasmZ - tier * 1.5;
     const tierY = 1.8 + tier * 0.75 + 0.38;
     for (let r = 0; r < perRow; r++) {
-      const x = -hW - 1.5 + (r / (perRow - 1)) * (W + 3);
+      const x = -hW - chasmX * 0.55 + (r / (perRow - 1)) * (W + chasmX * 1.1);
       const rotY = 0;
       addSpecBean(x, tierY, tierZ, rotY, 0, 0.23);
     }
@@ -1245,7 +1275,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   // ─── 9. SOUTH ENDZONE 3-TIER VICTORY PAVILION & MEGA-STRUCTURE ─
   // Frames the entire background behind the Coral Goal with grand architecture
   const southPavilion = new THREE.Group();
-  southPavilion.position.set(0, 0, hL + 11.5);
+  southPavilion.position.set(0, 0, hL + chasmZ + 9.5);
   root.add(southPavilion);
 
   // 9.1 Massive South Colosseum Facade Wall (Width 48m, Height 18m)
@@ -1374,7 +1404,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
 
   const createGiantMascot = (team: "cyan" | "coral", side: number) => {
     const mg = new THREE.Group();
-    const mx = side * (hW + 3.8);
+    const mx = side * (hW + chasmX + 3.8);
     const my = 0.6;
     mg.position.set(mx, my, 0);
 
@@ -1526,10 +1556,10 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   }[] = [];
 
   const towerPositions = [
-    { x: -hW - 10.5, y: 21.0, z: -hL - 10.5, col: 0x38bdf8, tx: -6, tz: -10 },
-    { x: hW + 10.5, y: 21.0, z: -hL - 10.5, col: 0xfbbf24, tx: 6, tz: -10 },
-    { x: -hW - 10.5, y: 21.0, z: hL + 11.5, col: 0xf43f5e, tx: -6, tz: 10 },
-    { x: hW + 10.5, y: 21.0, z: hL + 11.5, col: 0x22d3ee, tx: 6, tz: 10 },
+    { x: -hW - chasmX - 3.0, y: 21.0, z: -hL - chasmZ - 3.0, col: 0x38bdf8, tx: -6, tz: -10 },
+    { x: hW + chasmX + 3.0, y: 21.0, z: -hL - chasmZ - 3.0, col: 0xfbbf24, tx: 6, tz: -10 },
+    { x: -hW - chasmX - 3.0, y: 21.0, z: hL + chasmZ + 3.0, col: 0xf43f5e, tx: -6, tz: 10 },
+    { x: hW + chasmX + 3.0, y: 21.0, z: hL + chasmZ + 3.0, col: 0x22d3ee, tx: 6, tz: 10 },
   ];
 
   for (let tf = 0; tf < towerPositions.length; tf++) {

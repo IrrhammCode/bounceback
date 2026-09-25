@@ -47,13 +47,13 @@ import {
   sfxBombExplode,
   sfxShrink,
   sfxOnePunch,
+  sfxLethalHit,
 } from "./audio";
 import { DisasterManager, type DisasterVoteState, type DisasterId } from "./disasters";
 // @ts-ignore — JS asset modules following 404 asset contract
 import generateMecha from "../assets/toy_mecha.js";
 // @ts-ignore
 import generateBumper from "../assets/pinball_bumper.js";
-import { createGiantGong, type GongController } from "./gong";
 import { createFallGuysArena, type ArenaController } from "./fallguysArena";
 import { getArenaHeight, getArenaSlope } from "./arenaHeight";
 
@@ -87,7 +87,8 @@ export class BouncebackEngine {
   private gates: GateData[] = [];
   private bumperMeshes: THREE.Object3D[] = [];
   private gateMeshes: THREE.Object3D[] = [];
-  private gongs: GongController[] = [];
+  private lethalCinematicTimer = 0;
+  private lethalTargetPos = new THREE.Vector3();
   private player!: PlayerController;
   private juice!: JuiceSystem;
   private match!: Match;
@@ -187,10 +188,6 @@ export class BouncebackEngine {
     this.match.onGoal = (team, points, combo, bounces) => {
       sfxRingOut();
       if (combo > 1) sfxCombo(combo);
-      const defTeam = 1 - team;
-      // Trigger violent cartoon pendulum swing on the defending team's gong that got struck!
-      const struckGong = this.gongs.find((g) => g.team === defTeam);
-      if (struckGong) struckGong.hit();
 
       this.juice.trigger("ringout", { team, x: 0, y: 1.5, z: 0 });
       this.arenaController?.onGoalCelebration(team);
@@ -414,34 +411,27 @@ export class BouncebackEngine {
 
   private spawnGates() {
     const halfL = C.ARENA_L * 0.5;
-    // 2 Monumental Battle Gongs at the center of each goal end zone
-    const gongConfigs = [
-      // Team 0 Gong (Cyan defending — coral scores here)
-      { x: 0, z: -halfL + 2.2, team: 0, mult: 1 },
-      // Team 1 Gong (Coral defending — cyan scores here)
-      { x: 0, z: halfL - 2.2, team: 1, mult: 1 },
+    // Goal & Endzone defense markers for bot AI positioning
+    const baseConfigs = [
+      { x: 0, z: -halfL + 3.0, team: 0, mult: 1 },
+      { x: 0, z: halfL - 3.0, team: 1, mult: 1 },
     ];
 
-    for (const gc of gongConfigs) {
+    for (const bc of baseConfigs) {
       const gData: GateData = {
-        x: gc.x,
-        z: gc.z,
-        team: gc.team,
+        x: bc.x,
+        z: bc.z,
+        team: bc.team,
         axis: "z",
-        multiplier: gc.mult,
-        active: true,
+        multiplier: bc.mult,
+        active: false,
       };
       this.gates.push(gData);
-
-      const gongCtrl = createGiantGong(THREE, gc.team, gc.x, gc.z);
-      this.gongs.push(gongCtrl);
-      this.gateMeshes.push(gongCtrl.mesh);
-      this.scene.add(gongCtrl.mesh);
     }
   }
 
   private activatePhase2() {
-    // Make gongs double-value
+    // Ring-out double value
     if (this.gates[0]) this.gates[0].multiplier = C.GATE_SCORE_2X;
     if (this.gates[1]) this.gates[1].multiplier = C.GATE_SCORE_2X;
     // Move some bumpers
@@ -452,7 +442,7 @@ export class BouncebackEngine {
   }
 
   private activateOverdrive() {
-    // All gongs triple value
+    // All ring-outs triple value
     for (const g of this.gates) {
       g.multiplier = C.GATE_SCORE_3X;
     }
@@ -666,7 +656,7 @@ export class BouncebackEngine {
       let targetZ = p.z - camDist;
 
       // Wall avoidance clamp: never hit north bleachers or turn black
-      const minCamZ = -28.0;
+      const minCamZ = -C.ARENA_L * 0.5 - 6.5;
       if (targetZ < minCamZ) {
         const over = minCamZ - targetZ;
         targetZ = minCamZ;
@@ -676,19 +666,24 @@ export class BouncebackEngine {
       this.camTargetPos.set(targetX, targetY, targetZ);
       this.camLookTarget.set(p.x * 0.5, pGroundY + 1.3, p.z + 8.0);
 
+      // Smash Bros-Style Cinematic Lethal Zoom Punch
+      if (this.lethalCinematicTimer > 0) {
+        this.camLookTarget.lerp(this.lethalTargetPos, Math.min(1.0, 15.0 * dt));
+      }
+
       const lerpSpeed = Math.min(1.0, 5.0 * dt);
       this.camera.position.lerp(this.camTargetPos, lerpSpeed);
       this.camera.lookAt(this.camLookTarget);
     } else {
       // Standard Spacious Stadium 3rd-Person (Recommended for spatial awareness)
-      const camDist = 13.5;
-      const camHeight = 8.5;
+      const camDist = 14.5;
+      const camHeight = 9.0;
       const targetX = p.x * 0.65;
       let targetY = pGroundY + camHeight;
       let targetZ = p.z - camDist;
 
       // Wall avoidance clamp: never hit north bleachers or turn black
-      const minCamZ = -28.5;
+      const minCamZ = -C.ARENA_L * 0.5 - 7.5;
       if (targetZ < minCamZ) {
         const over = minCamZ - targetZ;
         targetZ = minCamZ;
@@ -698,21 +693,29 @@ export class BouncebackEngine {
       this.camTargetPos.set(targetX, targetY, targetZ);
       this.camLookTarget.set(p.x * 0.4, pGroundY + 1.2, p.z + 6.0);
 
+      // Smash Bros-Style Cinematic Lethal Zoom Punch
+      if (this.lethalCinematicTimer > 0) {
+        this.camLookTarget.lerp(this.lethalTargetPos, Math.min(1.0, 15.0 * dt));
+      }
+
       const lerpSpeed = Math.min(1.0, 4.2 * dt);
       this.camera.position.lerp(this.camTargetPos, lerpSpeed);
       this.camera.lookAt(this.camLookTarget);
     }
 
-    // Dynamic FOV (gentle transitions)
+    // Dynamic FOV (gentle transitions + dramatic lethal punch zoom)
     const playerSlot = this.skillSlots[0];
-    if (playerSlot && playerSlot.rocketTimer > 0) {
+    if (this.lethalCinematicTimer > 0) {
+      this.lethalCinematicTimer = Math.max(0, this.lethalCinematicTimer - dt);
+      this.targetFov = 38; // Smash Bros-style dramatic punch-in zoom!
+    } else if (playerSlot && playerSlot.rocketTimer > 0) {
       this.targetFov = 66; // Gentle boost during rocket
     } else if (p.dashTimer > 0) {
       this.targetFov = 62; // Gentle boost during dash
     } else {
       this.targetFov = this.baseFov;
     }
-    this.camera.fov += (this.targetFov - this.camera.fov) * Math.min(1.0, 8 * dt);
+    this.camera.fov += (this.targetFov - this.camera.fov) * Math.min(1.0, 12 * dt);
     this.camera.updateProjectionMatrix();
 
     // Update juice baseCamPos for shake
@@ -803,7 +806,6 @@ export class BouncebackEngine {
       this.camera.lookAt(0, 2.2, 0);
 
       this.arenaController?.update(dt, now * 0.001);
-      for (const gong of this.gongs) gong.update(dt);
       this.skills.updateTitleBoxes();
       this.updateTitleEntities(now * 0.001);
 
@@ -819,7 +821,6 @@ export class BouncebackEngine {
       this.camera.lookAt(this.camLookTarget);
 
       this.arenaController?.update(dt, now * 0.001);
-      for (const gong of this.gongs) gong.update(dt);
       this.skills.updateTitleBoxes();
       this.updateIntroEntities(now * 0.001);
 
@@ -839,7 +840,6 @@ export class BouncebackEngine {
       this.camera.lookAt(0, 1.4, winZ);
 
       this.arenaController?.update(dt, now * 0.001);
-      for (const gong of this.gongs) gong.update(dt);
       this.renderer.render(this.scene, this.camera);
       return;
     }
@@ -862,18 +862,50 @@ export class BouncebackEngine {
         (type, data) => {
           const d = data as any;
           if (type === "punch") {
-            sfxPunch();
-            this.juice.trigger("punch", {
-              x: d?.x ?? this.entities[0].x,
-              y: 1.2,
-              z: d?.z ?? this.entities[0].z,
-              originX: d?.originX ?? this.entities[0].x,
-              originZ: d?.originZ ?? this.entities[0].z,
-              dirX: d?.dirX ?? 0,
-              dirZ: d?.dirZ ?? 1,
-              team: d?.team ?? 0,
-              isHit: true,
-            });
+            const halfW = C.ARENA_W * 0.5;
+            const halfL = C.ARENA_L * 0.5;
+            const pImpulse = d?.impulse ?? C.PUNCH_IMPULSE;
+            const dirX = d?.dirX ?? 0;
+            const dirZ = d?.dirZ ?? 1;
+            const targetX = d?.x ?? this.entities[0].x;
+            const targetZ = d?.z ?? this.entities[0].z;
+
+            // Trajectory Prediction: calculate if target will clear ropes into the abyss
+            const projectedDist = pImpulse * 0.35;
+            const futureX = targetX + dirX * projectedDist;
+            const futureZ = targetZ + dirZ * projectedDist;
+            const isLethal = Math.abs(futureX) > halfW || Math.abs(futureZ) > halfL;
+
+            if (isLethal) {
+              sfxLethalHit();
+              this.lethalCinematicTimer = 0.55;
+              this.lethalTargetPos.set(targetX, 1.2, targetZ);
+              this.juice.trigger("lethal_finish", {
+                x: targetX,
+                y: 1.2,
+                z: targetZ,
+                originX: d?.originX ?? this.entities[0].x,
+                originZ: d?.originZ ?? this.entities[0].z,
+                dirX,
+                dirZ,
+                team: d?.team ?? 0,
+                isHit: true,
+              });
+              this.showAnnouncement("CRITICAL LETHAL STRIKE!!");
+            } else {
+              sfxPunch();
+              this.juice.trigger("punch", {
+                x: targetX,
+                y: 1.2,
+                z: targetZ,
+                originX: d?.originX ?? this.entities[0].x,
+                originZ: d?.originZ ?? this.entities[0].z,
+                dirX,
+                dirZ,
+                team: d?.team ?? 0,
+                isHit: true,
+              });
+            }
           } else if (type === "whiff") {
             sfxWhiff();
             this.juice.trigger("whiff", {
@@ -922,18 +954,49 @@ export class BouncebackEngine {
       updateBots(this.entities, this.bumpers, this.gates, dt, (type, data) => {
         const d = data as any;
         if (type === "botpunch") {
-          sfxPunch();
-          this.juice.trigger("botpunch", {
-            x: d?.x ?? 0,
-            y: 1.2,
-            z: d?.z ?? 0,
-            originX: d?.originX,
-            originZ: d?.originZ,
-            dirX: d?.dirX,
-            dirZ: d?.dirZ,
-            team: d?.team ?? 1,
-            isHit: true,
-          });
+          const halfW = C.ARENA_W * 0.5;
+          const halfL = C.ARENA_L * 0.5;
+          const bImpulse = d?.impulse ?? C.PUNCH_IMPULSE;
+          const dirX = d?.dirX ?? d?.nx ?? 0;
+          const dirZ = d?.dirZ ?? d?.nz ?? 1;
+          const targetX = d?.x ?? 0;
+          const targetZ = d?.z ?? 0;
+
+          const projectedDist = bImpulse * 0.35;
+          const futureX = targetX + dirX * projectedDist;
+          const futureZ = targetZ + dirZ * projectedDist;
+          const isLethal = Math.abs(futureX) > halfW || Math.abs(futureZ) > halfL;
+
+          if (isLethal) {
+            sfxLethalHit();
+            this.lethalCinematicTimer = 0.45;
+            this.lethalTargetPos.set(targetX, 1.2, targetZ);
+            this.juice.trigger("lethal_finish", {
+              x: targetX,
+              y: 1.2,
+              z: targetZ,
+              originX: d?.originX,
+              originZ: d?.originZ,
+              dirX,
+              dirZ,
+              team: d?.team ?? 1,
+              isHit: true,
+            });
+            this.showAnnouncement("CRITICAL RING-OUT HIT!!");
+          } else {
+            sfxPunch();
+            this.juice.trigger("botpunch", {
+              x: targetX,
+              y: 1.2,
+              z: targetZ,
+              originX: d?.originX,
+              originZ: d?.originZ,
+              dirX,
+              dirZ,
+              team: d?.team ?? 1,
+              isHit: true,
+            });
+          }
         } else {
           this.juice.trigger(type, data);
         }
@@ -1008,11 +1071,6 @@ export class BouncebackEngine {
 
       // Match timer
       this.match.update(dt);
-    }
-
-    // Update Giant Battle Gongs (pendulum swing physics)
-    for (const gong of this.gongs) {
-      gong.update(dt);
     }
 
     // Juice
@@ -1335,9 +1393,6 @@ export class BouncebackEngine {
     this.player.destroy();
     this.skills.destroy();
     this.disasterManager.destroy();
-    for (const g of this.gongs) {
-      g.dispose();
-    }
     this.arenaController?.dispose();
     this.renderer.dispose();
     this.scene.clear();

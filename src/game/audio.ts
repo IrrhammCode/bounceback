@@ -25,15 +25,16 @@ export function initAudio() {
   ctx = new AudioCtx();
 
   masterGain = ctx.createGain();
-  masterGain.gain.value = 0.5;
+  masterGain.gain.value = 0.55;
   masterGain.connect(ctx.destination);
 
+  // Balanced volume: BGM 0.20 so SFX at 0.70 pop crisp and clear!
   bgmGain = ctx.createGain();
-  bgmGain.gain.value = 0.32;
+  bgmGain.gain.value = 0.20;
   bgmGain.connect(masterGain);
 
   sfxGain = ctx.createGain();
-  sfxGain.gain.value = 0.55;
+  sfxGain.gain.value = 0.70;
   sfxGain.connect(masterGain);
 }
 
@@ -45,6 +46,29 @@ export function resumeAudio() {
   if (bgmPlaying && bgmAudio && bgmAudio.paused) {
     bgmAudio.play().catch(() => {});
   }
+}
+
+// Auto-unlock audio and start BGM on immediate launch or first interaction
+if (typeof window !== "undefined") {
+  const unlockAudio = () => {
+    resumeAudio();
+    if (!bgmPlaying) {
+      startBGM();
+    } else if (bgmAudio && bgmAudio.paused) {
+      bgmAudio.play().catch(() => {});
+    }
+    window.removeEventListener("pointerdown", unlockAudio);
+    window.removeEventListener("keydown", unlockAudio);
+    window.removeEventListener("click", unlockAudio);
+  };
+  window.addEventListener("pointerdown", unlockAudio, { once: true });
+  window.addEventListener("keydown", unlockAudio, { once: true });
+  window.addEventListener("click", unlockAudio, { once: true });
+
+  // Immediate attempt on localhost load
+  setTimeout(() => {
+    startBGM();
+  }, 50);
 }
 
 export function setMuted(v: boolean) {
@@ -126,7 +150,7 @@ export function startBGM() {
       bgmAudio = new Audio("/Yellow_Shell_Hustle.mp3");
       bgmAudio.loop = true;
       bgmAudio.preload = "auto";
-      bgmAudio.volume = muted ? 0 : 0.65;
+      bgmAudio.volume = muted ? 0 : 0.22;
       if (ctx && bgmGain) {
         try {
           bgmSourceNode = ctx.createMediaElementSource(bgmAudio);
@@ -473,75 +497,15 @@ export function sfxBumperHit(comboCount: number) {
   playTone(baseFreq * 1.25, 0.12, "triangle", 0.22);
 }
 
-// ─── Monumental Battle Gong ("DOOOOOOONNNNNGGGGGG!") ───
+// ─── Goal / Ring-Out Fanfare ───
 export function sfxGongHit() {
-  if (!ctx || !sfxGain || muted) return;
-  try {
-    const now = ctx.currentTime;
-
-    // 1. Initial sharp metal mallet strike impact
-    playNoise(0.08, 0.5, 2400);
-
-    // 2. Heavy Gong Inharmonic Partials with shimmering beat frequencies
-    const partials = [
-      { f: 72, vol: 0.55, dur: 3.2, type: "sine" as OscillatorType },
-      { f: 76, vol: 0.45, dur: 3.0, type: "triangle" as OscillatorType },
-      { f: 118, vol: 0.38, dur: 2.8, type: "sine" as OscillatorType },
-      { f: 184, vol: 0.32, dur: 2.4, type: "triangle" as OscillatorType },
-      { f: 275, vol: 0.25, dur: 2.0, type: "sine" as OscillatorType },
-      { f: 432, vol: 0.18, dur: 1.6, type: "sine" as OscillatorType },
-      { f: 710, vol: 0.12, dur: 1.2, type: "sine" as OscillatorType },
-    ];
-
-    for (const p of partials) {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = p.type;
-      osc.frequency.setValueAtTime(p.f, now);
-      osc.frequency.exponentialRampToValueAtTime(p.f * 0.98, now + p.dur);
-
-      gain.gain.setValueAtTime(0.01, now);
-      gain.gain.linearRampToValueAtTime(p.vol, now + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + p.dur);
-
-      osc.connect(gain);
-      gain.connect(sfxGain);
-      osc.start(now);
-      osc.stop(now + p.dur);
-    }
-
-    // 3. Resonant low-pass filter swell for deep floor-shaking hum
-    const subOsc = ctx.createOscillator();
-    const subGain = ctx.createGain();
-    subOsc.type = "sawtooth";
-    subOsc.frequency.setValueAtTime(54, now);
-    const lp = ctx.createBiquadFilter();
-    lp.type = "lowpass";
-    lp.frequency.setValueAtTime(140, now);
-    lp.frequency.linearRampToValueAtTime(70, now + 2.5);
-
-    subGain.gain.setValueAtTime(0.35, now);
-    subGain.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
-
-    subOsc.connect(lp);
-    lp.connect(subGain);
-    subGain.connect(sfxGain);
-    subOsc.start(now);
-    subOsc.stop(now + 2.5);
-
-    // 4. Ecstatic stadium crowd roar + referee whistle + brass stabs
-    setTimeout(() => {
-      sfxCrowdCheer(1.4);
-      playTone(2200, 0.14, "sine", 0.25);
-      setTimeout(() => playTone(2800, 0.18, "sine", 0.3), 90);
-    }, 150);
-  } catch {}
+  // Gong sound fully removed — replaced by stadium crowd cheers
+  sfxCrowdCheer(1.5);
 }
 
 export function sfxGoal() {
-  sfxGongHit();
   sfxStadiumAirhorn();
-  sfxCrowdCheer(1.4);
+  sfxCrowdCheer(2.2);
   playTone(220, 0.4, "sawtooth", 0.3, false);
   playTone(330, 0.4, "sawtooth", 0.2, false);
   playTone(440, 0.5, "sawtooth", 0.25);
@@ -550,15 +514,34 @@ export function sfxGoal() {
   }, 200);
 }
 
+export function sfxLethalHit() {
+  if (!ctx || !sfxGain || muted) return;
+  const now = ctx.currentTime;
+  playNoise(0.35, 0.45, 420);
+  try {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(320, now);
+    osc.frequency.exponentialRampToValueAtTime(35, now + 0.35);
+    g.gain.setValueAtTime(0.75, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+    osc.connect(g);
+    g.connect(sfxGain);
+    osc.start(now);
+    osc.stop(now + 0.38);
+  } catch {}
+  playTone(920, 0.12, "sawtooth", 0.4);
+}
+
 export function sfxRingOut() {
-  sfxGongHit();
   sfxStadiumAirhorn();
-  sfxCrowdCheer(1.8);
-  playTone(220, 0.3, "sawtooth", 0.35, false);
-  playTone(330, 0.3, "sawtooth", 0.3, false);
-  playTone(440, 0.45, "sawtooth", 0.35);
+  sfxCrowdCheer(2.5); // Thunderous cheering roar!
+  playTone(220, 0.3, "sawtooth", 0.4, false);
+  playTone(330, 0.3, "sawtooth", 0.35, false);
+  playTone(440, 0.45, "sawtooth", 0.4);
   setTimeout(() => {
-    playTone(660, 0.55, "sawtooth", 0.35);
+    playTone(660, 0.55, "sawtooth", 0.4);
   }, 140);
 }
 

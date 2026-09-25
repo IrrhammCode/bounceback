@@ -3,8 +3,8 @@
  */
 
 // Arena dimensions (metres) — spacious elongated Fall Guys stadium
-export const ARENA_W = 28;
-export const ARENA_L = 54;
+export const ARENA_W = 30;
+export const ARENA_L = 58;
 export const WALL_H = 1.4;
 export const WALL_THICK = 0.5;
 
@@ -40,7 +40,7 @@ export const IMMUNITY_DUR = 1.2;
 // Bumper
 export const BUMPER_RADIUS = 0.9;
 
-// Giant Battle Gong / Ring-Out Gate Configuration
+// Ring-Out Gate & Boundary Configuration
 export const GATE_WIDTH = 5.4;
 export const GATE_DEPTH = 1.2;
 
@@ -111,7 +111,7 @@ export const ROSTER_CYAN: FighterProfile[] = [
     costume: "ninja_headband",
     title: "SHADOW DASHER",
     avatarIcon: "02",
-    quote: "Kedip sekali, langsung melayang ke gong!",
+    quote: "Kedip sekali, langsung melayang keluar ring!",
     statPunch: 4,
     statSpeed: 5,
     statChaos: 3,
@@ -127,7 +127,7 @@ export const ROSTER_CORAL: FighterProfile[] = [
     costume: "dino_crest",
     title: "DINO DESTROYER",
     avatarIcon: "01",
-    quote: "Siap-siap terlempar ke langit!",
+    quote: "Siap-siap terlempar ke jurang!",
     statPunch: 5,
     statSpeed: 3,
     statChaos: 5,
@@ -153,7 +153,7 @@ export const ROSTER_CORAL: FighterProfile[] = [
     costume: "pro_shades",
     title: "THE IRON WALL",
     avatarIcon: "03",
-    quote: "Gong ini tidak akan pernah kalian sentuh!",
+    quote: "Ring ini milik kami, kalian yang bakal jatuh!",
     statPunch: 4,
     statSpeed: 3,
     statChaos: 3,

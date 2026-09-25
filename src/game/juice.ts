@@ -145,6 +145,22 @@ export class JuiceSystem {
         break;
       }
 
+      case "lethal_finish": {
+        this.addTrauma(0.95);
+        this.hitStopTimer = 0.16; // Dramatic freeze frame!
+        this.triggerSlowMo(0.5, 0.25);
+        this.spawnComicPopup("LETHAL FINISH!!", x, y + 1.2, z, "rainbow");
+        this.spawnShockwave(x, 0.2, z, 0xff0033, 7.5);
+        this.spawnHitSparks(x, y + 0.5, z, 0xffd700, 48);
+
+        const ox = d.originX ?? (x - (d.dirX ?? 0) * 1.5);
+        const oz = d.originZ ?? (z - (d.dirZ ?? 1) * 1.5);
+        const dx = d.dirX ?? (x - ox);
+        const dz = d.dirZ ?? (z - oz);
+        this.spawnGiantPunchFist(ox, y, oz, dx, dz, true, d.team ?? 0);
+        break;
+      }
+
       case "botpunch": {
         this.addTrauma(0.35);
         const comicHits = ["BAM!!", "WHACK!!", "POW!!"];
@@ -204,11 +220,10 @@ export class JuiceSystem {
         this.spawnGoalCelebration(d.team ?? 0, x, z);
         break;
 
-      case "gong":
       case "goal":
         this.addTrauma(0.95);
         this.triggerSlowMo(0.75, 0.2);
-        this.spawnComicPopup("GONG!!", x, y + 2.0, z, "gold");
+        this.spawnComicPopup("GOAL!!", x, y + 2.0, z, "gold");
         this.spawnShockwave(x, 0.2, z, 0xffd700, 7.5);
         this.spawnHitSparks(x, y + 0.5, z, 0xffea00, 38);
         this.spawnGoalCelebration(d.team ?? 0, x, z);
