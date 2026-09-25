@@ -28,7 +28,7 @@ const initialState: GameState = {
   playerSkill: SkillType.None,
   playerSkillName: "",
   playerSkillIcon: "",
-  cameraMode: "third_wide",
+  cameraMode: "third_close",
   disasterVoteState: {
     isActive: false,
     voteTimeLeft: 0,
@@ -282,19 +282,6 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
             X
           </button>
 
-          {/* Camera mode toggle button */}
-          <button
-            className="cam-toggle-btn"
-            onClick={() => engineRef.current?.toggleCamera()}
-            title="Toggle Camera (or press C / V)"
-          >
-            {gameState.cameraMode === "first_person"
-              ? "CAM: 1ST POV"
-              : gameState.cameraMode === "third_close"
-                ? "CAM: 3RD CLOSE"
-                : "CAM: 3RD WIDE"}
-          </button>
-
           {/* Top Bar: Tournament Series Standings + Scoreboard + Timer */}
           <div className="hud-top">
             {/* 5-Round Grand Championship Series Bar */}
@@ -470,9 +457,6 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
             </span>
             <span className={hasSkill ? "hint-skill-ready" : ""}>
               <kbd>E</kbd> / <kbd>Q</kbd> Skill
-            </span>
-            <span>
-              <kbd>C</kbd> Camera
             </span>
           </div>
         </div>
