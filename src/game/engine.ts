@@ -824,6 +824,42 @@ export class BouncebackEngine {
     }
   }
 
+  private introTagTempV = new THREE.Vector3();
+
+  private updateIntroOverheadTags() {
+    if (this.introPhase !== "cyan_team" && this.introPhase !== "coral_team") {
+      return;
+    }
+    const isCyan = this.introPhase === "cyan_team";
+    const indices = isCyan ? [3, 1, 0, 2, 4] : [9, 7, 5, 6, 8];
+
+    this.camera.updateMatrixWorld();
+
+    for (const entIdx of indices) {
+      const ent = this.entities[entIdx];
+      const el = document.getElementById(`intro-tag-ent-${entIdx}`);
+      if (!ent || !ent.mesh || !el) continue;
+
+      ent.mesh.updateMatrixWorld();
+      ent.mesh.getWorldPosition(this.introTagTempV);
+
+      // Height offset to place tag right above head / crown / hat
+      const isCaptain = entIdx === 0 || entIdx === 5;
+      this.introTagTempV.y += isCaptain ? 1.62 : 1.48;
+
+      this.introTagTempV.project(this.camera);
+
+      // In front of camera
+      if (this.introTagTempV.z < 1.0) {
+        const screenX = (this.introTagTempV.x * 0.5 + 0.5) * 100;
+        const screenY = (-this.introTagTempV.y * 0.5 + 0.5) * 100;
+
+        el.style.left = `${screenX.toFixed(2)}%`;
+        el.style.top = `${screenY.toFixed(2)}%`;
+      }
+    }
+  }
+
   private handleResize = () => {
     const w = this.canvas.clientWidth;
     const h = this.canvas.clientHeight;
@@ -1061,6 +1097,7 @@ export class BouncebackEngine {
       this.arenaController?.update(dt, now * 0.001);
       this.skills.updateTitleBoxes();
       this.updateIntroEntities(now * 0.001);
+      this.updateIntroOverheadTags();
 
       this.renderer.render(this.scene, this.camera);
       return;

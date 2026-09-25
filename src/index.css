@@ -1275,23 +1275,35 @@ body,
   pointer-events: auto;
 }
 
-/* Sleek Broadcast Lower-Third Lineup */
-.tv-lower-third {
-  width: calc(100% - 24px);
-  max-width: 1240px;
-  margin: 0 auto 6px auto;
+/* ════════════════════════════════════════════
+   BOUNCE TV — 5v5 OVERHEAD TAGS & TOP BANNER
+   ════════════════════════════════════════════ */
+.tv-overhead-tags-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 25;
+}
+
+/* Top Team Showcase Banner (Centered under header) */
+.tv-team-top-banner {
+  position: absolute;
+  top: 56px;
+  left: 0;
+  right: 0;
+  z-index: 25;
   display: flex;
-  flex-direction: column;
-  gap: 5px;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 0 24px;
+  pointer-events: none;
+  animation: bannerSlideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.animate-deck-appear {
-  animation: deckSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes deckSlideUp {
+@keyframes bannerSlideDown {
   0% {
-    transform: translateY(24px);
+    transform: translateY(-16px);
     opacity: 0;
   }
   100% {
@@ -1300,51 +1312,66 @@ body,
   }
 }
 
-.lower-third-header-bar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  width: 100%;
-}
-.header-accent-line {
+.banner-accent-line {
   flex: 1;
-  height: 1.5px;
-  background: linear-gradient(90deg, transparent 0%, rgba(39, 229, 255, 0.4) 100%);
+  max-width: 160px;
+  height: 2px;
 }
-.header-accent-line.right {
-  background: linear-gradient(90deg, rgba(39, 229, 255, 0.4) 0%, transparent 100%);
+.banner-accent-line.left {
+  background: linear-gradient(90deg, transparent 0%, rgba(39, 229, 255, 0.6) 100%);
 }
-.lower-third-header-bar.coral .header-accent-line {
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 82, 104, 0.4) 100%);
+.banner-accent-line.right {
+  background: linear-gradient(90deg, rgba(39, 229, 255, 0.6) 0%, transparent 100%);
 }
-.lower-third-header-bar.coral .header-accent-line.right {
-  background: linear-gradient(90deg, rgba(255, 82, 104, 0.4) 0%, transparent 100%);
+.tv-team-top-banner.coral .banner-accent-line.left {
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 82, 104, 0.6) 100%);
+}
+.tv-team-top-banner.coral .banner-accent-line.right {
+  background: linear-gradient(90deg, rgba(255, 82, 104, 0.6) 0%, transparent 100%);
 }
 
-.team-pill {
+.banner-content-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 18px;
+  border-radius: 30px;
+  backdrop-filter: blur(12px);
+  background: rgba(10, 14, 28, 0.92);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+.banner-content-pill.cyan {
+  border: 1.5px solid #27e5ff;
+  box-shadow: 0 0 16px rgba(39, 229, 255, 0.35);
+}
+.banner-content-pill.coral {
+  border: 1.5px solid #ff5268;
+  box-shadow: 0 0 16px rgba(255, 82, 104, 0.35);
+}
+
+.banner-team-name {
   font-family: var(--font-head);
   font-weight: 900;
-  font-size: 0.8rem;
+  font-size: 0.84rem;
   letter-spacing: 0.08em;
-  padding: 2px 14px;
-  border-radius: 20px;
   text-transform: uppercase;
   white-space: nowrap;
 }
-.team-pill.cyan {
-  background: rgba(39, 229, 255, 0.2);
-  border: 1.5px solid #27e5ff;
+.banner-content-pill.cyan .banner-team-name {
   color: #27e5ff;
-  box-shadow: 0 0 14px rgba(39, 229, 255, 0.35);
+  text-shadow: 0 0 10px rgba(39, 229, 255, 0.6);
 }
-.team-pill.coral {
-  background: rgba(255, 82, 104, 0.2);
-  border: 1.5px solid #ff5268;
+.banner-content-pill.coral .banner-team-name {
   color: #ff5268;
-  box-shadow: 0 0 14px rgba(255, 82, 104, 0.35);
+  text-shadow: 0 0 10px rgba(255, 82, 104, 0.6);
 }
-.team-meta-desc {
+
+.banner-divider {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.75rem;
+}
+
+.banner-meta {
   font-family: var(--font-body);
   font-size: 0.74rem;
   font-weight: 600;
@@ -1353,158 +1380,172 @@ body,
   white-space: nowrap;
 }
 
-/* 5v5 Symmetrical Grid */
-.roster-grid-5v5 {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
-  width: 100%;
-  align-items: stretch;
-}
-
-.fighter-card-5v5 {
-  position: relative;
-  background: rgba(12, 18, 32, 0.90);
-  backdrop-filter: blur(12px);
+/* ─── Compact Overhead Character Badges (Di Atas Karakter) ─── */
+.overhead-badge-5v5 {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  width: 114px;
+  padding: 4px 7px;
+  background: rgba(10, 15, 28, 0.92);
+  backdrop-filter: blur(8px);
   border-radius: 8px;
-  padding: 6px 10px;
-  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7);
   display: flex;
   flex-direction: column;
   gap: 2px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
-  overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s;
-  animation: cardPopIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  pointer-events: none;
+  animation: overheadBadgePop 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: left, top;
+  z-index: 30;
 }
 
-@keyframes cardPopIn {
+@keyframes overheadBadgePop {
   0% {
-    transform: scale(0.94);
     opacity: 0;
+    transform: translate(-50%, -85%) scale(0.85);
   }
   100% {
-    transform: scale(1);
     opacity: 1;
+    transform: translate(-50%, -100%) scale(1);
   }
 }
 
-.fighter-card-5v5.cyan {
-  border-color: rgba(39, 229, 255, 0.32);
+.overhead-badge-5v5.cyan {
+  border-color: rgba(39, 229, 255, 0.55);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7), 0 0 12px rgba(39, 229, 255, 0.25);
 }
-.fighter-card-5v5.coral {
-  border-color: rgba(255, 82, 104, 0.32);
+.overhead-badge-5v5.coral {
+  border-color: rgba(255, 82, 104, 0.55);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7), 0 0 12px rgba(255, 82, 104, 0.25);
 }
 
-/* Captain card (center slot 3): distinctive gold border, subtle crown glow */
-.fighter-card-5v5.captain-card {
+/* Captain badge: golden highlight & luminous glow */
+.overhead-badge-5v5.captain-badge {
+  width: 124px;
   border-width: 2px;
-  background: linear-gradient(180deg, rgba(255, 209, 102, 0.12) 0%, rgba(12, 18, 32, 0.95) 100%);
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
-}
-.fighter-card-5v5.captain-card.cyan {
-  border-color: #ffd166;
-  box-shadow: 0 0 16px rgba(39, 229, 255, 0.35), 0 0 8px rgba(255, 209, 102, 0.4);
-}
-.fighter-card-5v5.captain-card.coral {
-  border-color: #ffd166;
-  box-shadow: 0 0 16px rgba(255, 82, 104, 0.35), 0 0 8px rgba(255, 209, 102, 0.4);
+  border-color: #ffd166 !important;
+  background: linear-gradient(180deg, rgba(255, 209, 102, 0.15) 0%, rgba(10, 15, 28, 0.95) 100%);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), 0 0 18px rgba(255, 209, 102, 0.5) !important;
+  z-index: 35;
 }
 
-.card-top-row {
+.badge-role-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 4px;
   width: 100%;
 }
-.jersey-num {
-  font-family: var(--font-head);
-  font-weight: 900;
-  font-size: 1.05rem;
-  line-height: 1;
-}
-.fighter-card-5v5.cyan .jersey-num {
-  color: #27e5ff;
-  text-shadow: 0 0 8px rgba(39, 229, 255, 0.6);
-}
-.fighter-card-5v5.coral .jersey-num {
-  color: #ff5268;
-  text-shadow: 0 0 8px rgba(255, 82, 104, 0.6);
-}
-.role-badge {
+.badge-role-pill {
   font-family: var(--font-mono);
-  font-size: 0.54rem;
+  font-size: 0.52rem;
   font-weight: 800;
-  padding: 1px 5px;
-  border-radius: 4px;
+  padding: 1px 4px;
+  border-radius: 3px;
   background: rgba(255, 255, 255, 0.08);
   color: #94a3b8;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   white-space: nowrap;
 }
-.role-badge.captain {
+.badge-role-pill.captain {
   background: #ffd166;
   color: #0f172a;
   font-weight: 900;
-  box-shadow: 0 0 8px rgba(255, 209, 102, 0.4);
+  box-shadow: 0 0 8px rgba(255, 209, 102, 0.5);
+}
+.badge-type-pill {
+  font-family: var(--font-mono);
+  font-size: 0.48rem;
+  font-weight: 800;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #cbd5e1;
+  letter-spacing: 0.04em;
 }
 
-.card-identity {
+.badge-name-row {
   display: flex;
-  flex-direction: column;
-  gap: 1px;
+  align-items: baseline;
+  gap: 4px;
   text-align: left;
 }
-.fighter-name {
+.badge-num {
   font-family: var(--font-head);
   font-weight: 900;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
+  line-height: 1;
+}
+.overhead-badge-5v5.cyan .badge-num {
+  color: #27e5ff;
+  text-shadow: 0 0 6px rgba(39, 229, 255, 0.5);
+}
+.overhead-badge-5v5.coral .badge-num {
+  color: #ff5268;
+  text-shadow: 0 0 6px rgba(255, 82, 104, 0.5);
+}
+.overhead-badge-5v5.captain-badge .badge-num {
+  color: #ffd166;
+  text-shadow: 0 0 8px rgba(255, 209, 102, 0.7);
+}
+
+.badge-name {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 0.78rem;
   color: #fff;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.1;
 }
-.fighter-title {
+.overhead-badge-5v5.captain-badge .badge-name {
+  font-size: 0.82rem;
+}
+
+.badge-sub-row {
+  display: flex;
+  align-items: center;
+  text-align: left;
+}
+.badge-title {
   font-family: var(--font-mono);
-  font-size: 0.58rem;
+  font-size: 0.52rem;
+  font-weight: 700;
   color: #94a3b8;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.overhead-badge-5v5.captain-badge .badge-title {
+  color: #fde047;
+}
 
-.fighter-quote {
-  font-size: 0.64rem;
-  font-style: italic;
+/* Caret / Pointer pointing down directly at character head */
+.badge-arrow {
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  transform: translateX(-50%);
+  font-size: 8px;
+  line-height: 1;
+  pointer-events: none;
+}
+.overhead-badge-5v5.cyan .badge-arrow {
+  color: #27e5ff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 6px rgba(39, 229, 255, 0.6);
+}
+.overhead-badge-5v5.coral .badge-arrow {
+  color: #ff5268;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 6px rgba(255, 82, 104, 0.6);
+}
+.overhead-badge-5v5.captain-badge .badge-arrow {
   color: #ffd166;
-  margin: 1px 0 0;
-  line-height: 1.2;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  text-align: left;
-}
-
-.card-bottom-row {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  margin-top: 2px;
-}
-.archetype-tag {
-  font-family: var(--font-mono);
-  font-size: 0.52rem;
-  font-weight: 800;
-  padding: 1px 5px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.06);
-  color: #cbd5e1;
-  letter-spacing: 0.06em;
-  white-space: nowrap;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 8px rgba(255, 209, 102, 0.8);
 }
 
 /* Phase 3: VS Clash */
