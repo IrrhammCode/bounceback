@@ -4745,119 +4745,159 @@ body.simulated-fullscreen .screen {
 /* Mobile Portrait & Narrow Devices (<= 640px) */
 @media (max-width: 640px) {
   .hud-top {
-    padding-top: max(8px, calc(env(safe-area-inset-top, 0px) + 4px));
-    gap: 4px;
+    padding-top: max(6px, calc(env(safe-area-inset-top, 0px) + 2px));
+    gap: 3px;
+    transform: scale(0.86);
+    transform-origin: top center;
   }
 
   .hud-tournament-bar {
-    gap: 6px;
-    margin-bottom: 3px;
-    transform: scale(0.92);
+    gap: 5px;
+    margin-bottom: 2px;
   }
 
   .series-pips-mini.cyan .pips-mini-label,
   .series-pips-mini.coral .pips-mini-label {
-    font-size: 0.65rem;
+    font-size: 0.62rem;
   }
 
   .round-indicator-pill {
-    padding: 2px 8px;
-    gap: 4px;
+    padding: 2px 7px;
+    gap: 3px;
   }
 
   .round-pill-num {
-    font-size: 0.68rem;
+    font-size: 0.65rem;
   }
 
   .round-pill-badge {
-    font-size: 0.58rem;
+    font-size: 0.55rem;
     display: none;
   }
 
   .scoreboard {
-    border-radius: 12px;
+    border-radius: 10px;
   }
 
   .score-team {
-    padding: 4px 12px;
-    font-size: 1.25rem;
-    min-width: 52px;
+    padding: 3px 10px;
+    font-size: 1.15rem;
+    min-width: 46px;
   }
 
   .score-divider {
-    height: 28px;
+    height: 24px;
   }
 
   .timer-badge {
-    padding: 4px 12px;
-    font-size: 1.15rem;
+    padding: 3px 10px;
+    font-size: 1.05rem;
   }
 
   .timer-badge .phase-tag {
-    font-size: 0.45rem;
+    font-size: 0.42rem;
   }
 
   .hud-battle-stats-row {
-    padding: 2px 8px;
-    gap: 6px;
-    transform: scale(0.9);
-    margin-top: 2px;
+    padding: 2px 7px;
+    gap: 5px;
+    margin-top: 1px;
   }
 
   .hud-corner-actions {
-    top: max(8px, calc(env(safe-area-inset-top, 0px) + 4px));
-    left: max(8px, calc(env(safe-area-inset-left, 0px) + 4px));
-    gap: 6px;
+    top: max(6px, calc(env(safe-area-inset-top, 0px) + 2px));
+    left: max(6px, calc(env(safe-area-inset-left, 0px) + 2px));
+    gap: 5px;
   }
 
   .hud-corner-actions .exit-btn,
   .hud-corner-actions .btn-fullscreen-toggle {
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-    min-height: 36px;
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
   }
 
   #stick {
-    width: 110px;
-    height: 110px;
-    min-width: 110px;
-    min-height: 110px;
-    bottom: max(16px, calc(env(safe-area-inset-bottom, 0px) + 8px));
-    left: max(16px, calc(env(safe-area-inset-left, 0px) + 8px));
+    width: 96px;
+    height: 96px;
+    min-width: 96px;
+    min-height: 96px;
+    bottom: max(14px, calc(env(safe-area-inset-bottom, 0px) + 6px));
+    left: max(14px, calc(env(safe-area-inset-left, 0px) + 6px));
   }
 
   .action-buttons {
-    bottom: max(16px, calc(env(safe-area-inset-bottom, 0px) + 8px));
-    right: max(16px, calc(env(safe-area-inset-right, 0px) + 8px));
-    gap: 10px;
+    bottom: max(14px, calc(env(safe-area-inset-bottom, 0px) + 6px));
+    right: max(14px, calc(env(safe-area-inset-right, 0px) + 6px));
+    gap: 8px;
   }
 
   .action-btn.punch {
-    width: 68px;
-    height: 68px;
-    font-size: 0.74rem;
+    width: 62px;
+    height: 62px;
+    font-size: 0.70rem;
   }
 
   .action-btn.dash {
-    width: 54px;
-    height: 54px;
-    font-size: 0.66rem;
+    width: 48px;
+    height: 48px;
+    font-size: 0.62rem;
   }
 
   .action-btn.skill {
-    width: 54px;
-    height: 54px;
-    font-size: 0.66rem;
+    width: 48px;
+    height: 48px;
+    font-size: 0.62rem;
   }
 
   .arcade-skill-hud {
-    bottom: max(135px, calc(env(safe-area-inset-bottom, 0px) + 115px));
-    transform: translateX(-50%) scale(0.88);
+    display: none !important;
+  }
+
+  .kb-hints {
+    display: none !important;
+  }
+
+  /* 5v5 Overhead Character Badges: scale down so all 5 fit side by side */
+  .overhead-badge-5v5 {
+    width: clamp(64px, 17vw, 84px);
+    padding: 2px 4px;
+    gap: 1px;
+  }
+  .overhead-badge-5v5.captain-badge {
+    width: clamp(70px, 18.5vw, 92px);
+  }
+  .badge-role-pill {
+    font-size: 0.42rem;
+    padding: 1px 3px;
+  }
+  .badge-type-pill {
+    font-size: 0.38rem;
+    padding: 1px 2px;
+  }
+  .badge-num {
+    font-size: 0.68rem;
+  }
+  .badge-name {
+    font-size: 0.62rem;
+  }
+  .badge-title {
+    font-size: 0.40rem;
+  }
+  .banner-content-pill {
+    padding: 4px 12px;
+    gap: 6px;
+  }
+  .banner-team-name {
+    font-size: 0.72rem;
+  }
+  .banner-meta {
+    font-size: 0.62rem;
   }
 
   .title-header-bar {
-    padding: max(8px, calc(env(safe-area-inset-top, 0px) + 4px)) max(12px, calc(env(safe-area-inset-right, 0px) + 10px)) 8px max(12px, calc(env(safe-area-inset-left, 0px) + 10px));
+    padding: max(6px, calc(env(safe-area-inset-top, 0px) + 2px)) max(10px, calc(env(safe-area-inset-right, 0px) + 8px)) 6px max(10px, calc(env(safe-area-inset-left, 0px) + 8px));
   }
 
   .net-subtitle {
@@ -4865,7 +4905,7 @@ body.simulated-fullscreen .screen {
   }
 
   .title-header-right {
-    gap: 6px;
+    gap: 5px;
   }
 
   .title-sound-btn .btn-label,
@@ -4875,33 +4915,67 @@ body.simulated-fullscreen .screen {
 
   .title-sound-btn,
   .title-header-bar .title-fs-btn {
-    padding: 7px;
+    padding: 6px;
     border-radius: 50%;
-    min-width: 36px;
-    min-height: 36px;
+    min-width: 34px;
+    min-height: 34px;
     justify-content: center;
   }
 
   .title-live-indicator {
-    padding: 4px 10px;
+    padding: 3px 8px;
+  }
+
+  .title-center-plate {
+    padding: 0 10px;
+    transform: scale(0.92);
+    transform-origin: center center;
+  }
+
+  .title-logo-3d {
+    font-size: clamp(2.4rem, 10vw, 4.2rem);
+    margin: 0 0 10px 0;
+    line-height: 0.92;
+  }
+
+  .title-season-tag {
+    font-size: 0.62rem;
+    padding: 3px 12px;
+    margin-bottom: 8px;
+  }
+
+  .title-tagline {
+    font-size: clamp(0.70rem, 2.3vw, 0.88rem);
+    margin: 0 0 14px 0;
+    letter-spacing: 0.05em;
+  }
+
+  .title-feature-pills {
+    margin-bottom: 18px;
+    gap: 6px;
+  }
+
+  .feature-pill {
+    padding: 3px 10px;
+    font-size: 0.65rem;
   }
 
   .btn-enter-arena {
-    padding: 14px 34px;
+    padding: 11px 26px;
     border-radius: 12px;
   }
 
   .btn-main-text {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
   }
 
   .btn-sub-text {
-    font-size: 0.65rem;
+    font-size: 0.60rem;
   }
 
   .title-bottom-ticker {
-    font-size: 0.68rem;
-    padding: 6px 12px max(6px, calc(env(safe-area-inset-bottom, 0px) + 6px));
+    font-size: 0.65rem;
+    padding: 5px 10px max(5px, calc(env(safe-area-inset-bottom, 0px) + 5px));
   }
 }
 
@@ -5026,9 +5100,11 @@ body.simulated-fullscreen .screen {
   }
 
   .arcade-skill-hud {
-    bottom: max(10px, calc(env(safe-area-inset-bottom, 0px) + 4px));
-    transform: translateX(-50%) scale(0.75);
-    padding: 4px 10px;
+    display: none !important;
+  }
+
+  .kb-hints {
+    display: none !important;
   }
 
   .title-header-bar {

@@ -149,8 +149,21 @@ export class BouncebackEngine {
   // Camera follow state (starts behind Cyan player at z=-17, looking downfield toward Coral at +Z)
   private camTargetPos = new THREE.Vector3(0, 8.5, -31.0);
   private camLookTarget = new THREE.Vector3(0, 1.2, -11.0);
-  private baseFov = 58;
-  private targetFov = 58;
+  private baseFov = 56;
+  private targetFov = 56;
+
+  private getAdaptiveBaseFov(): number {
+    const w = this.canvas?.clientWidth || window.innerWidth;
+    const h = this.canvas?.clientHeight || window.innerHeight;
+    const aspect = h > 0 ? w / h : 1.77;
+    // Desktop landscape baseline (aspect >= 1.55)
+    if (aspect >= 1.55) {
+      return 56;
+    }
+    // Mobile portrait: dynamically widen FOV up to 68 deg to preserve horizontal arena view without fisheye
+    const t = Math.max(0, Math.min(1, (1.55 - aspect) / 1.1));
+    return 56 + t * 12;
+  }
 
   // Match-start cinematic swoop dive camera (animates wide countdown view down into 3rd person close)
   private isMatchStartDiving = false;
@@ -218,6 +231,8 @@ export class BouncebackEngine {
 
     // Camera — 3rd-person stadium perspective looking downfield
     const aspect = this.canvas.clientWidth / this.canvas.clientHeight;
+    this.baseFov = this.getAdaptiveBaseFov();
+    this.targetFov = this.baseFov;
     this.camera = new THREE.PerspectiveCamera(this.baseFov, aspect, 0.1, 350);
     this.camera.position.set(0, 8.5, -31.0);
     this.camera.lookAt(0, 1.2, -11.0);
@@ -344,6 +359,9 @@ export class BouncebackEngine {
     window.addEventListener("orientationchange", this.handleResize);
     document.addEventListener("fullscreenchange", this.handleResize);
     document.addEventListener("webkitfullscreenchange", this.handleResize);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", this.handleResize);
+    }
 
     // Start 3D animation loop immediately so Title Screen has a live dynamic arena background!
     this.running = true;
@@ -766,30 +784,35 @@ export class BouncebackEngine {
     phase: "opener" | "cyan_team" | "vs_clash" | "coral_team" | "countdown"
   ) {
     this.introPhase = phase;
+    const w = this.canvas?.clientWidth || window.innerWidth;
+    const h = this.canvas?.clientHeight || window.innerHeight;
+    const aspect = h > 0 ? w / h : 1.77;
+    const portraitFactor = Math.max(0, Math.min(1, (1.55 - aspect) / 1.1));
+
     switch (phase) {
       case "opener":
         // High aerial dive through stadium lights toward midfield
-        this.introCamTarget.set(0, 16.0, -22.0);
+        this.introCamTarget.set(0, 16.0 + portraitFactor * 7.0, -22.0 - portraitFactor * 8.0);
         this.introLookTarget.set(0, 2.0, -4.0);
         break;
       case "cyan_team":
-        // Golden 5v5 squad framing: 8.2m distance comfortably frames entire 5-person squad within center 48% of screen
-        this.introCamTarget.set(0, 1.95, -9.8);
+        // Golden 5v5 squad framing: adapts distance so all 5 players fit on screen regardless of phone width
+        this.introCamTarget.set(0, 1.95 + portraitFactor * 1.6, -9.8 - portraitFactor * 6.5);
         this.introLookTarget.set(0, 1.15, -18.0);
         break;
       case "vs_clash":
         // Low-angle dramatic sweep over the elevated midfield battle deck looking across both teams
-        this.introCamTarget.set(-11.5, 3.4, 0);
+        this.introCamTarget.set(-11.5 - portraitFactor * 4.5, 3.4 + portraitFactor * 1.5, 0);
         this.introLookTarget.set(0, 1.4, 0);
         break;
       case "coral_team":
-        // Golden 5v5 squad framing: 8.2m distance comfortably frames entire 5-person squad within center 48% of screen
-        this.introCamTarget.set(0, 1.95, 9.8);
+        // Golden 5v5 squad framing: adapts distance so all 5 players fit on screen regardless of phone width
+        this.introCamTarget.set(0, 1.95 + portraitFactor * 1.6, 9.8 + portraitFactor * 6.5);
         this.introLookTarget.set(0, 1.15, 18.0);
         break;
       case "countdown":
         // Sweeping up and dropping into exact 3rd-person gameplay position behind player
-        this.introCamTarget.set(0, 9.0, -C.ARENA_L * 0.5 - 2.0);
+        this.introCamTarget.set(0, 9.0 + portraitFactor * 3.5, (-C.ARENA_L * 0.5 - 2.0) - portraitFactor * 4.5);
         this.introLookTarget.set(0, 1.2, -11.0);
         break;
     }
@@ -827,10 +850,17 @@ export class BouncebackEngine {
     this.isMatchStartDiving = true;
     this.matchStartDiveTimer = 0;
 
+    const w = this.canvas?.clientWidth || window.innerWidth;
+    const h = this.canvas?.clientHeight || window.innerHeight;
+    const aspect = h > 0 ? w / h : 1.77;
+    const portraitFactor = Math.max(0, Math.min(1, (1.55 - aspect) / 1.1));
+
     const halfL = C.ARENA_L * 0.5;
     const spawnZ = -halfL * 0.58;
-    this.camTargetPos.set(0, 3.8, spawnZ - 6.8);
-    this.camLookTarget.set(0, 1.3, spawnZ + 8.0);
+    const camDist = 6.4 + portraitFactor * 2.6;
+    const camHeight = 3.6 + portraitFactor * 1.4;
+    this.camTargetPos.set(0, camHeight, spawnZ - camDist);
+    this.camLookTarget.set(0, 1.25 + portraitFactor * 0.2, spawnZ + 5.5 + portraitFactor * 1.8);
     sfxRoundTransitionWhoosh();
   }
 
@@ -1208,6 +1238,9 @@ export class BouncebackEngine {
     this.renderer.setPixelRatio(dpr);
     this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;
+    this.baseFov = this.getAdaptiveBaseFov();
+    this.targetFov = this.baseFov;
+    this.camera.fov = this.baseFov;
     this.camera.updateProjectionMatrix();
   };
 
@@ -1228,16 +1261,22 @@ export class BouncebackEngine {
     }
 
     const pGroundY = getArenaHeight(p.x, p.z);
+    const w = this.canvas.clientWidth || window.innerWidth;
+    const h = this.canvas.clientHeight || window.innerHeight;
+    const aspect = h > 0 ? w / h : 1.77;
+    const portraitFactor = Math.max(0, Math.min(1, (1.55 - aspect) / 1.1));
 
-    // Close Over-The-Shoulder Action Cam (Single Exclusive Camera)
-    const camDist = 6.8;
-    const camHeight = 3.8;
-    const targetX = p.x * 0.82;
+    // Responsive 3rd-person gameplay camera:
+    // Carefully tuned so character sits comfortably in the lower third (not cut off at bottom)
+    // with full tactical visibility of arena width, bumpers, and opponents ahead
+    const camDist = 6.4 + portraitFactor * 2.6;   // 6.4 (desktop) -> 9.0 (phone portrait)
+    const camHeight = 3.6 + portraitFactor * 1.4; // 3.6 (desktop) -> 5.0 (phone portrait)
+    const targetX = p.x * (0.80 - portraitFactor * 0.35);
     let targetY = pGroundY + camHeight;
     let targetZ = p.z - camDist;
 
     // Wall avoidance clamp: never hit north bleachers or turn black
-    const minCamZ = -C.ARENA_L * 0.5 - 6.5;
+    const minCamZ = -C.ARENA_L * 0.5 - 6.5 - portraitFactor * 2.5;
     if (targetZ < minCamZ) {
       const over = minCamZ - targetZ;
       targetZ = minCamZ;
@@ -1247,9 +1286,9 @@ export class BouncebackEngine {
     this.camTargetPos.set(targetX, targetY, targetZ);
 
     // Smooth Gimbal Look Target (interpolates smoothly to eliminate angular snap and jitter)
-    const desiredLookX = p.x * 0.45;
-    const desiredLookY = pGroundY + 1.35;
-    const desiredLookZ = p.z + 7.5;
+    const desiredLookX = p.x * (0.45 - portraitFactor * 0.2);
+    const desiredLookY = pGroundY + 1.25 + portraitFactor * 0.2;
+    const desiredLookZ = p.z + 5.5 + portraitFactor * 1.8;
 
     if (this.isMatchStartDiving) {
       this.matchStartDiveTimer += dt;
@@ -1285,12 +1324,12 @@ export class BouncebackEngine {
       this.camera.position.lerp(this.camTargetPos, posSpeed);
       this.camera.lookAt(this.camLookTarget);
 
-      // Dynamic FOV (gentle, nausea-free transitions)
+      // Dynamic FOV (gentle, nausea-free transitions relative to adaptive baseFov)
       const playerSlot = this.skillSlots[0];
       if (playerSlot && playerSlot.rocketTimer > 0) {
-        this.targetFov = 62;
+        this.targetFov = this.baseFov + 4;
       } else if (p.dashTimer > 0) {
-        this.targetFov = 60;
+        this.targetFov = this.baseFov + 2;
       } else {
         this.targetFov = this.baseFov;
       }
@@ -1387,11 +1426,16 @@ export class BouncebackEngine {
     // ─── 1. Title Screen Live 3D Drone Camera Orbit ───
     if (this.appMode === "title") {
       this.titleCamAngle += dt * 0.16;
-      const radius = 38.0;
-      const h = 21.0 + Math.sin(this.titleCamAngle * 0.6) * 4.0;
+      const w = this.canvas.clientWidth || window.innerWidth;
+      const h = this.canvas.clientHeight || window.innerHeight;
+      const aspect = h > 0 ? w / h : 1.77;
+      const portraitFactor = Math.max(0, Math.min(1, (1.55 - aspect) / 1.1));
+
+      const radius = 38.0 + portraitFactor * 22.0;
+      const hPos = 21.0 + portraitFactor * 12.0 + Math.sin(this.titleCamAngle * 0.6) * 4.0;
       this.camera.position.set(
         Math.sin(this.titleCamAngle) * radius,
-        h,
+        hPos,
         Math.cos(this.titleCamAngle) * radius
       );
       this.camera.lookAt(0, 2.2, 0);
@@ -1430,10 +1474,15 @@ export class BouncebackEngine {
     if (this.appMode === "result") {
       this.titleCamAngle += dt * 0.28;
       const winZ = this.winningTeam === 0 ? -16.74 : 16.74;
+      const w = this.canvas.clientWidth || window.innerWidth;
+      const h = this.canvas.clientHeight || window.innerHeight;
+      const aspect = h > 0 ? w / h : 1.77;
+      const portraitFactor = Math.max(0, Math.min(1, (1.55 - aspect) / 1.1));
+      const dist = 12.0 + portraitFactor * 8.0;
       this.camera.position.set(
-        Math.sin(this.titleCamAngle) * 12.0,
-        5.2,
-        winZ + Math.cos(this.titleCamAngle) * 12.0
+        Math.sin(this.titleCamAngle) * dist,
+        5.2 + portraitFactor * 2.5,
+        winZ + Math.cos(this.titleCamAngle) * dist
       );
       this.camera.lookAt(0, 1.4, winZ);
 
@@ -2292,6 +2341,9 @@ export class BouncebackEngine {
     window.removeEventListener("orientationchange", this.handleResize);
     document.removeEventListener("fullscreenchange", this.handleResize);
     document.removeEventListener("webkitfullscreenchange", this.handleResize);
+    if (window.visualViewport) {
+      window.visualViewport.removeEventListener("resize", this.handleResize);
+    }
     this.player.destroy();
     this.skills.destroy();
     this.disasterManager.destroy();
