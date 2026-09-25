@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { BouncebackEngine, type GameState } from "../game/engine";
 import { SkillType } from "../game/skills";
+import SkillIcon, { ActionPunchIcon, ActionDashIcon } from "../components/SkillIcon";
 import TitleScreenOverlay from "../components/TitleScreenOverlay";
 import TVIntroOverlay, { type IntroPhase } from "../components/TVIntroOverlay";
 import DisasterVoteOverlay from "../components/DisasterVoteOverlay";
@@ -440,6 +441,9 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
           {skillAcquiredFlash && (
             <div className="skill-acquired-banner animate-powerup-zoom">
               <div className="acq-glow-halo" />
+              <div className="acq-icon-wrap">
+                <SkillIcon skill={gameState.playerSkill} size={54} />
+              </div>
               <div className="acq-tag">MYSTERY POWER-UP READY</div>
               <div className="acq-name">{gameState.playerSkillName}</div>
               <div className="acq-sub">PRESS [E] / [Q] OR CLICK FIRE TO UNLEASH!</div>
@@ -469,9 +473,13 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
             <div className="skill-hud-body">
               <div className={`skill-icon-box ${hasSkill ? "box-ready" : ""}`}>
                 {hasSkill ? (
-                  <span className="skill-big-icon">{gameState.playerSkillIcon}</span>
+                  <span className="skill-big-icon">
+                    <SkillIcon skill={gameState.playerSkill} size={34} />
+                  </span>
                 ) : (
-                  <span className="skill-empty-icon">?</span>
+                  <span className="skill-empty-icon">
+                    <SkillIcon skill={SkillType.None} size={30} />
+                  </span>
                 )}
                 {hasSkill && <div className="skill-glow-halo" />}
               </div>
@@ -514,16 +522,24 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
                 onClick={handleActivateSkill}
               >
                 <span className="icon">
-                  {hasSkill ? gameState.playerSkillIcon : "POW"}
+                  {hasSkill ? (
+                    <SkillIcon skill={gameState.playerSkill} size={24} />
+                  ) : (
+                    <SkillIcon skill={SkillType.None} size={24} />
+                  )}
                 </span>
                 {hasSkill ? "FIRE" : "SKILL"}
               </button>
               <button id="btnA" className="action-btn punch">
-                <span className="icon">HIT</span>
+                <span className="icon">
+                  <ActionPunchIcon size={24} />
+                </span>
                 PUNCH
               </button>
               <button id="btnB" className="action-btn dash">
-                <span className="icon">RUN</span>
+                <span className="icon">
+                  <ActionDashIcon size={24} />
+                </span>
                 DASH
               </button>
             </div>

@@ -152,6 +152,13 @@ export class BouncebackEngine {
   private baseFov = 58;
   private targetFov = 58;
 
+  // Match-start cinematic swoop dive camera (animates wide countdown view down into 3rd person close)
+  private isMatchStartDiving = false;
+  private matchStartDiveTimer = 0;
+  private readonly MATCH_START_DIVE_DURATION = 0.95;
+  private diveStartCamPos = new THREE.Vector3();
+  private diveStartCamLook = new THREE.Vector3();
+
   // Arena visual meshes & controller
   private floorMesh!: THREE.Mesh;
   private arenaController: ArenaController | null = null;
@@ -788,13 +795,18 @@ export class BouncebackEngine {
     this.resetEntitiesToSpawn();
     this.showAnnouncement(`${currentRoundDef.title} — ROUND ${currentRoundDef.roundNumber} START!`);
 
-    // Smoothly lock camera directly behind player into 3rd person close follow
+    // Smoothly dive camera from countdown wide position directly behind player into 3rd person close follow
     const halfL = C.ARENA_L * 0.5;
     const spawnZ = -halfL * 0.58;
     this.camTargetPos.set(0, 3.8, spawnZ - 6.8);
     this.camLookTarget.set(0, 1.3, spawnZ + 8.0);
-    this.camera.position.copy(this.camTargetPos);
-    this.camera.lookAt(this.camLookTarget);
+
+    // Initialize cinematic swoop dive transition from current camera orientation
+    this.diveStartCamPos.copy(this.camera.position);
+    this.diveStartCamLook.copy(this.camLookTarget);
+    this.isMatchStartDiving = true;
+    this.matchStartDiveTimer = 0;
+    sfxRoundTransitionWhoosh();
   }
 
   public advanceToNextRound() {
@@ -823,6 +835,7 @@ export class BouncebackEngine {
 
   public resetToTitle() {
     this.isCelebratingRound = false;
+    this.isMatchStartDiving = false;
     this.roundCelebrationTimer = 0;
     this.lastCountdownSec = 0;
     if (this.trophyMesh) this.trophyMesh.visible = false;
@@ -1188,31 +1201,52 @@ export class BouncebackEngine {
 
     this.camTargetPos.set(targetX, targetY, targetZ);
 
-    // Smooth Gimbal Look Target (interpolates smoothly to eliminate angular snap and jitter)
-    const desiredLookX = p.x * 0.45;
-    const desiredLookY = pGroundY + 1.35;
-    const desiredLookZ = p.z + 7.5;
-    const lookSpeed = Math.min(1.0, 9.0 * dt);
-    this.camLookTarget.x += (desiredLookX - this.camLookTarget.x) * lookSpeed;
-    this.camLookTarget.y += (desiredLookY - this.camLookTarget.y) * lookSpeed;
-    this.camLookTarget.z += (desiredLookZ - this.camLookTarget.z) * lookSpeed;
+    if (this.isMatchStartDiving) {
+      this.matchStartDiveTimer += dt;
+      const progress = Math.min(1.0, this.matchStartDiveTimer / this.MATCH_START_DIVE_DURATION);
+      // Smootherstep (Ken Perlin quintic S-curve: zero velocity and acceleration at start & end)
+      const ease = progress * progress * progress * (progress * (progress * 6 - 15) + 10);
 
-    // Smooth Gimbal Camera Position Tracking
-    const posSpeed = Math.min(1.0, 8.0 * dt);
-    this.camera.position.lerp(this.camTargetPos, posSpeed);
-    this.camera.lookAt(this.camLookTarget);
+      // Lerp camera position from wide countdown position to the 3rd-person target position
+      this.camera.position.lerpVectors(this.diveStartCamPos, this.camTargetPos, ease);
 
-    // Dynamic FOV (gentle, nausea-free transitions)
-    const playerSlot = this.skillSlots[0];
-    if (playerSlot && playerSlot.rocketTimer > 0) {
-      this.targetFov = 62;
-    } else if (p.dashTimer > 0) {
-      this.targetFov = 60;
+      // Interpolate look target smoothly toward desired look
+      const desiredLook = new THREE.Vector3(desiredLookX, desiredLookY, desiredLookZ);
+      this.camLookTarget.lerpVectors(this.diveStartCamLook, desiredLook, ease);
+      this.camera.lookAt(this.camLookTarget);
+
+      // Dynamic cinematic FOV rush during dive (widens slightly then settles cleanly)
+      const fovBump = Math.sin(progress * Math.PI) * 4.5;
+      this.camera.fov = this.baseFov + fovBump;
+      this.camera.updateProjectionMatrix();
+
+      if (progress >= 1.0) {
+        this.isMatchStartDiving = false;
+      }
     } else {
-      this.targetFov = this.baseFov;
+      // Smooth Gimbal Look Target (interpolates smoothly to eliminate angular snap and jitter)
+      const lookSpeed = Math.min(1.0, 9.0 * dt);
+      this.camLookTarget.x += (desiredLookX - this.camLookTarget.x) * lookSpeed;
+      this.camLookTarget.y += (desiredLookY - this.camLookTarget.y) * lookSpeed;
+      this.camLookTarget.z += (desiredLookZ - this.camLookTarget.z) * lookSpeed;
+
+      // Smooth Gimbal Camera Position Tracking
+      const posSpeed = Math.min(1.0, 8.0 * dt);
+      this.camera.position.lerp(this.camTargetPos, posSpeed);
+      this.camera.lookAt(this.camLookTarget);
+
+      // Dynamic FOV (gentle, nausea-free transitions)
+      const playerSlot = this.skillSlots[0];
+      if (playerSlot && playerSlot.rocketTimer > 0) {
+        this.targetFov = 62;
+      } else if (p.dashTimer > 0) {
+        this.targetFov = 60;
+      } else {
+        this.targetFov = this.baseFov;
+      }
+      this.camera.fov += (this.targetFov - this.camera.fov) * Math.min(1.0, 6.0 * dt);
+      this.camera.updateProjectionMatrix();
     }
-    this.camera.fov += (this.targetFov - this.camera.fov) * Math.min(1.0, 6.0 * dt);
-    this.camera.updateProjectionMatrix();
 
     // Update juice baseCamPos for shake
     this.juice.baseCamPos = {
