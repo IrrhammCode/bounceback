@@ -185,14 +185,27 @@ export class BouncebackEngine {
     this.onTournamentEnd = onTournamentEnd || null;
   }
 
+  private isMobileDevice(): boolean {
+    if (typeof navigator === "undefined") return false;
+    return (
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      ("ontouchstart" in window) ||
+      (typeof window !== "undefined" && (window.innerWidth <= 840 || window.innerHeight <= 450))
+    );
+  }
+
   init() {
     // Renderer
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas,
       antialias: true,
       alpha: false,
+      powerPreference: "high-performance",
     });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const isMobile = this.isMobileDevice();
+    this.renderer.setPixelRatio(
+      isMobile ? Math.min(window.devicePixelRatio || 1, 1.5) : Math.min(window.devicePixelRatio || 1, 2)
+    );
     this.renderer.setClearColor(0x38bdf8);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -317,9 +330,12 @@ export class BouncebackEngine {
     // Audio
     initAudio();
 
-    // Resize handler
+    // Resize & screen orientation handlers
     this.handleResize();
     window.addEventListener("resize", this.handleResize);
+    window.addEventListener("orientationchange", this.handleResize);
+    document.addEventListener("fullscreenchange", this.handleResize);
+    document.addEventListener("webkitfullscreenchange", this.handleResize);
 
     // Start 3D animation loop immediately so Title Screen has a live dynamic arena background!
     this.running = true;
@@ -332,11 +348,13 @@ export class BouncebackEngine {
     const hemi = new THREE.HemisphereLight(0x7dd3fc, 0xfde047, 0.95);
     this.scene.add(hemi);
 
-    // 2. Warm bright direct sunlight with ultra-crisp shadows
+    // 2. Warm bright direct sunlight with ultra-crisp shadows (optimized for mobile 60 FPS)
     const sun = new THREE.DirectionalLight(0xfff8ee, 1.85);
     sun.position.set(18, 38, 18);
     sun.castShadow = true;
-    sun.shadow.mapSize.set(4096, 4096);
+    const isMobile = this.isMobileDevice();
+    const shadowMapSize = isMobile ? 1024 : 2048;
+    sun.shadow.mapSize.set(shadowMapSize, shadowMapSize);
     sun.shadow.camera.near = 1;
     sun.shadow.camera.far = 110;
     sun.shadow.camera.left = -26;
@@ -1172,9 +1190,14 @@ export class BouncebackEngine {
   }
 
   private handleResize = () => {
-    const w = this.canvas.clientWidth;
-    const h = this.canvas.clientHeight;
+    const w = this.canvas.clientWidth || window.innerWidth;
+    const h = this.canvas.clientHeight || window.innerHeight;
     if (w === 0 || h === 0) return;
+    const isMobile = this.isMobileDevice();
+    const dpr = isMobile
+      ? Math.min(window.devicePixelRatio || 1, 1.5)
+      : Math.min(window.devicePixelRatio || 1, 2);
+    this.renderer.setPixelRatio(dpr);
     this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
@@ -2285,6 +2308,9 @@ export class BouncebackEngine {
     this.running = false;
     cancelAnimationFrame(this.animId);
     window.removeEventListener("resize", this.handleResize);
+    window.removeEventListener("orientationchange", this.handleResize);
+    document.removeEventListener("fullscreenchange", this.handleResize);
+    document.removeEventListener("webkitfullscreenchange", this.handleResize);
     this.player.destroy();
     this.skills.destroy();
     this.disasterManager.destroy();

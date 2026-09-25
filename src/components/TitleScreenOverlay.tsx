@@ -8,6 +8,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { isMuted, setMuted, sfxPunch, resumeAudio } from "../game/audio";
 import { ALL_DISASTERS, type DisasterId } from "../game/disasters";
+import FullscreenButton from "./FullscreenButton";
 
 interface TitleScreenOverlayProps {
   onStartMatch: () => void;
@@ -100,6 +101,8 @@ export default function TitleScreenOverlay({ onStartMatch }: TitleScreenOverlayP
             </svg>
             <span className="btn-label">{muted ? "MUTED" : "SOUND ON"}</span>
           </button>
+
+          <FullscreenButton showLabel className="title-fs-btn" />
         </div>
       </header>
 

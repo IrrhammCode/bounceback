@@ -6,6 +6,7 @@ import TitleScreenOverlay from "../components/TitleScreenOverlay";
 import TVIntroOverlay, { type IntroPhase } from "../components/TVIntroOverlay";
 import DisasterVoteOverlay from "../components/DisasterVoteOverlay";
 import RoundVictoryOverlay from "../components/RoundVictoryOverlay";
+import FullscreenButton from "../components/FullscreenButton";
 import ResultScreen from "./ResultScreen";
 import { type RoundResult } from "../game/tournament";
 import { sfxWhistle, sfxGoal, sfxMatchStart } from "../game/audio";
@@ -272,14 +273,21 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
       {/* 6. In-Game HUD Overlay (Only visible during active match) */}
       {appMode === "game" && (
         <div className="hud animate-fade-in">
-          {/* Exit match button */}
-          <button
-            className="exit-btn"
-            onClick={handleExitToTitle}
-            title="Exit to Title Screen"
-          >
-            X
-          </button>
+          {/* Top Control Actions (Exit Match + Fullscreen Toggle) */}
+          <div className="hud-corner-actions">
+            <button
+              className="exit-btn"
+              onClick={handleExitToTitle}
+              title="Exit to Title Screen"
+              aria-label="Exit Match"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+            <FullscreenButton className="hud-fs-btn" />
+          </div>
 
           {/* Top Bar: Tournament Series Standings + Scoreboard + Timer */}
           <div className="hud-top">
@@ -494,6 +502,7 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
 
           {/* Touch Controls — always in DOM for 404 test harness */}
           <div className="touch-controls">
+            <div id="stick-zone" className="stick-zone" />
             <div id="stick" />
             <div id="stickbase" />
             <div id="sticknub" />
@@ -548,6 +557,7 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
       {/* Hidden touch controls when not in game, ensuring DOM elements exist for automation */}
       {appMode !== "game" && (
         <div style={{ display: "none" }} aria-hidden="true">
+          <div id="stick-zone" className="stick-zone" />
           <div id="stick" />
           <div id="stickbase" />
           <div id="sticknub" />
