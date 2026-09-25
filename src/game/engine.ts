@@ -287,27 +287,28 @@ export class BouncebackEngine {
   private spawnEntities() {
     const halfL = C.ARENA_L * 0.5;
     // 3v3 Official TV Broadcast Match Roster: 3 Cyan vs 3 Coral
+    // Compact inverted-V squad formation: Captain at center vanguard, wingmen shoulder-to-shoulder
     const spawnPositions = [
       // Team 0 (Cyan): YOU (#7), DJ BOUNCE (#1), NINJA BEAN (#2)
       {
         x: 0,
-        z: -halfL * 0.62,
+        z: -halfL * 0.60,
         team: 0,
         isPlayer: true,
         number: C.ROSTER_CYAN[0].number,
         costume: C.ROSTER_CYAN[0].costume,
       },
       {
-        x: -2.8,
-        z: -halfL * 0.56,
+        x: -1.75,
+        z: -halfL * 0.64,
         team: 0,
         isPlayer: false,
         number: C.ROSTER_CYAN[1].number,
         costume: C.ROSTER_CYAN[1].costume,
       },
       {
-        x: 2.8,
-        z: -halfL * 0.56,
+        x: 1.75,
+        z: -halfL * 0.64,
         team: 0,
         isPlayer: false,
         number: C.ROSTER_CYAN[2].number,
@@ -316,23 +317,23 @@ export class BouncebackEngine {
       // Team 1 (Coral): REX CRUSH (#1), HOPPER MAD (#2), SHADY VIP (#3)
       {
         x: 0,
-        z: halfL * 0.62,
+        z: halfL * 0.60,
         team: 1,
         isPlayer: false,
         number: C.ROSTER_CORAL[0].number,
         costume: C.ROSTER_CORAL[0].costume,
       },
       {
-        x: -2.8,
-        z: halfL * 0.56,
+        x: -1.75,
+        z: halfL * 0.64,
         team: 1,
         isPlayer: false,
         number: C.ROSTER_CORAL[1].number,
         costume: C.ROSTER_CORAL[1].costume,
       },
       {
-        x: 2.8,
-        z: halfL * 0.56,
+        x: 1.75,
+        z: halfL * 0.64,
         team: 1,
         isPlayer: false,
         number: C.ROSTER_CORAL[2].number,
@@ -474,9 +475,9 @@ export class BouncebackEngine {
         this.introLookTarget.set(0, 2.0, -4.0);
         break;
       case "cyan_team":
-        // Dynamic close-up hero showcase directly in front of Team Cyan
-        this.introCamTarget.set(0, 1.85, -13.5);
-        this.introLookTarget.set(0, 1.35, -17.8);
+        // Golden framing: 6.0m distance frames entire 3-person squad within center 33% of screen
+        this.introCamTarget.set(0, 1.55, -11.8);
+        this.introLookTarget.set(0, 0.95, -17.8);
         break;
       case "vs_clash":
         // Low-angle dramatic sweep over the elevated midfield battle deck looking across both teams
@@ -484,9 +485,9 @@ export class BouncebackEngine {
         this.introLookTarget.set(0, 1.4, 0);
         break;
       case "coral_team":
-        // Dynamic close-up rival showcase directly in front of Team Coral
-        this.introCamTarget.set(0, 1.85, 13.5);
-        this.introLookTarget.set(0, 1.35, 17.8);
+        // Golden framing: 6.0m distance frames entire 3-person squad within center 33% of screen
+        this.introCamTarget.set(0, 1.55, 11.8);
+        this.introLookTarget.set(0, 0.95, 17.8);
         break;
       case "countdown":
         // Sweeping up and dropping into exact 3rd-person gameplay position behind player
@@ -523,12 +524,12 @@ export class BouncebackEngine {
   private resetEntitiesToSpawn() {
     const halfL = C.ARENA_L * 0.5;
     const spawnPositions = [
-      { x: 0, z: -halfL * 0.62 },
-      { x: -2.8, z: -halfL * 0.56 },
-      { x: 2.8, z: -halfL * 0.56 },
-      { x: 0, z: halfL * 0.62 },
-      { x: -2.8, z: halfL * 0.56 },
-      { x: 2.8, z: halfL * 0.56 },
+      { x: 0, z: -halfL * 0.60 },
+      { x: -1.75, z: -halfL * 0.64 },
+      { x: 1.75, z: -halfL * 0.64 },
+      { x: 0, z: halfL * 0.60 },
+      { x: -1.75, z: halfL * 0.64 },
+      { x: 1.75, z: halfL * 0.64 },
     ];
     for (let i = 0; i < this.entities.length && i < spawnPositions.length; i++) {
       const ent = this.entities[i];
@@ -626,7 +627,7 @@ export class BouncebackEngine {
         } else if (i === 1) {
           // ── DJ BOUNCE (#1): Bouncing to the Beat & Waving Arm! ──
           jumpY = isCyanPhase ? Math.abs(Math.sin(t * 8.0)) * 0.28 : Math.abs(Math.sin(t * 3.0)) * 0.08;
-          rotY += Math.sin(t * 3.5) * 0.15;
+          rotY = (isCyanPhase ? 0.20 : 0) + Math.sin(t * 3.5) * 0.12;
 
           if (u.head) {
             u.head.rotation.x = Math.sin(t * 8.0) * 0.22;
@@ -644,6 +645,7 @@ export class BouncebackEngine {
         } else if (i === 2) {
           // ── NINJA BEAN (#2): Low Agile Ninja Crouch & Rapid Hand Seals! ──
           jumpY = isCyanPhase ? Math.abs(Math.sin(t * 5.0)) * 0.2 : 0;
+          rotY = isCyanPhase ? -0.20 : 0;
           const sealCycle = Math.sin(t * 11.0);
 
           if (u.leftArm) {
@@ -688,6 +690,7 @@ export class BouncebackEngine {
         } else if (i === 4) {
           // ── HOPPER MAD (#2): Wild Bouncing & Flailing Joy! ──
           jumpY = isCoralPhase ? Math.abs(Math.sin(t * 11.0)) * 0.42 : Math.abs(Math.sin(t * 4.0)) * 0.1;
+          rotY = isCoralPhase ? (Math.PI - 0.20) : Math.PI;
           const flail = Math.sin(t * 11.0);
 
           if (u.leftArm) {
@@ -705,7 +708,7 @@ export class BouncebackEngine {
         } else if (i === 5) {
           // ── SHADY VIP (#3): Cool Confident Arms-Crossed Swagger! ──
           jumpY = isCoralPhase ? Math.sin(t * 3.0) * 0.05 : 0;
-          rotY += Math.sin(t * 2.0) * 0.12;
+          rotY = (isCoralPhase ? (Math.PI + 0.20) : Math.PI) + Math.sin(t * 2.0) * 0.10;
 
           if (u.leftArm) {
             u.leftArm.rotation.set(-1.1, 0.7, 0.4);
