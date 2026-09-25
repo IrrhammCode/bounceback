@@ -92,7 +92,8 @@ export function updatePhysics(
   bumpers: BumperData[],
   gates: GateData[],
   dt: number,
-  scoreCallback: ScoreCallback
+  scoreCallback: ScoreCallback,
+  customFriction?: number
 ) {
   const halfW = C.ARENA_W * 0.5;
   const halfL = C.ARENA_L * 0.5;
@@ -159,7 +160,8 @@ export function updatePhysics(
       }
     } else {
       e.launchTimer = 0;
-      const gDecay = Math.pow(C.GROUND_FRICTION, dt * 60);
+      const friction = customFriction ?? C.GROUND_FRICTION;
+      const gDecay = Math.pow(friction, dt * 60);
       e.vx *= gDecay;
       e.vz *= gDecay;
     }

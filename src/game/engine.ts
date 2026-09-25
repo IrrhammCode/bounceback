@@ -57,6 +57,7 @@ import generateMecha from "../assets/toy_mecha.js";
 import generateBumper from "../assets/pinball_bumper.js";
 import { createFallGuysArena, type ArenaController } from "./fallguysArena";
 import { getArenaHeight, getArenaSlope } from "./arenaHeight";
+import { TournamentManager, type RoundResult, type RoundDef } from "./tournament";
 
 export interface GameState {
   timer: string;
@@ -74,6 +75,14 @@ export interface GameState {
   cameraMode: "third_wide" | "third_close" | "first_person";
   // Reality TV Live Audience Disaster Vote
   disasterVoteState: DisasterVoteState;
+  // 5-Round Championship Tournament Metadata
+  currentRound: number;
+  totalRounds: number;
+  roundWins: [number, number];
+  roundTitle: string;
+  roundSubtitle: string;
+  roundBadge: string;
+  roundTheme: string;
 }
 
 export type GameStateCallback = (state: GameState) => void;
@@ -100,13 +109,17 @@ export class BouncebackEngine {
   private running = false;
   private onStateChange: GameStateCallback;
   private onMatchEnd: ((winner: number, scores: [number, number]) => void) | null = null;
+  public onRoundEnd: ((result: RoundResult) => void) | null = null;
+  public onTournamentEnd: ((winner: number, history: RoundResult[], wins: [number, number]) => void) | null = null;
 
-  public appMode: "title" | "intro" | "game" | "result" = "title";
+  public appMode: "title" | "intro" | "game" | "result" | "round_recap" = "title";
   public introPhase: "opener" | "cyan_team" | "vs_clash" | "coral_team" | "countdown" = "opener";
   private titleCamAngle = 0;
   private introCamTarget = new THREE.Vector3(0, 16.0, -22.0);
   private introLookTarget = new THREE.Vector3(0, 2.0, -4.0);
   private winningTeam = 0;
+
+  public tournament = new TournamentManager();
 
   public cameraMode: "third_wide" | "third_close" | "first_person" = "third_wide";
   private boundCamKeyDown?: (e: KeyboardEvent) => void;
@@ -130,11 +143,15 @@ export class BouncebackEngine {
   constructor(
     canvas: HTMLCanvasElement,
     onStateChange: GameStateCallback,
-    onMatchEnd?: (winner: number, scores: [number, number]) => void
+    onMatchEnd?: (winner: number, scores: [number, number]) => void,
+    onRoundEnd?: (result: RoundResult) => void,
+    onTournamentEnd?: (winner: number, history: RoundResult[], wins: [number, number]) => void
   ) {
     this.canvas = canvas;
     this.onStateChange = onStateChange;
     this.onMatchEnd = onMatchEnd || null;
+    this.onRoundEnd = onRoundEnd || null;
+    this.onTournamentEnd = onTournamentEnd || null;
   }
 
   init() {
@@ -213,11 +230,36 @@ export class BouncebackEngine {
     };
     this.match.onMatchEnd = (winner, scores) => {
       sfxGameOver();
-      this.appMode = "result";
+      const roundResult = this.tournament.recordRoundResult(winner, scores);
       this.winningTeam = winner;
-      const winTeam = winner === 0 ? "TEAM CYAN" : "TEAM CORAL";
-      this.showAnnouncement(`MATCH OVER — ${winTeam} WINS!`);
-      if (this.onMatchEnd) this.onMatchEnd(winner, scores);
+
+      if (this.tournament.isTournamentOver) {
+        this.appMode = "result";
+        this.winningTeam = this.tournament.tournamentWinner;
+        const winTeam =
+          this.winningTeam === 0
+            ? "TEAM CYAN"
+            : this.winningTeam === 1
+              ? "TEAM CORAL"
+              : "DRAW";
+        this.showAnnouncement(`GRAND CHAMPIONSHIP OVER — ${winTeam} WINS!`);
+        if (this.onTournamentEnd) {
+          this.onTournamentEnd(
+            this.tournament.tournamentWinner,
+            this.tournament.roundHistory,
+            this.tournament.roundWins
+          );
+        }
+        if (this.onMatchEnd) this.onMatchEnd(this.winningTeam, scores);
+      } else {
+        this.appMode = "round_recap";
+        const winTeam =
+          winner === 0 ? "TEAM CYAN" : winner === 1 ? "TEAM CORAL" : "TIED ROUND";
+        this.showAnnouncement(`ROUND ${roundResult.roundNumber} OVER — ${winTeam}!`);
+        if (this.onRoundEnd) {
+          this.onRoundEnd(roundResult);
+        }
+      }
     };
 
     // Skill system
@@ -567,6 +609,10 @@ export class BouncebackEngine {
 
   public startIntro() {
     this.appMode = "intro";
+    this.tournament.startNewTournament();
+    if (this.arenaController) {
+      this.arenaController.setMapTheme(1);
+    }
     this.introPhase = "opener";
     this.setIntroPhase("opener");
   }
@@ -604,14 +650,26 @@ export class BouncebackEngine {
     }
   }
 
-  startMatch() {
+  public startMatch(roundNumber?: number) {
+    if (roundNumber !== undefined) {
+      this.tournament.currentRound = roundNumber;
+    }
+    const currentRoundDef = this.tournament.getCurrentRoundDef();
+
     this.appMode = "game";
     resumeAudio();
     sfxMatchStart();
     startBGM();
+
+    // Set map theme on arena controller (skybox, floor texture, obstacle visibility)
+    if (this.arenaController) {
+      this.arenaController.setMapTheme(currentRoundDef.roundNumber);
+    }
+
     this.match.start();
     this.disasterManager.reset();
-    this.showAnnouncement("5V5 ARENA MATCH START!");
+    this.resetEntitiesToSpawn();
+    this.showAnnouncement(`${currentRoundDef.title} — ROUND ${currentRoundDef.roundNumber} START!`);
 
     // Smoothly lock camera directly behind player into 3rd person follow
     this.camTargetPos.set(0, 8.5, -31.0);
@@ -620,9 +678,29 @@ export class BouncebackEngine {
     this.camera.lookAt(this.camLookTarget);
   }
 
+  public advanceToNextRound() {
+    if (this.tournament.advanceToNextRound()) {
+      this.startMatch(this.tournament.currentRound);
+    } else {
+      this.appMode = "result";
+    }
+  }
+
+  public startNewTournament() {
+    this.tournament.startNewTournament();
+    if (this.arenaController) {
+      this.arenaController.setMapTheme(1);
+    }
+    this.startMatch(1);
+  }
+
   public resetToTitle() {
     this.appMode = "title";
     stopBGM();
+    this.tournament.startNewTournament();
+    if (this.arenaController) {
+      this.arenaController.setMapTheme(1);
+    }
     this.disasterManager.reset();
     this.resetEntitiesToSpawn();
     this.match.reset();
@@ -1354,6 +1432,9 @@ export class BouncebackEngine {
         }
       });
 
+      // Current round definition & modifiers
+      const currentRoundDef = this.tournament.getCurrentRoundDef();
+
       // Physics
       updatePhysics(
         this.entities,
@@ -1361,12 +1442,14 @@ export class BouncebackEngine {
         this.gates,
         dt,
         (scoringTeam, multiplier, bounceCount, entityIdx) => {
-          this.match.score(scoringTeam, multiplier, bounceCount, entityIdx);
-        }
+          const scaledPoints = Math.round(multiplier * currentRoundDef.goalMultiplier);
+          this.match.score(scoringTeam, scaledPoints, bounceCount, entityIdx);
+        },
+        currentRoundDef.groundFriction
       );
 
-      // Sweeper Arm Obstacle Collisions (The Whirlygig!)
-      if (this.arenaController && this.arenaController.sweeperArms.length > 0) {
+      // Sweeper Arm Obstacle Collisions (The Whirlygig!) — active in rounds 1, 2, 3
+      if (this.arenaController && this.arenaController.sweeperArms.length > 0 && currentRoundDef.roundNumber <= 3) {
         for (const arm of this.arenaController.sweeperArms) {
           const cosA = Math.cos(arm.angle);
           const sinA = Math.sin(arm.angle);
@@ -1412,6 +1495,66 @@ export class BouncebackEngine {
                   text: "BOING!",
                 });
               }
+            }
+          }
+        }
+      }
+
+      // Round 2: Neon Speedway Flank Conveyor Belts
+      if (this.arenaController?.conveyorBelts && currentRoundDef.roundNumber === 2) {
+        for (const belt of this.arenaController.conveyorBelts) {
+          const halfWidth = belt.width * 0.5;
+          for (const ent of this.entities) {
+            if (
+              Math.abs(ent.x - belt.x) <= halfWidth + ent.radius &&
+              ent.z >= belt.zMin &&
+              ent.z <= belt.zMax
+            ) {
+              ent.vz += belt.directionZ * belt.speed * dt;
+            }
+          }
+        }
+      }
+
+      // Round 3: Stormland Lightning Flash
+      if (currentRoundDef.roundNumber === 3 && Math.random() < 0.008) {
+        this.arenaController?.triggerLightning?.();
+      }
+
+      // Round 4: Cyberpinball Jump Pads
+      if (this.arenaController?.jumpPads && currentRoundDef.roundNumber === 4) {
+        for (const pad of this.arenaController.jumpPads) {
+          for (const ent of this.entities) {
+            const dx = ent.x - pad.x;
+            const dz = ent.z - pad.z;
+            const dist = Math.hypot(dx, dz);
+            if (dist < pad.radius + ent.radius && ent.y <= 0.25 && ent.immuneTimer <= 0) {
+              ent.vy = pad.impulseY;
+              ent.vz += pad.impulseZ;
+              ent.immuneTimer = 0.6;
+              sfxBoing();
+              this.juice.trigger("bumper", {
+                x: pad.x,
+                y: 1.0,
+                z: pad.z,
+                text: "BOING!",
+              });
+            }
+          }
+        }
+      }
+
+      // Round 5: Midnight Cosmic Singularity Vortex in Final 30 Seconds
+      if (currentRoundDef.roundNumber === 5) {
+        const isFinal30s = this.match.timeLeft <= 30 && this.match.timeLeft > 0;
+        this.arenaController?.setCosmicVortexActive?.(isFinal30s);
+        if (isFinal30s) {
+          for (const ent of this.entities) {
+            const dist = Math.hypot(ent.x, ent.z);
+            if (dist > 1.0) {
+              const pull = Math.min(10.0, 32.0 / dist) * dt;
+              ent.vx -= (ent.x / dist) * pull;
+              ent.vz -= (ent.z / dist) * pull;
             }
           }
         }
@@ -1794,8 +1937,9 @@ export class BouncebackEngine {
     // Update reality TV live audience disaster manager & physics on entities
     const disasterVoteState = this.disasterManager.update(dt, this.entities);
 
-    // Push game state to React (including player skill & reality TV disaster voting)
+    // Push game state to React (including player skill & reality TV disaster voting & 5-round tournament info)
     const pSlot = this.skillSlots[0];
+    const currentRoundDef = this.tournament.getCurrentRoundDef();
     this.onStateChange({
       timer: this.match.getTimerDisplay(),
       scores: [...this.match.scores] as [number, number],
@@ -1810,6 +1954,13 @@ export class BouncebackEngine {
       playerSkillIcon: pSlot ? SKILL_ICONS[pSlot.type] : "",
       cameraMode: this.cameraMode,
       disasterVoteState,
+      currentRound: this.tournament.currentRound,
+      totalRounds: this.tournament.maxRounds,
+      roundWins: [...this.tournament.roundWins] as [number, number],
+      roundTitle: currentRoundDef.title,
+      roundSubtitle: currentRoundDef.subtitle,
+      roundBadge: currentRoundDef.badge,
+      roundTheme: currentRoundDef.theme,
     });
 
     this.renderer.render(this.scene, this.camera);

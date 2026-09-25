@@ -22,10 +22,19 @@
 import * as THREE from "three";
 import * as C from "./config";
 import { getArenaHeight } from "./arenaHeight";
+import {
+  createSkyTexture,
+  createFloorTexture,
+  createSpeedwayBelts,
+  createStormlandFeatures,
+  createPinballJumpPads,
+  createCosmicSingularity,
+} from "./arenaThemes";
 
 export interface ArenaController {
   update: (dt: number, time: number) => void;
   onGoalCelebration: (team: number) => void;
+  setMapTheme: (roundNumber: number) => void;
   sweeperArms: {
     center: THREE.Vector3;
     angle: number;
@@ -33,6 +42,24 @@ export interface ArenaController {
     armRadius: number;
     rotSpeed: number;
   }[];
+  conveyorBelts?: {
+    x: number;
+    zMin: number;
+    zMax: number;
+    width: number;
+    directionZ: number;
+    speed: number;
+  }[];
+  jumpPads?: {
+    x: number;
+    z: number;
+    radius: number;
+    impulseY: number;
+    impulseZ: number;
+  }[];
+  triggerLightning?: () => void;
+  setCosmicVortexActive?: (active: boolean) => void;
+  isCosmicVortexActive?: () => boolean;
   floorMesh: THREE.Mesh;
   dispose: () => void;
 }
@@ -972,7 +999,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     ctx.fillStyle = "#ffffff";
     ctx.font = "900 44px 'Arial Black', sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("★ BOUNCEBACK! ★", 256, 75);
+    ctx.fillText("BOUNCEBACK!", 256, 75);
     ctx.font = "700 30px 'Arial Black', sans-serif";
     ctx.fillStyle = "#fef08a";
     ctx.fillText("CHAMPIONSHIP ARENA", 256, 140);
@@ -1319,15 +1346,15 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     ctx.fillStyle = "#ffffff";
     ctx.font = "900 68px Outfit, sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("⚡ BOUNCEBACK ARENA ⚡", 512, 110);
+    ctx.fillText("BOUNCEBACK ARENA", 512, 110);
 
     ctx.fillStyle = "#38bdf8";
     ctx.font = "800 48px Outfit, sans-serif";
-    ctx.fillText("★ CORAL CHAMPIONSHIP CUP ★", 512, 190);
+    ctx.fillText("CORAL CHAMPIONSHIP CUP", 512, 190);
 
     ctx.fillStyle = "#f43f5e";
     ctx.font = "900 56px Outfit, sans-serif";
-    ctx.fillText("👑 WIN THE CROWN 👑", 512, 280);
+    ctx.fillText("WIN THE CROWN", 512, 280);
   });
   const southJumbo = new THREE.Mesh(
     new THREE.PlaneGeometry(20, 6.5),
@@ -2386,6 +2413,73 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
       confMesh.setMatrixAt(i, cd.matrix);
     }
     confMesh.instanceMatrix.needsUpdate = true;
+
+    // 14. Update Map Biome Obstacles
+    speedway.update(dt, time);
+    stormland.update(dt, time);
+    pinball.update(dt, time);
+    cosmic.update(dt, time);
+  }
+
+  // ─── 18. MAP BIOME MANAGERS & OBSTACLES ───────────────
+  const speedway = createSpeedwayBelts(root);
+  const stormland = createStormlandFeatures(root);
+  const pinball = createPinballJumpPads(root);
+  const cosmic = createCosmicSingularity(root);
+
+  const skyCache: Record<number, THREE.CanvasTexture> = { 1: skyTex };
+  const floorCache: Record<number, THREE.CanvasTexture> = { 1: floorTex };
+
+  function getSky(rn: number): THREE.CanvasTexture {
+    if (!skyCache[rn]) skyCache[rn] = createSkyTexture(rn);
+    return skyCache[rn];
+  }
+
+  function getFloor(rn: number): THREE.CanvasTexture {
+    if (!floorCache[rn]) floorCache[rn] = createFloorTexture(rn);
+    return floorCache[rn];
+  }
+
+  function setMapTheme(roundNumber: number) {
+    skyMat.map = getSky(roundNumber);
+    skyMat.needsUpdate = true;
+    floorMat.map = getFloor(roundNumber);
+    floorMat.needsUpdate = true;
+
+    // Toggle map-specific interactive obstacle groups
+    speedway.group.visible = (roundNumber === 2);
+    stormland.group.visible = (roundNumber === 3);
+    pinball.group.visible = (roundNumber === 4);
+    cosmic.group.visible = (roundNumber === 5);
+
+    // Hazard sweepers: active in round 1, 2, 3 (hyper-spin in round 3), retracted in 4 & 5
+    for (let i = 0; i < sweepers.length; i++) {
+      sweeperGroups[i].visible = (roundNumber <= 3);
+      sweepers[i].rotSpeed = (roundNumber === 3 ? (i === 0 ? 1.9 : -1.9) : (i === 0 ? 1.25 : -1.25));
+    }
+
+    // Dynamic Cloud Sea color
+    if (roundNumber === 1) {
+      cloudSeaMat.color.setHex(0xffffff);
+      cloudSeaMat.emissive.setHex(0xffffff);
+      cloudSeaMat.emissiveIntensity = 0.25;
+    } else if (roundNumber === 2) {
+      cloudSeaMat.color.setHex(0x701a75);
+      cloudSeaMat.emissive.setHex(0xc2410c);
+      cloudSeaMat.emissiveIntensity = 0.35;
+    } else if (roundNumber === 3) {
+      cloudSeaMat.color.setHex(0x0f172a);
+      cloudSeaMat.emissive.setHex(0x1e1b4b);
+      cloudSeaMat.emissiveIntensity = 0.15;
+    } else if (roundNumber === 4) {
+      cloudSeaMat.color.setHex(0x180424);
+      cloudSeaMat.emissive.setHex(0xec4899);
+      cloudSeaMat.emissiveIntensity = 0.40;
+    } else {
+      cloudSeaMat.color.setHex(0x020617);
+      cloudSeaMat.emissive.setHex(0x3e1e68);
+      cloudSeaMat.emissiveIntensity = 0.30;
+    }
   }
 
   function onGoalCelebration(team: number) {
@@ -2397,5 +2491,17 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     scene.remove(root);
   }
 
-  return { update, onGoalCelebration, sweeperArms: sweepers, floorMesh, dispose };
+  return {
+    update,
+    onGoalCelebration,
+    setMapTheme,
+    sweeperArms: sweepers,
+    conveyorBelts: speedway.conveyorBelts,
+    jumpPads: pinball.jumpPads,
+    triggerLightning: stormland.triggerLightning,
+    setCosmicVortexActive: cosmic.setVortexActive,
+    isCosmicVortexActive: cosmic.isVortexActive,
+    floorMesh,
+    dispose,
+  };
 }

@@ -44,10 +44,12 @@ export const BUMPER_RADIUS = 0.9;
 export const GATE_WIDTH = 5.4;
 export const GATE_DEPTH = 1.2;
 
-// Match
-export const MATCH_DURATION = 100;
-export const PHASE2_TIME = 30;
-export const PHASE3_TIME = 75;
+// Match & 5-Round Championship
+export const MATCH_DURATION = 180; // 3 Minutes per Round
+export const PHASE2_TIME = 60;     // At 2:00 remaining
+export const PHASE3_TIME = 120;    // Final 1:00 Overdrive Climax
+export const TOTAL_ROUNDS = 5;
+export const WINS_TO_CLINCH = 3;
 export const GATE_SCORE_1X = 1;
 export const GATE_SCORE_2X = 2;
 export const GATE_SCORE_3X = 3;

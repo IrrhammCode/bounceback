@@ -4,6 +4,9 @@ import { SkillType } from "../game/skills";
 import TitleScreenOverlay from "../components/TitleScreenOverlay";
 import TVIntroOverlay, { type IntroPhase } from "../components/TVIntroOverlay";
 import DisasterVoteOverlay from "../components/DisasterVoteOverlay";
+import RoundRecapOverlay from "../components/RoundRecapOverlay";
+import ResultScreen from "./ResultScreen";
+import { type RoundResult } from "../game/tournament";
 import { sfxWhistle, sfxGoal, sfxMatchStart } from "../game/audio";
 
 interface GameScreenProps {
@@ -11,10 +14,10 @@ interface GameScreenProps {
   onExit?: () => void;
 }
 
-type AppMode = "title" | "intro" | "game" | "result";
+type AppMode = "title" | "intro" | "game" | "result" | "round_recap";
 
 const initialState: GameState = {
-  timer: "1:40",
+  timer: "3:00",
   scores: [0, 0],
   phase: 1,
   combo: [0, 0],
@@ -35,6 +38,13 @@ const initialState: GameState = {
     disasterTimeLeft: 0,
     announcement: "",
   },
+  currentRound: 1,
+  totalRounds: 5,
+  roundWins: [0, 0],
+  roundTitle: "SUNNY COLOSSEUM",
+  roundSubtitle: "ROUND 1: OPENING CLASH",
+  roundBadge: "CLASSIC SHOWDOWN",
+  roundTheme: "colosseum",
 };
 
 export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
@@ -42,9 +52,17 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
   const engineRef = useRef<BouncebackEngine | null>(null);
   const [gameState, setGameState] = useState<GameState>(initialState);
   const [appMode, setAppMode] = useState<AppMode>("title");
-  const [result, setResult] = useState<{ winner: number; scores: [number, number] }>({
+  const [currentRoundResult, setCurrentRoundResult] = useState<RoundResult | null>(null);
+  const [seriesResult, setSeriesResult] = useState<{
+    winner: number;
+    scores: [number, number];
+    history: RoundResult[];
+    roundWins: [number, number];
+  }>({
     winner: 0,
     scores: [0, 0],
+    history: [],
+    roundWins: [0, 0],
   });
 
   // Signal ready to 404 test runner
@@ -58,13 +76,30 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
 
   const handleEngineMatchEnd = useCallback(
     (winner: number, scores: [number, number]) => {
-      setResult({ winner, scores });
+      const history = engineRef.current?.tournament.roundHistory || [];
+      const roundWins = engineRef.current?.tournament.roundWins || [0, 0];
+      setSeriesResult({ winner, scores, history, roundWins });
       setAppMode("result");
       sfxWhistle();
       setTimeout(() => sfxGoal(), 400);
       onMatchEnd?.(winner, scores);
     },
     [onMatchEnd]
+  );
+
+  const handleRoundEnd = useCallback((result: RoundResult) => {
+    setCurrentRoundResult(result);
+    setAppMode("round_recap");
+  }, []);
+
+  const handleTournamentEnd = useCallback(
+    (winner: number, history: RoundResult[], wins: [number, number]) => {
+      const lastScores: [number, number] =
+        history.length > 0 ? history[history.length - 1].scores : [0, 0];
+      setSeriesResult({ winner, scores: lastScores, history, roundWins: wins });
+      setAppMode("result");
+    },
+    []
   );
 
   // Initialize Engine once on mount with 3D title screen drone camera active
@@ -74,7 +109,9 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
     const engine = new BouncebackEngine(
       canvasRef.current,
       handleStateChange,
-      handleEngineMatchEnd
+      handleEngineMatchEnd,
+      handleRoundEnd,
+      handleTournamentEnd
     );
     engineRef.current = engine;
     engine.init();
@@ -83,7 +120,13 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
       engine.destroy();
       engineRef.current = null;
     };
-  }, [handleStateChange, handleEngineMatchEnd]);
+  }, [handleStateChange, handleEngineMatchEnd, handleRoundEnd, handleTournamentEnd]);
+
+  // Advance to next tournament round from round recap
+  const handleNextRound = useCallback(() => {
+    setAppMode("game");
+    engineRef.current?.advanceToNextRound();
+  }, []);
 
   // Transition from Title Screen into 3v3 TV Intro Cutscene with camera dive
   const handleStartMatchFromTitle = useCallback(() => {
@@ -206,48 +249,28 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
         />
       )}
 
-      {/* 4. Match Over Result Overlay (Winning Team Victory Orbit) */}
-      {appMode === "result" && (
-        <div className="result-broadcast-overlay animate-modal-zoom">
-          <div className="result-broadcast-card">
-            <div className="result-badge">MATCH CONCLUDED • FINAL BROADCAST SCORE</div>
-            <h1
-              className={`result-winner-title ${
-                result.winner === 0 ? "cyan" : result.winner === 1 ? "coral" : "draw"
-              }`}
-            >
-              {result.winner === 0
-                ? "TEAM CYAN VICTORIOUS!"
-                : result.winner === 1
-                  ? "TEAM CORAL VICTORIOUS!"
-                  : "MATCH TIED • SUDDEN DRAW!"}
-            </h1>
-
-            <div className="result-score-banner">
-              <div className="team-score-box cyan">
-                <span className="team-name">TEAM CYAN</span>
-                <span className="score-val">{result.scores[0]}</span>
-              </div>
-              <div className="score-vs-divider">VS</div>
-              <div className="team-score-box coral">
-                <span className="team-name">TEAM CORAL</span>
-                <span className="score-val">{result.scores[1]}</span>
-              </div>
-            </div>
-
-            <div className="result-actions-row">
-              <button className="btn-result-rematch" onClick={handleRematch}>
-                PLAY REMATCH
-              </button>
-              <button className="btn-result-menu" onClick={handleExitToTitle}>
-                RETURN TO TITLE
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* 4. Round Recap Overlay between 5 Championship Rounds */}
+      {appMode === "round_recap" && currentRoundResult && (
+        <RoundRecapOverlay
+          roundResult={currentRoundResult}
+          roundWins={gameState.roundWins || [0, 0]}
+          onNextRound={handleNextRound}
+        />
       )}
 
-      {/* 5. In-Game HUD Overlay (Only visible during active match) */}
+      {/* 5. Grand Championship Result Overlay */}
+      {appMode === "result" && (
+        <ResultScreen
+          winner={seriesResult.winner}
+          scores={seriesResult.scores}
+          roundWins={seriesResult.roundWins}
+          history={seriesResult.history}
+          onRematch={handleRematch}
+          onMenu={handleExitToTitle}
+        />
+      )}
+
+      {/* 6. In-Game HUD Overlay (Only visible during active match) */}
       {appMode === "game" && (
         <div className="hud animate-fade-in">
           {/* Exit match button */}
@@ -256,7 +279,7 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
             onClick={handleExitToTitle}
             title="Exit to Title Screen"
           >
-            ✕
+            X
           </button>
 
           {/* Camera mode toggle button */}
@@ -272,8 +295,46 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
                 : "CAM: 3RD WIDE"}
           </button>
 
-          {/* Top Bar: Scoreboard + Timer */}
+          {/* Top Bar: Tournament Series Standings + Scoreboard + Timer */}
           <div className="hud-top">
+            {/* 5-Round Grand Championship Series Bar */}
+            <div className="hud-tournament-bar">
+              <div className="series-pips-mini cyan">
+                <span className="pips-mini-label">CYAN</span>
+                {[0, 1, 2].map((idx) => (
+                  <span
+                    key={idx}
+                    className={`pip-dot-mini cyan ${idx < (gameState.roundWins?.[0] || 0) ? "active" : ""}`}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill={idx < (gameState.roundWins?.[0] || 0) ? "#27e5ff" : "none"} stroke="#27e5ff" strokeWidth="2.5">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                  </span>
+                ))}
+              </div>
+
+              <div className="round-indicator-pill">
+                <span className="round-pill-num">
+                  ROUND {gameState.currentRound || 1} OF {gameState.totalRounds || 5}
+                </span>
+                <span className="round-pill-badge">{gameState.roundBadge || "CLASSIC SHOWDOWN"}</span>
+              </div>
+
+              <div className="series-pips-mini coral">
+                {[0, 1, 2].map((idx) => (
+                  <span
+                    key={idx}
+                    className={`pip-dot-mini coral ${idx < (gameState.roundWins?.[1] || 0) ? "active" : ""}`}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill={idx < (gameState.roundWins?.[1] || 0) ? "#ff5268" : "none"} stroke="#ff5268" strokeWidth="2.5">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                  </span>
+                ))}
+                <span className="pips-mini-label">CORAL</span>
+              </div>
+            </div>
+
             <div className="scoreboard">
               <div className="score-team cyan">
                 <span className="label">CYN</span>
@@ -307,7 +368,7 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
           {skillAcquiredFlash && (
             <div className="skill-acquired-banner animate-powerup-zoom">
               <div className="acq-glow-halo" />
-              <div className="acq-tag">★ MYSTERY POWER-UP READY ★</div>
+              <div className="acq-tag">MYSTERY POWER-UP READY</div>
               <div className="acq-name">{gameState.playerSkillName}</div>
               <div className="acq-sub">PRESS [E] / [Q] OR CLICK FIRE TO UNLEASH!</div>
             </div>
@@ -320,11 +381,11 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
             </div>
           )}
 
-          {/* ─── Ultra-Prominent Arcade Skill HUD (Skill Wajib Terlihat) ─── */}
+          {/* Ultra-Prominent Arcade Skill HUD */}
           <div className={`arcade-skill-hud ${hasSkill ? "skill-ready-pulse" : "skill-empty-slot"}`}>
             <div className="skill-hud-header">
               <span className={`skill-status-tag ${hasSkill ? "ready" : "empty"}`}>
-                {hasSkill ? "★ POWER-UP READY ★" : "POWER-UP SLOT"}
+                {hasSkill ? "POWER-UP READY" : "POWER-UP SLOT"}
               </span>
               {hasSkill && (
                 <span className="skill-trigger-key-prompt animate-pulse">

@@ -3228,3 +3228,446 @@ body,
     flex-direction: column;
   }
 }
+
+/* ==========================================================================
+   5-ROUND GRAND CHAMPIONSHIP TOURNAMENT STYLES
+   ========================================================================== */
+
+/* ─── HUD Tournament Header Bar (In-Game Top Header) ─── */
+.hud-tournament-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.series-pips-mini {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.series-pips-mini.cyan .pips-mini-label {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: #27e5ff;
+  text-shadow: 0 0 8px rgba(39, 229, 255, 0.6);
+  margin-right: 4px;
+}
+.series-pips-mini.coral .pips-mini-label {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: #ff5268;
+  text-shadow: 0 0 8px rgba(255, 82, 104, 0.6);
+  margin-left: 4px;
+}
+
+.pip-dot-mini {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.2);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.pip-dot-mini.cyan.active {
+  color: #27e5ff;
+  text-shadow: 0 0 10px rgba(39, 229, 255, 0.9);
+  transform: scale(1.15);
+}
+.pip-dot-mini.coral.active {
+  color: #ff5268;
+  text-shadow: 0 0 10px rgba(255, 82, 104, 0.9);
+  transform: scale(1.15);
+}
+
+.round-indicator-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 12px;
+  background: rgba(10, 14, 28, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+}
+.round-pill-num {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  color: #ffd166;
+  text-shadow: 0 0 8px rgba(255, 209, 102, 0.5);
+}
+.round-pill-badge {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 0.06em;
+  padding-left: 6px;
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* ─── Round Recap TV Intermission Card ─── */
+.round-recap-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, rgba(17, 24, 39, 0.82) 0%, rgba(3, 7, 18, 0.96) 100%);
+  backdrop-filter: blur(16px);
+  z-index: 100;
+  padding: 20px;
+}
+
+.round-recap-card {
+  width: 100%;
+  max-width: 620px;
+  background: linear-gradient(145deg, rgba(20, 27, 45, 0.95), rgba(11, 15, 28, 0.98));
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 24px;
+  padding: 32px 36px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(39, 229, 255, 0.15);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.recap-broadcast-badge {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #ffd166;
+  margin-bottom: 12px;
+  text-shadow: 0 0 10px rgba(255, 209, 102, 0.4);
+}
+
+.recap-winner-title {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 1.85rem;
+  letter-spacing: 0.04em;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+}
+
+.recap-score-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 16px;
+  padding: 14px 24px;
+  margin-bottom: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.recap-team-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.recap-team-name {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+}
+.recap-team-box.cyan .recap-team-name {
+  color: #27e5ff;
+}
+.recap-team-box.coral .recap-team-name {
+  color: #ff5268;
+}
+.recap-score-val {
+  font-family: var(--font-mono);
+  font-weight: 900;
+  font-size: 2.4rem;
+  color: #fff;
+  line-height: 1;
+}
+.recap-vs {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 1.1rem;
+  color: #64748b;
+}
+
+.recap-series-standings {
+  margin-bottom: 24px;
+  padding: 12px 18px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.series-title {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+.series-pips-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+.pips-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pips-label {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+}
+.pips-group.cyan .pips-label {
+  color: #27e5ff;
+}
+.pips-group.coral .pips-label {
+  color: #ff5268;
+}
+.pips-dots {
+  display: flex;
+  gap: 4px;
+}
+.pip-star {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.2);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.pip-star.cyan.filled {
+  color: #27e5ff;
+  text-shadow: 0 0 10px rgba(39, 229, 255, 0.9);
+  transform: scale(1.2);
+}
+.pip-star.coral.filled {
+  color: #ff5268;
+  text-shadow: 0 0 10px rgba(255, 82, 104, 0.9);
+  transform: scale(1.2);
+}
+.series-divider {
+  color: rgba(255, 255, 255, 0.2);
+  font-weight: 900;
+}
+
+.recap-next-preview {
+  margin-bottom: 24px;
+  text-align: left;
+}
+.next-label {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  color: #ffd166;
+  margin-bottom: 6px;
+}
+.next-card {
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.next-badge {
+  font-family: var(--font-mono);
+  font-weight: 900;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  color: #ffd166;
+}
+.next-title {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 1.05rem;
+  letter-spacing: 0.05em;
+  color: #fff;
+}
+.next-gimmick {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.recap-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.countdown-pill {
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+.countdown-val {
+  color: #ffd166;
+  font-weight: 900;
+  font-size: 0.95rem;
+}
+.btn-recap-next {
+  background: linear-gradient(135deg, #00f0ff, #2563eb);
+  border: none;
+  border-radius: 10px;
+  padding: 12px 24px;
+  color: #fff;
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.4);
+}
+.btn-recap-next:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 24px rgba(0, 240, 255, 0.7);
+}
+
+/* ─── Grand Championship Result Screen Overhaul ─── */
+.grand-championship-card {
+  width: 100%;
+  max-width: 680px;
+  background: linear-gradient(145deg, rgba(20, 27, 45, 0.96), rgba(9, 13, 24, 0.98));
+  border: 2px solid rgba(255, 209, 102, 0.35);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85), 0 0 50px rgba(255, 209, 102, 0.2);
+}
+.trophy-header-badge {
+  font-family: var(--font-mono);
+  font-weight: 900;
+  font-size: 0.76rem;
+  letter-spacing: 0.16em;
+  color: #ffd166;
+  margin-bottom: 12px;
+  text-shadow: 0 0 10px rgba(255, 209, 102, 0.5);
+}
+
+.series-score-hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 16px;
+  padding: 16px 28px;
+  margin-bottom: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.series-hero-team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.series-hero-name {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+}
+.series-hero-team.cyan .series-hero-name {
+  color: #27e5ff;
+}
+.series-hero-team.coral .series-hero-name {
+  color: #ff5268;
+}
+.series-hero-wins {
+  font-family: var(--font-mono);
+  font-weight: 900;
+  font-size: 2rem;
+  color: #fff;
+  line-height: 1;
+}
+.series-hero-divider {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 1.4rem;
+  color: #64748b;
+}
+
+/* Round-by-Round Scorecard Table */
+.round-scorecard-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: rgba(0, 0, 0, 0.28);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.table-header-row {
+  display: grid;
+  grid-template-columns: 70px 1fr 100px 90px;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.05);
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  color: #94a3b8;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: left;
+}
+.table-data-row {
+  display: grid;
+  grid-template-columns: 70px 1fr 100px 90px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  align-items: center;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  text-align: left;
+}
+.table-data-row:last-child {
+  border-bottom: none;
+}
+.col-round {
+  font-family: var(--font-mono);
+  font-weight: 800;
+  color: #ffd166;
+}
+.col-title {
+  color: #e2e8f0;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.col-scores {
+  font-family: var(--font-mono);
+  font-weight: 800;
+}
+.col-scores .c-val {
+  color: #27e5ff;
+}
+.col-scores .r-val {
+  color: #ff5268;
+}
+.col-win {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+}
+.col-win.cyan {
+  color: #27e5ff;
+}
+.col-win.coral {
+  color: #ff5268;
+}
+.col-win.draw {
+  color: #ffd166;
+}
