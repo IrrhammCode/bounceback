@@ -755,6 +755,10 @@ export class BouncebackEngine {
     this.disasterManager.userVote(id);
   }
 
+  public triggerDisasterVote() {
+    this.disasterManager.startVote();
+  }
+
   public triggerPlayerSkill() {
     if (this.appMode !== "game") return;
     if (this.skillSlots[0] && this.skillSlots[0].type !== SkillType.None) {
@@ -1894,13 +1898,33 @@ export class BouncebackEngine {
             u.rightLeg.rotation.x = -Math.sin(now * 0.06) * 1.8;
           }
         } else if (ent.respawning) {
-          // Dropping in from sky on respawn
+          // Dropping in from sky on respawn — clean neutral sky-dive pose and reset all limb states
           ent.mesh.position.y = groundH + ent.y + footOffset;
           ent.mesh.rotation.x = 0;
           ent.mesh.rotation.z = 0;
+          u.walkPhase = 0;
           if (u.leftArm && u.rightArm) {
-            u.leftArm.rotation.set(0, 0, 1.4);
-            u.rightArm.rotation.set(0, 0, -1.4);
+            u.leftArm.rotation.set(-0.18, 0, 0.35);
+            u.rightArm.rotation.set(-0.18, 0, -0.35);
+          }
+          if (u.leftForearm) u.leftForearm.rotation.set(-0.25, 0, 0);
+          if (u.rightForearm) u.rightForearm.rotation.set(-0.25, 0, 0);
+          if (u.leftLeg && u.rightLeg) {
+            u.leftLeg.rotation.set(0, 0, -0.05);
+            u.rightLeg.rotation.set(0, 0, 0.05);
+          }
+          if (u.leftLowerLeg && u.rightLowerLeg) {
+            u.leftLowerLeg.rotation.set(0, 0, 0);
+            u.rightLowerLeg.rotation.set(0, 0, 0);
+          }
+          if (u.leftFoot && u.rightFoot) {
+            u.leftFoot.rotation.set(0, 0, 0);
+            u.rightFoot.rotation.set(0, 0, 0);
+          }
+          if (u.torso) u.torso.rotation.set(0, 0, 0);
+          if (u.hips) {
+            u.hips.rotation.set(0, 0, 0);
+            u.hips.position.y = u.baseHipsY ?? 0.52;
           }
         } else if (ent.launched) {
           // High dramatic over-the-top parabolic flight arc (lasts ~2.4s, hard cap 3.0s max)
@@ -1923,8 +1947,8 @@ export class BouncebackEngine {
             u.rightArm.rotation.set(-2.6 - Math.sin(now * 0.035) * 1.5, -Math.cos(now * 0.03) * 1.2, -1.4);
           }
           if (u.leftLeg && u.rightLeg) {
-            u.leftLeg.rotation.x = Math.sin(now * 0.045) * 1.6;
-            u.rightLeg.rotation.x = -Math.sin(now * 0.045) * 1.6;
+            u.leftLeg.rotation.set(Math.sin(now * 0.045) * 1.6, 0, -0.05);
+            u.rightLeg.rotation.set(-Math.sin(now * 0.045) * 1.6, 0, 0.05);
           }
           if (u.torso) {
             u.torso.rotation.x = Math.sin(now * 0.02) * 0.8;
@@ -2046,42 +2070,46 @@ export class BouncebackEngine {
               continue;
             }
           }
-          if (spd > 0.35 && !ent.stunTimer) {
+          // Responsive movement detection: triggers brisk walk cycle even on slight stick tilts or slow speeds
+          const isPlayerMoving = i === 0 && (this.player.stickActive || Math.abs(this.player.stickX) > 0.05 || Math.abs(this.player.stickZ) > 0.05);
+          const isMoving = (spd > 0.08 || isPlayerMoving) && !ent.stunTimer;
+
+          if (isMoving) {
             const isRun = spd > 7.0 || ent.dashTimer > 0 || (slot && slot.rocketTimer > 0);
 
             // Dynamic stride frequency: walks briskly, sprints fast during dash/high speed
-            const cadence = isRun ? 12.0 + (spd - 7.0) * 0.8 : 6.8 + spd * 0.85;
-            u.walkPhase = (u.walkPhase || 0) + dt * cadence;
+            const cadence = isRun ? 12.0 + (spd - 7.0) * 0.8 : 6.8 + Math.max(spd, 1.2) * 0.85;
+            u.walkPhase = (Number.isFinite(u.walkPhase) ? u.walkPhase : 0) + dt * cadence;
             const phase = u.walkPhase;
 
             const sinL = Math.sin(phase);
             const sinR = -sinL; // 180° alternating mirror stride
 
-            // 1. Long Thighs / Upper Legs (Alternating stride forward/backward)
-            const thighAmp = isRun ? 0.85 : 0.55;
-            u.leftLeg.rotation.x = -sinL * thighAmp;
-            u.rightLeg.rotation.x = -sinR * thighAmp;
+            // 1. Long Thighs / Upper Legs (Alternating stride forward/backward + stance separation to prevent merging)
+            const thighAmp = isRun ? 0.95 : 0.65;
+            u.leftLeg.rotation.set(-sinL * thighAmp, 0, -0.06 + Math.sin(phase) * 0.02);
+            u.rightLeg.rotation.set(-sinR * thighAmp, 0, 0.06 + Math.sin(phase) * 0.02);
 
             // 2. Articulated Knees (Bends backward during swing-forward to clear ground, straightens on plant/push-off)
             if (u.leftLowerLeg && u.rightLowerLeg) {
               const kneeBendMax = isRun ? 1.25 : 0.75;
               // Left knee bends backward when swinging forward (sinL > 0)
-              u.leftLowerLeg.rotation.x = Math.max(0, sinL * kneeBendMax);
+              u.leftLowerLeg.rotation.set(Math.max(0, sinL * kneeBendMax), 0, 0);
               // Right knee bends backward when swinging forward (sinR > 0)
-              u.rightLowerLeg.rotation.x = Math.max(0, sinR * kneeBendMax);
+              u.rightLowerLeg.rotation.set(Math.max(0, sinR * kneeBendMax), 0, 0);
             }
 
             // 3. Sneakers / Feet (Toe push-off backward, heel strike forward)
             if (u.leftFoot && u.rightFoot) {
               const footAmp = isRun ? 0.38 : 0.22;
-              u.leftFoot.rotation.x = -sinL * footAmp;
-              u.rightFoot.rotation.x = -sinR * footAmp;
+              u.leftFoot.rotation.set(-sinL * footAmp, 0, 0);
+              u.rightFoot.rotation.set(-sinR * footAmp, 0, 0);
             }
 
             // 4. Pelvis & Hips (Yaw swivel with advancing leg + vertical step bounce)
             if (u.hips) {
               // Pelvis swivels slightly toward the forward stepping leg
-              u.hips.rotation.y = -sinL * (isRun ? 0.16 : 0.09);
+              u.hips.rotation.set(0, -sinL * (isRun ? 0.16 : 0.09), 0);
               // Up-and-down double-frequency step bounce (peaks mid-stride, dips at foot strike)
               const stepBounce = Math.abs(Math.sin(phase)) * (isRun ? 0.045 : 0.022);
               u.hips.position.y = baseHipsY + stepBounce;
@@ -2093,57 +2121,89 @@ export class BouncebackEngine {
             u.torso.rotation.y = sinL * (isRun ? 0.14 : 0.08); // Counter-twist opposite hips
             u.torso.rotation.z = Math.sin(phase) * (isRun ? 0.05 : 0.08); // Side-to-side weight transfer
 
-            // 6. Long Arms & Forearms (Alternating opposition swing)
+            // 6. Long Arms & Forearms (Alternating opposition swing + zeroed Y-twist)
             // Left arm swings forward with right leg (when sinL < 0)
             const armSwingAmp = isRun ? 1.05 : 0.60;
-            u.leftArm.rotation.x = -0.22 + sinL * armSwingAmp;
-            u.leftArm.rotation.z = 0.28 + Math.sin(phase) * 0.06;
+            u.leftArm.rotation.set(-0.22 + sinL * armSwingAmp, 0, 0.28 + Math.sin(phase) * 0.06);
 
             if (u.leftForearm) {
               // Forearm bends into running pump on forward swing
               const elbowBend = isRun ? -0.80 - Math.max(0, -sinL) * 0.65 : -0.32 - Math.max(0, -sinL) * 0.38;
-              u.leftForearm.rotation.x = elbowBend;
+              u.leftForearm.rotation.set(elbowBend, 0, 0);
             }
 
             // Right arm (unless currently punching)
             if (ent.punchCd <= 0) {
-              u.rightArm.rotation.x = -0.22 - sinL * armSwingAmp;
-              u.rightArm.rotation.z = -0.28 - Math.sin(phase) * 0.06;
+              u.rightArm.rotation.set(-0.22 - sinL * armSwingAmp, 0, -0.28 - Math.sin(phase) * 0.06);
               if (u.rightForearm) {
                 const elbowBend = isRun ? -0.80 - Math.max(0, sinL) * 0.65 : -0.32 - Math.max(0, sinL) * 0.38;
-                u.rightForearm.rotation.x = elbowBend;
+                u.rightForearm.rotation.set(elbowBend, 0, 0);
               }
             }
           } else {
-            // Idle Stance: Smooth natural return to standing resting pose
+            // Idle Stance: Smooth natural return to standing resting pose with clear stance separation
             const lerpSpeed = Math.min(1.0, 14.0 * dt);
             u.torso.rotation.x += (0 - u.torso.rotation.x) * lerpSpeed;
             u.torso.rotation.y += (0 - u.torso.rotation.y) * lerpSpeed;
             u.torso.rotation.z += (0 - u.torso.rotation.z) * lerpSpeed;
 
             if (u.hips) {
+              u.hips.rotation.x += (0 - u.hips.rotation.x) * lerpSpeed;
               u.hips.rotation.y += (0 - u.hips.rotation.y) * lerpSpeed;
+              u.hips.rotation.z += (0 - u.hips.rotation.z) * lerpSpeed;
               u.hips.position.y += (baseHipsY - u.hips.position.y) * lerpSpeed;
             }
 
+            // Keep legs naturally separated at resting stance (-0.05 and +0.05 z-tilt)
             u.leftLeg.rotation.x += (0 - u.leftLeg.rotation.x) * lerpSpeed;
+            u.leftLeg.rotation.y += (0 - u.leftLeg.rotation.y) * lerpSpeed;
+            u.leftLeg.rotation.z += (-0.05 - u.leftLeg.rotation.z) * lerpSpeed;
+
             u.rightLeg.rotation.x += (0 - u.rightLeg.rotation.x) * lerpSpeed;
+            u.rightLeg.rotation.y += (0 - u.rightLeg.rotation.y) * lerpSpeed;
+            u.rightLeg.rotation.z += (0.05 - u.rightLeg.rotation.z) * lerpSpeed;
 
-            if (u.leftLowerLeg) u.leftLowerLeg.rotation.x += (0 - u.leftLowerLeg.rotation.x) * lerpSpeed;
-            if (u.rightLowerLeg) u.rightLowerLeg.rotation.x += (0 - u.rightLowerLeg.rotation.x) * lerpSpeed;
+            if (u.leftLowerLeg) {
+              u.leftLowerLeg.rotation.x += (0 - u.leftLowerLeg.rotation.x) * lerpSpeed;
+              u.leftLowerLeg.rotation.y += (0 - u.leftLowerLeg.rotation.y) * lerpSpeed;
+              u.leftLowerLeg.rotation.z += (0 - u.leftLowerLeg.rotation.z) * lerpSpeed;
+            }
+            if (u.rightLowerLeg) {
+              u.rightLowerLeg.rotation.x += (0 - u.rightLowerLeg.rotation.x) * lerpSpeed;
+              u.rightLowerLeg.rotation.y += (0 - u.rightLowerLeg.rotation.y) * lerpSpeed;
+              u.rightLowerLeg.rotation.z += (0 - u.rightLowerLeg.rotation.z) * lerpSpeed;
+            }
 
-            if (u.leftFoot) u.leftFoot.rotation.x += (0 - u.leftFoot.rotation.x) * lerpSpeed;
-            if (u.rightFoot) u.rightFoot.rotation.x += (0 - u.rightFoot.rotation.x) * lerpSpeed;
+            if (u.leftFoot) {
+              u.leftFoot.rotation.x += (0 - u.leftFoot.rotation.x) * lerpSpeed;
+              u.leftFoot.rotation.y += (0 - u.leftFoot.rotation.y) * lerpSpeed;
+              u.leftFoot.rotation.z += (0 - u.leftFoot.rotation.z) * lerpSpeed;
+            }
+            if (u.rightFoot) {
+              u.rightFoot.rotation.x += (0 - u.rightFoot.rotation.x) * lerpSpeed;
+              u.rightFoot.rotation.y += (0 - u.rightFoot.rotation.y) * lerpSpeed;
+              u.rightFoot.rotation.z += (0 - u.rightFoot.rotation.z) * lerpSpeed;
+            }
 
-            // Idle breathing sway on long arms
+            // Idle breathing sway on long arms, cleanly returning Y/Z rotations to neutral
             u.leftArm.rotation.x = -0.18 + Math.sin(now * 0.003) * 0.04;
+            u.leftArm.rotation.y += (0 - u.leftArm.rotation.y) * lerpSpeed;
             u.leftArm.rotation.z = 0.28;
-            if (u.leftForearm) u.leftForearm.rotation.x = -0.22;
+            if (u.leftForearm) {
+              u.leftForearm.rotation.x = -0.22;
+              u.leftForearm.rotation.y = 0;
+              u.leftForearm.rotation.z = 0;
+            }
 
             if (ent.punchCd <= 0) {
               u.rightArm.rotation.x = -0.18 - Math.sin(now * 0.003) * 0.04;
+              u.rightArm.rotation.y += (0 - u.rightArm.rotation.y) * lerpSpeed;
               u.rightArm.rotation.z = -0.28;
-              if (u.rightForearm) u.rightForearm.rotation.x = -0.22;
+              if (u.rightForearm) {
+                u.rightForearm.rotation.x = -0.22;
+                u.rightForearm.rotation.y = 0;
+                u.rightForearm.rotation.z = 0;
+              }
             }
           }
 

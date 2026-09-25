@@ -13,6 +13,7 @@ let sfxGain: GainNode | null = null;
 let muted = false;
 
 // BGM State
+const BGM_VOLUME = 0.16; // Balanced volume so SFX, punches, and hits are crisp and clear
 let bgmAudio: HTMLAudioElement | null = null;
 let bgmPlaying = false;
 
@@ -74,7 +75,7 @@ export function setMuted(v: boolean) {
     masterGain.gain.value = v ? 0 : 0.45;
   }
   if (bgmAudio) {
-    bgmAudio.volume = v ? 0 : 0.35;
+    bgmAudio.volume = v ? 0 : BGM_VOLUME;
   }
 }
 
@@ -148,7 +149,7 @@ export function startBGM() {
       bgmAudio.loop = true;
       bgmAudio.preload = "auto";
     }
-    bgmAudio.volume = muted ? 0 : 0.35;
+    bgmAudio.volume = muted ? 0 : BGM_VOLUME;
     const p = bgmAudio.play();
     if (p !== undefined) {
       p.catch(() => {

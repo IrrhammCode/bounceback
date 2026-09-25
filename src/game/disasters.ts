@@ -196,7 +196,7 @@ export class DisasterManager {
     return this.state;
   }
 
-  private startVote() {
+  public startVote() {
     this.timeSinceLastVote = 0;
     this.clearAllVisuals();
 
