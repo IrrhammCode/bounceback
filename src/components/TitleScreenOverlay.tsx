@@ -126,11 +126,11 @@ export default function TitleScreenOverlay({ onStartMatch }: TitleScreenOverlayP
           </div>
           <div className="feature-pill">
             <span className="pill-dot coral" />
-            <span className="pill-text">AUDIENCE DISASTERS (EVERY 30S)</span>
+            <span className="pill-text">5-ROUND GRAND CHAMPIONSHIP</span>
           </div>
           <div className="feature-pill">
             <span className="pill-dot gold" />
-            <span className="pill-text">RING-OUT K.O. SYSTEM</span>
+            <span className="pill-text">K.O. & OUT BATTLE STATS</span>
           </div>
         </div>
 
@@ -156,7 +156,7 @@ export default function TitleScreenOverlay({ onStartMatch }: TitleScreenOverlayP
         <div className="ticker-badge">LIVE TICKER</div>
         <div className="ticker-track">
           <span>
-            NEXT LIVE ARENA POLL IN 30 SECONDS • AUDIENCE DISASTERS: TWISTER TORNADO, METEOR STRIKE, SEISMIC QUAKE, ORBITAL LASER, GRAVITY SINGULARITY • SMASH MYSTERY BOXES FOR POWER SKILLS • KNOCK FOES OFF THE ARENA TO SCORE POINTS!
+            5-ROUND GRAND CHAMPIONSHIP • AUDIENCE DISASTERS: TWISTER TORNADO, METEOR STRIKE, SEISMIC QUAKE, ORBITAL LASER, GRAVITY SINGULARITY • SMASH MYSTERY BOXES FOR POWER SKILLS • TRACK REAL-TIME K.O. AND OUT BATTLE STATS!
           </span>
         </div>
       </footer>
@@ -183,28 +183,28 @@ export default function TitleScreenOverlay({ onStartMatch }: TitleScreenOverlayP
             </div>
 
             <div className="guide-sections-grid">
-              {/* Section 1: Objective & Ring-Out Scoring */}
+              {/* Section 1: 5-Round Series & Ring-Out Scoring */}
               <div className="guide-card">
                 <div className="guide-card-header cyan">
                   <span className="card-num">01</span>
-                  <h3>RING-OUT K.O. GOAL</h3>
+                  <h3>5-ROUND TOURNAMENT & K.O.</h3>
                 </div>
                 <p>
-                  Punch opponents with high velocity to launch them flying over the perimeter ropes into the void abyss! Vaulting an enemy off the arena scores points with crowd combo multipliers.
+                  Compete in a best-of-5 tournament series across 5 distinct stadiums! Punch opponents over the perimeter ropes into the void abyss to score points with crowd combo multipliers. First team to 3 wins clinches the Golden Trophy!
                 </p>
                 <div className="guide-callout">
-                  <strong>TIP:</strong> Use auto-aim magnetic punches and bumper ricochets to blast rivals over the edge for up to 3x bonus points!
+                  <strong>BATTLE STATS:</strong> Real-time K.O. (knockouts scored) and OUT (falls suffered) counters track both team standings and your personal MVP record on your HUD!
                 </div>
               </div>
 
-              {/* Section 2: Audience Disaster Voting (Every 30s) */}
+              {/* Section 2: Audience Disaster Voting & Mystery Skills */}
               <div className="guide-card">
                 <div className="guide-card-header coral">
                   <span className="card-num">02</span>
-                  <h3>AUDIENCE DISASTERS (EVERY 30S)</h3>
+                  <h3>AUDIENCE DISASTERS & SKILLS</h3>
                 </div>
                 <p>
-                  Every 30 seconds, millions of live viewers trigger a 6-second emergency vote! Press Key <strong>1, 2, or 3</strong> to cast your vote. The winning hazard strikes the arena:
+                  Throughout each round, live audience viewers trigger emergency disaster votes! Grab glowing Mystery Boxes in the arena to wield game-changing super skills:
                 </p>
                 <ul className="disaster-bullet-list">
                   {disasterList.map((d) => (
@@ -216,9 +216,12 @@ export default function TitleScreenOverlay({ onStartMatch }: TitleScreenOverlayP
                     </li>
                   ))}
                 </ul>
+                <div className="guide-callout" style={{ marginTop: "12px" }}>
+                  <strong>MYSTERY SKILLS:</strong> Giga Fist, Rocket Boost, Giga Magnet, Bounce Bomb, Shrink Zap, and One Punch Man!
+                </div>
               </div>
 
-              {/* Section 3: Controls & Skills */}
+              {/* Section 3: Controls & Camera */}
               <div className="guide-card full-width">
                 <div className="guide-card-header gold">
                   <span className="card-num">03</span>
@@ -231,23 +234,23 @@ export default function TitleScreenOverlay({ onStartMatch }: TitleScreenOverlayP
                   </div>
                   <div className="ctrl-item">
                     <span className="key-badge">SPACE</span>
-                    <span className="ctrl-name">Punch / Hit Opponents</span>
+                    <span className="ctrl-name">Punch / Hit (Magnetic Auto-Aim)</span>
                   </div>
                   <div className="ctrl-item">
                     <span className="key-badge">SHIFT</span>
-                    <span className="ctrl-name">Speed Dash</span>
+                    <span className="ctrl-name">Speed Dash (Evade / Chase)</span>
                   </div>
                   <div className="ctrl-item">
                     <span className="key-badge">E / Q</span>
                     <span className="ctrl-name">Activate Mystery Skill</span>
                   </div>
                   <div className="ctrl-item">
-                    <span className="key-badge">C / V</span>
-                    <span className="ctrl-name">Toggle Camera (3rd / 1st POV)</span>
-                  </div>
-                  <div className="ctrl-item">
                     <span className="key-badge">1, 2, 3</span>
                     <span className="ctrl-name">Vote in Audience Polls</span>
+                  </div>
+                  <div className="ctrl-item">
+                    <span className="key-badge">3RD CAM</span>
+                    <span className="ctrl-name">Locked 3rd-Person Close Action View</span>
                   </div>
                 </div>
               </div>
