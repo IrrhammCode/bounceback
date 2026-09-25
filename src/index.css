@@ -3610,7 +3610,7 @@ body,
 }
 .table-header-row {
   display: grid;
-  grid-template-columns: 70px 1fr 100px 90px;
+  grid-template-columns: 60px 1fr 85px 105px 75px;
   padding: 8px 14px;
   background: rgba(255, 255, 255, 0.05);
   font-family: var(--font-head);
@@ -3623,7 +3623,7 @@ body,
 }
 .table-data-row {
   display: grid;
-  grid-template-columns: 70px 1fr 100px 90px;
+  grid-template-columns: 60px 1fr 85px 105px 75px;
   padding: 10px 14px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   align-items: center;
@@ -3655,6 +3655,24 @@ body,
 }
 .col-scores .r-val {
   color: #ff5268;
+}
+.col-ko-out {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.col-ko-out .c-ko {
+  color: #27e5ff;
+}
+.col-ko-out .r-ko {
+  color: #ff5268;
+}
+.col-ko-out .ko-div {
+  color: #64748b;
+  font-size: 0.65rem;
 }
 .col-win {
   font-family: var(--font-head);
@@ -3860,4 +3878,285 @@ body,
     opacity: 1;
     transform: translate(-50%, 0) scale(1);
   }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   IN-GAME HUD K.O. & OUT BATTLE COUNTER
+   ───────────────────────────────────────────────────────────── */
+.hud-battle-stats-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 4px;
+  padding: 3px 12px;
+  background: rgba(10, 15, 28, 0.82);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+}
+
+.team-stats-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.team-stats-box.cyan .stat-pill.ko {
+  background: rgba(39, 229, 255, 0.15);
+  border: 1px solid rgba(39, 229, 255, 0.4);
+  color: #27e5ff;
+}
+.team-stats-box.cyan .stat-pill.out {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+}
+
+.team-stats-box.coral .stat-pill.ko {
+  background: rgba(255, 82, 104, 0.15);
+  border: 1px solid rgba(255, 82, 104, 0.4);
+  color: #ff5268;
+}
+.team-stats-box.coral .stat-pill.out {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+}
+
+.pill-tag {
+  font-size: 0.55rem;
+  letter-spacing: 0.06em;
+  opacity: 0.85;
+}
+
+.pill-val {
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.player-personal-pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 1px 8px;
+  background: rgba(255, 209, 102, 0.12);
+  border: 1px solid rgba(255, 209, 102, 0.35);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.player-badge {
+  color: #ffd166;
+  font-size: 0.55rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.player-stat-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.player-stat-item .p-num {
+  color: #ffffff;
+  font-weight: 900;
+}
+
+.player-stat-item .p-label {
+  color: #ffd166;
+  font-size: 0.52rem;
+}
+
+.p-divider {
+  color: rgba(255, 209, 102, 0.5);
+  font-size: 0.55rem;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   ROUND RECAP COMBAT STATS BOX
+   ───────────────────────────────────────────────────────────── */
+.recap-combat-stats-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 18px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  margin-top: 10px;
+}
+
+.combat-stats-team {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.combat-stat-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 6px;
+  min-width: 44px;
+}
+
+.combat-stats-team.cyan .combat-stat-badge.ko {
+  background: rgba(39, 229, 255, 0.15);
+  border: 1px solid rgba(39, 229, 255, 0.45);
+}
+.combat-stats-team.cyan .combat-stat-badge.ko .stat-number {
+  color: #27e5ff;
+}
+
+.combat-stats-team.coral .combat-stat-badge.ko {
+  background: rgba(255, 82, 104, 0.15);
+  border: 1px solid rgba(255, 82, 104, 0.45);
+}
+.combat-stats-team.coral .combat-stat-badge.ko .stat-number {
+  color: #ff5268;
+}
+
+.combat-stat-badge.out {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.combat-stat-badge.out .stat-number {
+  color: #94a3b8;
+}
+
+.combat-stat-badge .stat-label {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+}
+
+.combat-stat-badge .stat-number {
+  font-family: var(--font-head);
+  font-size: 1.15rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.combat-stats-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  text-align: center;
+}
+
+.combat-title {
+  font-family: var(--font-head);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #ffd166;
+  text-transform: uppercase;
+}
+
+.combat-player-tag {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #cbd5e1;
+  background: rgba(255, 209, 102, 0.1);
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 209, 102, 0.25);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   SERIES RESULT COMBAT TOTALS BANNER
+   ───────────────────────────────────────────────────────────── */
+.series-combat-totals {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-top: 14px;
+  padding: 12px 18px;
+  background: rgba(10, 15, 28, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+.totals-team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.totals-label {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #94a3b8;
+}
+
+.totals-team.cyan .totals-val {
+  font-family: var(--font-head);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #27e5ff;
+  letter-spacing: 0.04em;
+}
+
+.totals-team.coral .totals-val {
+  font-family: var(--font-head);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #ff5268;
+  letter-spacing: 0.04em;
+}
+
+.totals-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 12px;
+  background: rgba(255, 209, 102, 0.08);
+  border: 1px solid rgba(255, 209, 102, 0.3);
+  border-radius: 8px;
+}
+
+.totals-player-title {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: #ffd166;
+  text-transform: uppercase;
+}
+
+.totals-player-val {
+  font-family: var(--font-head);
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0.05em;
 }

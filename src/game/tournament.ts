@@ -116,6 +116,10 @@ export interface RoundResult {
   scores: [number, number];
   theme: RoundTheme;
   title: string;
+  kos?: [number, number];
+  outs?: [number, number];
+  playerKo?: number;
+  playerOut?: number;
 }
 
 export class TournamentManager {
@@ -141,7 +145,14 @@ export class TournamentManager {
     return TOURNAMENT_ROUNDS[this.currentRound] || TOURNAMENT_ROUNDS[1];
   }
 
-  recordRoundResult(winner: number, scores: [number, number]): RoundResult {
+  recordRoundResult(
+    winner: number,
+    scores: [number, number],
+    kos: [number, number] = [0, 0],
+    outs: [number, number] = [0, 0],
+    playerKo: number = 0,
+    playerOut: number = 0
+  ): RoundResult {
     const roundDef = this.getCurrentRoundDef();
     if (winner === 0) {
       this.roundWins[0]++;
@@ -155,6 +166,10 @@ export class TournamentManager {
       scores: [...scores] as [number, number],
       theme: roundDef.theme,
       title: roundDef.title,
+      kos: [...kos] as [number, number],
+      outs: [...outs] as [number, number],
+      playerKo,
+      playerOut,
     };
 
     this.roundHistory.push(result);

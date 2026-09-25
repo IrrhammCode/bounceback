@@ -48,6 +48,10 @@ const initialState: GameState = {
   roundBadge: "CLASSIC SHOWDOWN",
   roundTheme: "colosseum",
   celebrationBanner: null,
+  kos: [0, 0],
+  outs: [0, 0],
+  playerKo: 0,
+  playerOut: 0,
 };
 
 export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
@@ -343,6 +347,44 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
               <div className="score-team coral">
                 {gameState.scores[1]}
                 <span className="label">CRL</span>
+              </div>
+            </div>
+
+            {/* Real-time Esports K.O. & OUT Battle Counter */}
+            <div className="hud-battle-stats-row">
+              <div className="team-stats-box cyan">
+                <span className="stat-pill ko">
+                  <span className="pill-tag">K.O.</span>
+                  <span className="pill-val">{gameState.kos?.[0] || 0}</span>
+                </span>
+                <span className="stat-pill out">
+                  <span className="pill-tag">OUT</span>
+                  <span className="pill-val">{gameState.outs?.[0] || 0}</span>
+                </span>
+              </div>
+
+              <div className="player-personal-pill">
+                <span className="player-badge">YOU</span>
+                <span className="player-stat-item">
+                  <span className="p-num">{gameState.playerKo || 0}</span>
+                  <span className="p-label">K.O.</span>
+                </span>
+                <span className="p-divider">•</span>
+                <span className="player-stat-item">
+                  <span className="p-num">{gameState.playerOut || 0}</span>
+                  <span className="p-label">OUT</span>
+                </span>
+              </div>
+
+              <div className="team-stats-box coral">
+                <span className="stat-pill ko">
+                  <span className="pill-tag">K.O.</span>
+                  <span className="pill-val">{gameState.kos?.[1] || 0}</span>
+                </span>
+                <span className="stat-pill out">
+                  <span className="pill-tag">OUT</span>
+                  <span className="pill-val">{gameState.outs?.[1] || 0}</span>
+                </span>
               </div>
             </div>
           </div>

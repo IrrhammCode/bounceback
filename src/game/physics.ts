@@ -84,7 +84,8 @@ export type ScoreCallback = (
   scoringTeam: number,
   multiplier: number,
   bounceCount: number,
-  entityIdx: number
+  entityIdx: number,
+  killerIdx?: number
 ) => void;
 
 export function updatePhysics(
@@ -121,7 +122,7 @@ export function updatePhysics(
           e.lastHitBy >= 0 && entities[e.lastHitBy]
             ? entities[e.lastHitBy].team
             : 1 - e.team;
-        scoreCallback(scoringTeam, 2, Math.max(1, e.bounceCount), i);
+        scoreCallback(scoringTeam, 2, Math.max(1, e.bounceCount), i, e.lastHitBy);
         respawnEntity(e, halfW, halfL);
       }
       continue;
@@ -257,7 +258,7 @@ export function updatePhysics(
         }
         if (scored) {
           const scoringTeam = 1 - e.team;
-          scoreCallback(scoringTeam, gate.multiplier, e.bounceCount, i);
+          scoreCallback(scoringTeam, gate.multiplier, e.bounceCount, i, e.lastHitBy);
           respawnEntity(e, halfW, halfL);
         }
       }

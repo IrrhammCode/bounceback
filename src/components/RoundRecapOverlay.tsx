@@ -90,6 +90,38 @@ export default function RoundRecapOverlay({
           </div>
         </div>
 
+        {/* Round Knockout & Ring-Out Battle Stats */}
+        <div className="recap-combat-stats-box">
+          <div className="combat-stats-team cyan">
+            <span className="combat-stat-badge ko">
+              <span className="stat-label">K.O.</span>
+              <span className="stat-number">{roundResult.kos?.[0] || 0}</span>
+            </span>
+            <span className="combat-stat-badge out">
+              <span className="stat-label">OUT</span>
+              <span className="stat-number">{roundResult.outs?.[0] || 0}</span>
+            </span>
+          </div>
+
+          <div className="combat-stats-center">
+            <span className="combat-title">KNOCKOUTS & OUTS</span>
+            <span className="combat-player-tag">
+              YOUR STATS: {roundResult.playerKo || 0} K.O. • {roundResult.playerOut || 0} OUT
+            </span>
+          </div>
+
+          <div className="combat-stats-team coral">
+            <span className="combat-stat-badge ko">
+              <span className="stat-label">K.O.</span>
+              <span className="stat-number">{roundResult.kos?.[1] || 0}</span>
+            </span>
+            <span className="combat-stat-badge out">
+              <span className="stat-label">OUT</span>
+              <span className="stat-number">{roundResult.outs?.[1] || 0}</span>
+            </span>
+          </div>
+        </div>
+
         {/* Series Pips / Standings */}
         <div className="recap-series-standings">
           <div className="series-title">BEST-OF-5 TOURNAMENT SERIES</div>

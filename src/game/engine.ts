@@ -97,6 +97,11 @@ export interface GameState {
     winnerName: string;
     isGrandChampionship: boolean;
   } | null;
+  // Knockout & Ring-Out Stats
+  kos: [number, number];
+  outs: [number, number];
+  playerKo: number;
+  playerOut: number;
 }
 
 export type GameStateCallback = (state: GameState) => void;
@@ -226,14 +231,17 @@ export class BouncebackEngine {
 
     // Match
     this.match = new Match();
-    this.match.onGoal = (team, points, combo, bounces) => {
+    this.match.onGoal = (team, points, combo, bounces, _entityIdx, killerIdx) => {
       sfxRingOut();
       if (combo > 1) sfxCombo(combo);
 
       this.juice.trigger("ringout", { team, x: 0, y: 1.5, z: 0 });
       this.arenaController?.onGoalCelebration(team);
       const teamName = team === 0 ? "TEAM CYAN" : "TEAM CORAL";
-      let txt = `${teamName} RING OUT K.O.! +${points}`;
+      let txt =
+        killerIdx === 0
+          ? `YOU SCORED A RING-OUT K.O.! +${points}`
+          : `${teamName} RING-OUT K.O.! +${points}`;
       if (bounces >= 2) txt += ` [${bounces}x BOUNCE]`;
       if (combo > 1) txt += ` [COMBO x${combo}]`;
       this.showAnnouncement(txt);
@@ -255,7 +263,14 @@ export class BouncebackEngine {
       sfxRoundBuzzer();
       sfxCrowdCheer(1.8);
 
-      const roundResult = this.tournament.recordRoundResult(winner, scores);
+      const roundResult = this.tournament.recordRoundResult(
+        winner,
+        scores,
+        this.match.kos,
+        this.match.outs,
+        this.match.playerKo,
+        this.match.playerOut
+      );
       this.winningTeam = winner;
       this.celebrationWinner = winner;
       this.isGrandChampionship = this.tournament.isTournamentOver;
@@ -1515,9 +1530,9 @@ export class BouncebackEngine {
         this.bumpers,
         this.gates,
         dt,
-        (scoringTeam, multiplier, bounceCount, entityIdx) => {
+        (scoringTeam, multiplier, bounceCount, entityIdx, killerIdx) => {
           const scaledPoints = Math.round(multiplier * currentRoundDef.goalMultiplier);
-          this.match.score(scoringTeam, scaledPoints, bounceCount, entityIdx);
+          this.match.score(scoringTeam, scaledPoints, bounceCount, entityIdx, killerIdx);
         },
         currentRoundDef.groundFriction
       );
@@ -2190,6 +2205,10 @@ export class BouncebackEngine {
       roundBadge: currentRoundDef.badge,
       roundTheme: currentRoundDef.theme,
       celebrationBanner,
+      kos: [...this.match.kos] as [number, number],
+      outs: [...this.match.outs] as [number, number],
+      playerKo: this.match.playerKo,
+      playerOut: this.match.playerOut,
     });
 
     this.renderer.render(this.scene, this.camera);

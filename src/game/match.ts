@@ -7,7 +7,9 @@ export type GoalCallback = (
   team: number,
   points: number,
   combo: number,
-  bounces: number
+  bounces: number,
+  entityIdx?: number,
+  killerIdx?: number
 ) => void;
 
 export class Match {
@@ -20,6 +22,12 @@ export class Match {
   combo: [number, number] = [0, 0];
   comboTimer: [number, number] = [0, 0];
   overdriveFired = false;
+
+  // Knockout & Ring-Out Stats
+  kos: [number, number] = [0, 0];
+  outs: [number, number] = [0, 0];
+  playerKo = 0;
+  playerOut = 0;
 
   onPhaseChange: ((phase: number) => void) | null = null;
   onGoal: GoalCallback | null = null;
@@ -37,6 +45,10 @@ export class Match {
     this.combo = [0, 0];
     this.comboTimer = [0, 0];
     this.overdriveFired = false;
+    this.kos = [0, 0];
+    this.outs = [0, 0];
+    this.playerKo = 0;
+    this.playerOut = 0;
   }
 
   reset() {
@@ -49,6 +61,10 @@ export class Match {
     this.combo = [0, 0];
     this.comboTimer = [0, 0];
     this.overdriveFired = false;
+    this.kos = [0, 0];
+    this.outs = [0, 0];
+    this.playerKo = 0;
+    this.playerOut = 0;
   }
 
   getPhaseForTime(elapsed: number): number {
@@ -61,7 +77,8 @@ export class Match {
     team: number,
     gateMultiplier: number,
     bounceCount: number,
-    _entityIdx: number
+    entityIdx: number,
+    killerIdx: number = -1
   ): number {
     if (this.over) return 0;
     const comboMult = 1 + this.combo[team] * 0.5;
@@ -74,7 +91,21 @@ export class Match {
     this.combo[team]++;
     this.comboTimer[team] = C.COMBO_WINDOW;
 
-    if (this.onGoal) this.onGoal(team, points, this.combo[team], bounceCount);
+    // Track K.O. and OUT statistics
+    this.kos[team]++;
+    const victimTeam = 1 - team;
+    this.outs[victimTeam]++;
+
+    if (killerIdx === 0) {
+      this.playerKo++;
+    }
+    if (entityIdx === 0) {
+      this.playerOut++;
+    }
+
+    if (this.onGoal) {
+      this.onGoal(team, points, this.combo[team], bounceCount, entityIdx, killerIdx);
+    }
     return points;
   }
 

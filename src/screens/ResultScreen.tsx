@@ -33,6 +33,13 @@ export default function ResultScreen({
         ? "TEAM CORAL GRAND CHAMPIONS!"
         : "CHAMPIONSHIP DRAW!";
 
+  const totalCyanKo = history.reduce((acc, r) => acc + (r.kos?.[0] || 0), 0);
+  const totalCyanOut = history.reduce((acc, r) => acc + (r.outs?.[0] || 0), 0);
+  const totalCoralKo = history.reduce((acc, r) => acc + (r.kos?.[1] || 0), 0);
+  const totalCoralOut = history.reduce((acc, r) => acc + (r.outs?.[1] || 0), 0);
+  const totalPlayerKo = history.reduce((acc, r) => acc + (r.playerKo || 0), 0);
+  const totalPlayerOut = history.reduce((acc, r) => acc + (r.playerOut || 0), 0);
+
   return (
     <div className="screen">
       {/* Animated Background */}
@@ -62,6 +69,24 @@ export default function ResultScreen({
           </div>
         </div>
 
+        {/* Tournament Total Knockout & Out Aggregates */}
+        <div className="series-combat-totals">
+          <div className="totals-team cyan">
+            <span className="totals-label">CYAN TOTALS</span>
+            <span className="totals-val">{totalCyanKo} K.O. • {totalCyanOut} OUT</span>
+          </div>
+
+          <div className="totals-player">
+            <span className="totals-player-title">YOUR PERSONAL RECORD</span>
+            <span className="totals-player-val">{totalPlayerKo} K.O. • {totalPlayerOut} OUT</span>
+          </div>
+
+          <div className="totals-team coral">
+            <span className="totals-label">CORAL TOTALS</span>
+            <span className="totals-val">{totalCoralKo} K.O. • {totalCoralOut} OUT</span>
+          </div>
+        </div>
+
         {/* Round by Round Scorecard Table */}
         {history.length > 0 && (
           <div className="round-scorecard-table">
@@ -69,6 +94,7 @@ export default function ResultScreen({
               <span>ROUND</span>
               <span>MAP THEME</span>
               <span>SCORES</span>
+              <span>K.O. / OUT</span>
               <span>WINNER</span>
             </div>
             {history.map((r) => (
@@ -77,6 +103,11 @@ export default function ResultScreen({
                 <span className="col-title">{r.title}</span>
                 <span className="col-scores">
                   <span className="c-val">{r.scores[0]}</span> : <span className="r-val">{r.scores[1]}</span>
+                </span>
+                <span className="col-ko-out">
+                  <span className="c-ko">{r.kos?.[0] || 0}/{r.outs?.[0] || 0}</span>
+                  <span className="ko-div">vs</span>
+                  <span className="r-ko">{r.kos?.[1] || 0}/{r.outs?.[1] || 0}</span>
                 </span>
                 <span className={`col-win ${r.winner === 0 ? "cyan" : r.winner === 1 ? "coral" : "draw"}`}>
                   {r.winner === 0 ? "CYAN" : r.winner === 1 ? "CORAL" : "TIE"}

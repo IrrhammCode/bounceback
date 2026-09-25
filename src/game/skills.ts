@@ -63,6 +63,7 @@ export interface BananaTrap {
   z: number;
   timer: number;       // lifetime countdown
   mesh: THREE.Object3D;
+  ownerIdx?: number;
 }
 
 const BANANA_LIFETIME = 12.0;
@@ -77,6 +78,7 @@ export interface BounceBomb {
   vz: number;
   timer: number;       // detonation countdown
   mesh: THREE.Object3D;
+  ownerIdx?: number;
 }
 
 const BOMB_LIFETIME = 3.0;
@@ -559,6 +561,7 @@ export class SkillManager {
           z: behindZ,
           timer: BANANA_LIFETIME,
           mesh,
+          ownerIdx: idx,
         });
         if (eventFn) eventFn("banana_drop", { x: behindX, z: behindZ });
         break;
@@ -614,6 +617,7 @@ export class SkillManager {
           vz: (dirZ / dirLen) * BOMB_SPEED,
           timer: BOMB_LIFETIME,
           mesh,
+          ownerIdx: idx,
         });
         if (eventFn) eventFn("bomb_roll");
         break;
@@ -1579,6 +1583,9 @@ export class SkillManager {
         const dz = ent.z - banana.z;
         const d = Math.sqrt(dx * dx + dz * dz);
         if (d < BANANA_SLIP_RADIUS) {
+          if (banana.ownerIdx !== undefined) {
+            ent.lastHitBy = banana.ownerIdx;
+          }
           slot.slipTimer = BANANA_SLIP_DURATION;
           slot.slipSpinAngle = 0;
           ent.stunTimer = BANANA_SLIP_DURATION;
@@ -1639,6 +1646,9 @@ export class SkillManager {
           const dz = ent.z - bomb.z;
           const d = Math.sqrt(dx * dx + dz * dz);
           if (d < BOMB_BLAST_RADIUS) {
+            if (bomb.ownerIdx !== undefined) {
+              ent.lastHitBy = bomb.ownerIdx;
+            }
             const nd = d || 0.01;
             const power = (1 - d / BOMB_BLAST_RADIUS) * BOMB_BLAST_IMPULSE;
             ent.vx += (dx / nd) * power;
