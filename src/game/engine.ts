@@ -795,17 +795,16 @@ export class BouncebackEngine {
     this.resetEntitiesToSpawn();
     this.showAnnouncement(`${currentRoundDef.title} — ROUND ${currentRoundDef.roundNumber} START!`);
 
-    // Smoothly dive camera from countdown wide position directly behind player into 3rd person close follow
-    const halfL = C.ARENA_L * 0.5;
-    const spawnZ = -halfL * 0.58;
-    this.camTargetPos.set(0, 3.8, spawnZ - 6.8);
-    this.camLookTarget.set(0, 1.3, spawnZ + 8.0);
-
     // Initialize cinematic swoop dive transition from current camera orientation
     this.diveStartCamPos.copy(this.camera.position);
     this.diveStartCamLook.copy(this.camLookTarget);
     this.isMatchStartDiving = true;
     this.matchStartDiveTimer = 0;
+
+    const halfL = C.ARENA_L * 0.5;
+    const spawnZ = -halfL * 0.58;
+    this.camTargetPos.set(0, 3.8, spawnZ - 6.8);
+    this.camLookTarget.set(0, 1.3, spawnZ + 8.0);
     sfxRoundTransitionWhoosh();
   }
 
@@ -1206,6 +1205,11 @@ export class BouncebackEngine {
     }
 
     this.camTargetPos.set(targetX, targetY, targetZ);
+
+    // Smooth Gimbal Look Target (interpolates smoothly to eliminate angular snap and jitter)
+    const desiredLookX = p.x * 0.45;
+    const desiredLookY = pGroundY + 1.35;
+    const desiredLookZ = p.z + 7.5;
 
     if (this.isMatchStartDiving) {
       this.matchStartDiveTimer += dt;
