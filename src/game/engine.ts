@@ -1315,56 +1315,73 @@ export class BouncebackEngine {
       }
 
       // AI
-      updateBots(this.entities, this.bumpers, this.gates, dt, (type, data) => {
-        const d = data as any;
-        if (type === "botpunch") {
-          const halfW = C.ARENA_W * 0.5;
-          const halfL = C.ARENA_L * 0.5;
-          const bImpulse = d?.impulse ?? C.PUNCH_IMPULSE;
-          const dirX = d?.dirX ?? d?.nx ?? 0;
-          const dirZ = d?.dirZ ?? d?.nz ?? 1;
-          const targetX = d?.x ?? 0;
-          const targetZ = d?.z ?? 0;
+      updateBots(
+        this.entities,
+        this.bumpers,
+        this.gates,
+        dt,
+        (type, data) => {
+          const d = data as any;
+          if (type === "botpunch") {
+            const halfW = C.ARENA_W * 0.5;
+            const halfL = C.ARENA_L * 0.5;
+            const bImpulse = d?.impulse ?? C.PUNCH_IMPULSE;
+            const dirX = d?.dirX ?? d?.nx ?? 0;
+            const dirZ = d?.dirZ ?? d?.nz ?? 1;
+            const targetX = d?.x ?? 0;
+            const targetZ = d?.z ?? 0;
 
-          const projectedDist = bImpulse * 0.35;
-          const futureX = targetX + dirX * projectedDist;
-          const futureZ = targetZ + dirZ * projectedDist;
-          const isLethal = Math.abs(futureX) > halfW || Math.abs(futureZ) > halfL;
+            const projectedDist = bImpulse * 0.35;
+            const futureX = targetX + dirX * projectedDist;
+            const futureZ = targetZ + dirZ * projectedDist;
+            const isLethal = Math.abs(futureX) > halfW || Math.abs(futureZ) > halfL;
 
-          if (isLethal) {
-            sfxLethalHit();
-            this.lethalCinematicTimer = 0.45;
-            this.lethalTargetPos.set(targetX, 1.2, targetZ);
-            this.juice.trigger("lethal_finish", {
-              x: targetX,
-              y: 1.2,
-              z: targetZ,
-              originX: d?.originX,
-              originZ: d?.originZ,
-              dirX,
-              dirZ,
-              team: d?.team ?? 1,
-              isHit: true,
-            });
-            this.showAnnouncement("CRITICAL RING-OUT HIT!!");
+            if (isLethal) {
+              sfxLethalHit();
+              this.lethalCinematicTimer = 0.45;
+              this.lethalTargetPos.set(targetX, 1.2, targetZ);
+              this.juice.trigger("lethal_finish", {
+                x: targetX,
+                y: 1.2,
+                z: targetZ,
+                originX: d?.originX,
+                originZ: d?.originZ,
+                dirX,
+                dirZ,
+                team: d?.team ?? 1,
+                isHit: true,
+              });
+              this.showAnnouncement("CRITICAL RING-OUT HIT!!");
+            } else {
+              sfxPunch();
+              this.juice.trigger("botpunch", {
+                x: targetX,
+                y: 1.2,
+                z: targetZ,
+                originX: d?.originX,
+                originZ: d?.originZ,
+                dirX,
+                dirZ,
+                team: d?.team ?? 1,
+                isHit: true,
+              });
+            }
           } else {
-            sfxPunch();
-            this.juice.trigger("botpunch", {
-              x: targetX,
-              y: 1.2,
-              z: targetZ,
-              originX: d?.originX,
-              originZ: d?.originZ,
-              dirX,
-              dirZ,
-              team: d?.team ?? 1,
-              isHit: true,
-            });
+            this.juice.trigger(type, data);
           }
-        } else {
-          this.juice.trigger(type, data);
+        },
+        this.skillSlots,
+        (botIdx) => {
+          this.skills.activateSkill(
+            botIdx,
+            this.entities[botIdx],
+            this.entities,
+            this.skillSlots,
+            this.handleSkillEvent,
+            this.gates
+          );
         }
-      });
+      );
 
       // Current round definition & modifiers
       const currentRoundDef = this.tournament.getCurrentRoundDef();
@@ -1771,7 +1788,7 @@ export class BouncebackEngine {
 
           // Punch extension animation (satisfying snappy punch thrust & recovery)
           if (ent.punchCd > 0) {
-            const punchProgress = 1.0 - (ent.punchCd / C.PUNCH_CD);
+            const punchProgress = Math.max(0, Math.min(1.0, 1.0 - (ent.punchCd / C.PUNCH_CD)));
             const punchDist = punchProgress < 0.35 ? (punchProgress / 0.35) : (1.0 - (punchProgress - 0.35) / 0.65);
             u.rightArm.rotation.x = -1.6;
             u.rightArm.rotation.y = 0.25;
