@@ -21,6 +21,27 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastToggleRef = useRef(0);
 
+  const modalRef = useRef<HTMLDivElement>(null);
+  const [canScrollModal, setCanScrollModal] = useState(false);
+
+  const checkModalScroll = useCallback(() => {
+    const el = modalRef.current;
+    if (!el) return;
+    const hasMore = el.scrollHeight - el.scrollTop - el.clientHeight > 18;
+    setCanScrollModal(hasMore);
+  }, []);
+
+  useEffect(() => {
+    if (showIOSModal) {
+      const t = setTimeout(checkModalScroll, 80);
+      window.addEventListener("resize", checkModalScroll);
+      return () => {
+        clearTimeout(t);
+        window.removeEventListener("resize", checkModalScroll);
+      };
+    }
+  }, [showIOSModal, checkModalScroll]);
+
   const isMobileOrIOS = useCallback((): boolean => {
     if (typeof window === "undefined" || typeof navigator === "undefined") return false;
     const ua = navigator.userAgent || "";
@@ -290,7 +311,12 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
             role="dialog"
             aria-modal="true"
           >
-            <div className="ios-fs-modal animate-scale-pop" onClick={(e) => e.stopPropagation()}>
+            <div
+              ref={modalRef}
+              onScroll={checkModalScroll}
+              className="ios-fs-modal animate-scale-pop"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="ios-fs-header">
                 <span className="ios-fs-badge">IPHONE (IOS) GUIDE</span>
                 <button
@@ -349,6 +375,21 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
               <div className="ios-fs-tip">
                 <strong>Quick Browser Tip:</strong> Tap the <strong>aA</strong> button on the left of your Safari address bar &rarr; choose <em>"Hide Toolbar"</em>.
               </div>
+
+              {/* Scroll Indicator Hint Pill (shown when content is taller than viewport) */}
+              {canScrollModal && (
+                <button
+                  type="button"
+                  className="ios-fs-scroller-hint animate-bounce-subtle"
+                  onClick={() => modalRef.current?.scrollBy({ top: 160, behavior: "smooth" })}
+                  aria-label="Scroll down for more steps"
+                >
+                  <span>SCROLL DOWN FOR MORE</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+              )}
 
               <div className="ios-fs-modal-actions">
                 <button

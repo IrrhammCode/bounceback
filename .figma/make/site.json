@@ -1,7 +1,16 @@
 {
-  "description": "Engage in a fun mobile game with Boi-Boian's interactive title screen, featuring clear CTAs, quick how-to guides, and a vibrant 3D backdrop.",
+  "title": "Bounce Back - 5v5 Arena Brawler",
+  "description": "Bounce Back! Punch opponents off the arena, survive live audience disasters, and dominate the 5v5 Grand Championship.",
+  "icons": {
+    "icon": "/logo.png"
+  },
+  "openGraph": {
+    "title": "Bounce Back - 5v5 Arena Brawler",
+    "description": "Punch opponents off the arena, survive live audience disasters, and dominate the 5v5 Grand Championship.",
+    "image": "/logo.png"
+  },
   "robots": {
-    "index": false
+    "index": true
   },
   "accessibility": {
     "addBypassLinks": false,

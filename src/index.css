@@ -1419,9 +1419,32 @@ body.simulated-fullscreen .screen {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  max-height: 90vh;
+  max-height: calc(100dvh - 32px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #27e5ff rgba(255, 255, 255, 0.08);
+}
+
+.ios-fs-modal::-webkit-scrollbar {
+  width: 7px;
+}
+
+.ios-fs-modal::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
+.ios-fs-modal::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #27e5ff, #0284c7);
+  border-radius: 8px;
+  border: 1.5px solid rgba(16, 24, 44, 0.95);
+  box-shadow: 0 0 10px rgba(39, 229, 255, 0.7);
+}
+
+.ios-fs-modal::-webkit-scrollbar-thumb:hover {
+  background: #67e8f9;
 }
 
 .ios-fs-header {
@@ -1593,6 +1616,40 @@ body.simulated-fullscreen .screen {
   font-size: 0.80rem;
   padding: 9px;
   box-shadow: none;
+}
+
+/* Floating Scroller Indicator for iOS Fullscreen Guide Modal */
+.ios-fs-scroller-hint {
+  position: sticky;
+  bottom: 6px;
+  align-self: center;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #27e5ff, #0284c7);
+  color: #04101e;
+  border: 1.5px solid #ffffff;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-family: var(--font-mono);
+  font-weight: 900;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7), 0 0 16px rgba(39, 229, 255, 0.8);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: -4px;
+  margin-bottom: 2px;
+}
+
+.ios-fs-scroller-hint:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.85), 0 0 22px rgba(39, 229, 255, 1);
+}
+
+.ios-fs-scroller-hint:active {
+  transform: scale(0.96);
 }
 
 .ios-fs-action-btn:active {
@@ -6586,6 +6643,80 @@ body.simulated-fullscreen .screen {
 .tutorial-btn.primary:hover {
   transform: translateY(-1px);
   box-shadow: 0 6px 22px rgba(255, 209, 102, 0.5);
+}
+
+/* ─── Custom Glowing Scrollbar for Phone Tips & Help Modals ─── */
+.orientation-tutorial-card {
+  scrollbar-width: thin;
+  scrollbar-color: #ffd166 rgba(255, 255, 255, 0.08);
+}
+
+.orientation-tutorial-card::-webkit-scrollbar {
+  width: 7px;
+}
+
+.orientation-tutorial-card::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
+.orientation-tutorial-card::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #ffd166, #ffb703);
+  border-radius: 8px;
+  border: 1.5px solid rgba(16, 24, 44, 0.95);
+  box-shadow: 0 0 10px rgba(255, 209, 102, 0.7);
+}
+
+.orientation-tutorial-card::-webkit-scrollbar-thumb:hover {
+  background: #ffe082;
+}
+
+/* Floating Scroller Indicator Pill */
+.tutorial-scroller-hint {
+  position: sticky;
+  bottom: 8px;
+  align-self: center;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #ffd166, #ffb703);
+  color: #081120;
+  border: 1.5px solid #ffffff;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-family: var(--font-mono);
+  font-weight: 900;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7), 0 0 16px rgba(255, 209, 102, 0.8);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: -6px;
+  margin-bottom: 4px;
+}
+
+.tutorial-scroller-hint:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.85), 0 0 22px rgba(255, 209, 102, 1);
+}
+
+.tutorial-scroller-hint:active {
+  transform: scale(0.96);
+}
+
+@keyframes bounceSubtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(5px);
+  }
+}
+
+.animate-bounce-subtle {
+  animation: bounceSubtle 1.8s infinite ease-in-out;
 }
 
 /* ─────────────────────────────────────────────────────────────

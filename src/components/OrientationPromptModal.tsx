@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 
 interface OrientationPromptModalProps {
@@ -15,6 +15,20 @@ export const OrientationPromptModal: React.FC<OrientationPromptModalProps> = ({
   const [dismissed, setDismissed] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [activeDeviceTab, setActiveDeviceTab] = useState<"iphone" | "android">("iphone");
+
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [canScrollDown, setCanScrollDown] = useState(false);
+
+  const checkScrollState = useCallback(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const hasMore = el.scrollHeight - el.scrollTop - el.clientHeight > 18;
+    setCanScrollDown(hasMore);
+  }, []);
+
+  const handleScrollDown = () => {
+    cardRef.current?.scrollBy({ top: 180, behavior: "smooth" });
+  };
 
   const checkOrientation = useCallback(() => {
     if (typeof window === "undefined") return;
@@ -61,6 +75,17 @@ export const OrientationPromptModal: React.FC<OrientationPromptModalProps> = ({
     }
   }, [forceShowTutorial]);
 
+  useEffect(() => {
+    if (showTutorial) {
+      const timer = setTimeout(checkScrollState, 80);
+      window.addEventListener("resize", checkScrollState);
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener("resize", checkScrollState);
+      };
+    }
+  }, [showTutorial, activeDeviceTab, checkScrollState]);
+
   const handleCloseTutorial = () => {
     setShowTutorial(false);
     if (onCloseTutorial) onCloseTutorial();
@@ -93,6 +118,8 @@ export const OrientationPromptModal: React.FC<OrientationPromptModalProps> = ({
         aria-modal="true"
       >
         <div
+          ref={cardRef}
+          onScroll={checkScrollState}
           className="orientation-tutorial-card animate-scale-pop"
           onClick={(e) => e.stopPropagation()}
         >
@@ -231,6 +258,21 @@ export const OrientationPromptModal: React.FC<OrientationPromptModalProps> = ({
                 </div>
               </div>
             </div>
+          )}
+
+          {/* Scroll Indicator Hint Pill (shown when content is taller than viewport) */}
+          {canScrollDown && (
+            <button
+              type="button"
+              className="tutorial-scroller-hint animate-bounce-subtle"
+              onClick={handleScrollDown}
+              aria-label="Scroll down for more steps"
+            >
+              <span>SCROLL DOWN FOR MORE</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
           )}
 
           {/* Footer Actions */}
