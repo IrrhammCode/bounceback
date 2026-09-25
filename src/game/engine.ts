@@ -1428,6 +1428,13 @@ export class BouncebackEngine {
     }
   };
 
+  public isPaused = false;
+
+  public setPaused(paused: boolean) {
+    this.isPaused = paused;
+    this.lastTime = performance.now();
+  }
+
   private loop = (now: number) => {
     if (!this.running) return;
     this.animId = requestAnimationFrame(this.loop);
@@ -1436,6 +1443,13 @@ export class BouncebackEngine {
 
     const rawDt = (now - this.lastTime) / 1000;
     this.lastTime = now;
+
+    // When game is paused, freeze match simulation and keep rendering static scene
+    if (this.isPaused && this.appMode === "game") {
+      this.renderer.render(this.scene, this.camera);
+      return;
+    }
+
     const dt = Math.min(rawDt, 0.05) * this.juice.getTimeScale();
 
     // ─── 1. Title Screen Live 3D Drone Camera Orbit ───

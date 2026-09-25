@@ -69,18 +69,55 @@ if (typeof window !== "undefined") {
   }, 50);
 }
 
+let currentMasterVol = 0.55;
+let currentBgmVol = BGM_VOLUME; // 0.16
+let currentSfxVol = 0.70;
+
 export function setMuted(v: boolean) {
   muted = v;
   if (masterGain) {
-    masterGain.gain.value = v ? 0 : 0.45;
+    masterGain.gain.value = v ? 0 : currentMasterVol;
   }
   if (bgmAudio) {
-    bgmAudio.volume = v ? 0 : BGM_VOLUME;
+    bgmAudio.volume = v ? 0 : currentBgmVol;
   }
 }
 
 export function isMuted() {
   return muted;
+}
+
+export function setMasterVolume(val: number) {
+  currentMasterVol = Math.max(0, Math.min(1, val));
+  if (masterGain && !muted) {
+    masterGain.gain.value = currentMasterVol;
+  }
+}
+
+export function setBgmVolume(val: number) {
+  currentBgmVol = Math.max(0, Math.min(1, val));
+  if (bgmGain && !muted) {
+    bgmGain.gain.value = currentBgmVol;
+  }
+  if (bgmAudio && !muted) {
+    bgmAudio.volume = currentBgmVol;
+  }
+}
+
+export function setSfxVolume(val: number) {
+  currentSfxVol = Math.max(0, Math.min(1, val));
+  if (sfxGain && !muted) {
+    sfxGain.gain.value = currentSfxVol;
+  }
+}
+
+export function getAudioSettings() {
+  return {
+    muted,
+    masterVolume: currentMasterVol,
+    bgmVolume: currentBgmVol,
+    sfxVolume: currentSfxVol,
+  };
 }
 
 function playTone(

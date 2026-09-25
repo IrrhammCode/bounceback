@@ -7,6 +7,8 @@ import TVIntroOverlay, { type IntroPhase } from "../components/TVIntroOverlay";
 import DisasterVoteOverlay from "../components/DisasterVoteOverlay";
 import RoundVictoryOverlay from "../components/RoundVictoryOverlay";
 import FullscreenButton from "../components/FullscreenButton";
+import PauseSettingsModal from "../components/PauseSettingsModal";
+import OrientationPromptModal from "../components/OrientationPromptModal";
 import ResultScreen from "./ResultScreen";
 import { type RoundResult } from "../game/tournament";
 import { sfxWhistle, sfxGoal, sfxMatchStart } from "../game/audio";
@@ -73,10 +75,44 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
     roundWins: [0, 0],
   });
 
+  const [isPaused, setIsPaused] = useState(false);
+  const [showOrientationGuide, setShowOrientationGuide] = useState(false);
+
   // Signal ready to 404 test runner
   useEffect(() => {
     (window as any).__READY__ = true;
   }, []);
+
+  const handleOpenPause = useCallback(() => {
+    setIsPaused(true);
+    engineRef.current?.setPaused(true);
+  }, []);
+
+  const handleResume = useCallback(() => {
+    setIsPaused(false);
+    engineRef.current?.setPaused(false);
+  }, []);
+
+  const handleRestartRound = useCallback(() => {
+    setIsPaused(false);
+    engineRef.current?.setPaused(false);
+    engineRef.current?.startMatch();
+  }, []);
+
+  // Keyboard shortcut to toggle pause during match (Escape or P)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.key === "Escape" || e.key === "p" || e.key === "P") && appMode === "game") {
+        setIsPaused((prev) => {
+          const next = !prev;
+          engineRef.current?.setPaused(next);
+          return next;
+        });
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [appMode]);
 
   const handleStateChange = useCallback((state: GameState) => {
     setGameState(state);
@@ -273,8 +309,19 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
       {/* 6. In-Game HUD Overlay (Only visible during active match) */}
       {appMode === "game" && (
         <div className="hud animate-fade-in">
-          {/* Top Control Actions (Exit Match + Fullscreen Toggle) */}
+          {/* Top Control Actions (Pause & Settings + Exit Match + Fullscreen Toggle) */}
           <div className="hud-corner-actions">
+            <button
+              className="pause-btn"
+              onClick={handleOpenPause}
+              title="Pause & Settings"
+              aria-label="Pause and Settings"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="6" y="4" width="4" height="16" rx="1" />
+                <rect x="14" y="4" width="4" height="16" rx="1" />
+              </svg>
+            </button>
             <button
               className="exit-btn"
               onClick={handleExitToTitle}
@@ -554,6 +601,21 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
           </button>
         </div>
       </div>
+
+      {/* 8. Pause & Settings Modal */}
+      <PauseSettingsModal
+        isOpen={isPaused}
+        onResume={handleResume}
+        onRestart={handleRestartRound}
+        onExitToTitle={handleExitToTitle}
+        onOpenOrientationGuide={() => setShowOrientationGuide(true)}
+      />
+
+      {/* 9. Landscape Orientation & Fullscreen Guide Modal */}
+      <OrientationPromptModal
+        forceShowTutorial={showOrientationGuide}
+        onCloseTutorial={() => setShowOrientationGuide(false)}
+      />
     </div>
   );
 }
