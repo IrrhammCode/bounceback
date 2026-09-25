@@ -1272,12 +1272,19 @@ export class BouncebackEngine {
     const portraitFactor = Math.max(0, Math.min(1, (1.55 - aspect) / 1.1));
 
     // Responsive 3rd-person gameplay camera:
-    // Carefully tuned so character sits comfortably in the lower third (not cut off at bottom)
-    // with full tactical visibility of arena width, bumpers, and opponents ahead
-    const camDist = 6.4 + portraitFactor * 2.6;   // 6.4 (desktop) -> 9.0 (phone portrait)
-    const camHeight = 3.6 + portraitFactor * 1.4; // 3.6 (desktop) -> 5.0 (phone portrait)
-    const targetX = p.x * (0.80 - portraitFactor * 0.35);
-    let targetY = pGroundY + camHeight;
+    // In phone portrait, the screen width is narrow, so the camera must STRICTLY follow
+    // the character 1:1 on the X axis, locking the fighter in the center corridor so they
+    // never get lost or cut off at the narrow screen borders.
+    const camDist = 6.4 + portraitFactor * 1.8;   // 6.4 (desktop) -> 8.2 (phone portrait)
+    const camHeight = 3.6 + portraitFactor * 1.0; // 3.6 (desktop) -> 4.6 (phone portrait)
+
+    // Strict 1:1 lateral tracking in portrait mode!
+    const xFollowFactor = 0.85 + portraitFactor * 0.15; // 0.85 in landscape -> 1.0 (strict 1:1) in portrait
+    const targetX = p.x * xFollowFactor;
+
+    // Follow jump / elevation gracefully so fighter never flies off screen
+    const charY = pGroundY + Math.max(0, p.y - pGroundY) * 0.5;
+    let targetY = charY + camHeight;
     let targetZ = p.z - camDist;
 
     // Wall avoidance clamp: never hit north bleachers or turn black
@@ -1290,9 +1297,10 @@ export class BouncebackEngine {
 
     this.camTargetPos.set(targetX, targetY, targetZ);
 
-    // Smooth Gimbal Look Target (interpolates smoothly to eliminate angular snap and jitter)
-    const desiredLookX = p.x * (0.45 - portraitFactor * 0.2);
-    const desiredLookY = pGroundY + 1.25 + portraitFactor * 0.2;
+    // Look target also follows 1:1 horizontally in portrait mode to keep the character centered
+    const lookXFactor = 0.65 + portraitFactor * 0.35; // 0.65 in landscape -> 1.0 (strict 1:1) in portrait
+    const desiredLookX = p.x * lookXFactor;
+    const desiredLookY = charY + 1.25 + portraitFactor * 0.2;
     const desiredLookZ = p.z + 5.5 + portraitFactor * 1.8;
 
     if (this.isMatchStartDiving) {
@@ -1318,15 +1326,17 @@ export class BouncebackEngine {
         this.isMatchStartDiving = false;
       }
     } else {
-      // Smooth Gimbal Look Target (interpolates smoothly to eliminate angular snap and jitter)
-      const lookSpeed = Math.min(1.0, 9.0 * dt);
+      // Smooth Gimbal Look Target - fast & tight tracking in portrait
+      const lookSpeed = Math.min(1.0, (9.0 + portraitFactor * 7.0) * dt); // 9.0 -> 16.0 in portrait
       this.camLookTarget.x += (desiredLookX - this.camLookTarget.x) * lookSpeed;
       this.camLookTarget.y += (desiredLookY - this.camLookTarget.y) * lookSpeed;
       this.camLookTarget.z += (desiredLookZ - this.camLookTarget.z) * lookSpeed;
 
-      // Smooth Gimbal Camera Position Tracking
-      const posSpeed = Math.min(1.0, 8.0 * dt);
-      this.camera.position.lerp(this.camTargetPos, posSpeed);
+      // Smooth Gimbal Camera Position Tracking - fast & tight tracking in portrait
+      const posSpeed = Math.min(1.0, (8.0 + portraitFactor * 7.0) * dt);  // 8.0 -> 15.0 in portrait
+      this.camera.position.x += (this.camTargetPos.x - this.camera.position.x) * posSpeed;
+      this.camera.position.y += (this.camTargetPos.y - this.camera.position.y) * posSpeed;
+      this.camera.position.z += (this.camTargetPos.z - this.camera.position.z) * posSpeed;
       this.camera.lookAt(this.camLookTarget);
 
       // Dynamic FOV (gentle, nausea-free transitions relative to adaptive baseFov)
