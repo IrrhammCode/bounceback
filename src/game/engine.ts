@@ -1510,14 +1510,6 @@ export class BouncebackEngine {
           // Quickly spring back to 0 roll Z (standing straight)
           ent.mesh.rotation.z += (0 - ent.mesh.rotation.z) * Math.min(1.0, 24.0 * dt);
           if (Math.abs(ent.mesh.rotation.z) < 0.03) ent.mesh.rotation.z = 0;
-
-          if (u.torso && !ent.stunTimer && spd > 0.4) {
-            u.torso.rotation.x = slope.pitch * 0.65;
-            u.torso.rotation.y = 0;
-          } else if (u.torso && !ent.stunTimer) {
-            u.torso.rotation.x = 0;
-            u.torso.rotation.y = 0;
-          }
         }
 
         // Face movement direction with smooth turning & dynamic lean banking
@@ -1586,32 +1578,106 @@ export class BouncebackEngine {
           }
         }
 
-        // Procedural Fall Guy Waddle & Limb Animations
+        // ─── Realistic Procedural Locomotion (Alternating Stride, Knee Bend, Arm Pump, Stance Push-Off) ───
         if (u.leftArm && u.rightArm && u.leftLeg && u.rightLeg && u.torso && !ent.launched) {
-          if (spd > 0.4 && !ent.stunTimer) {
-            u.walkPhase = (u.walkPhase || 0) + dt * spd * 5.2;
-            // Body waddle roll
-            u.torso.rotation.z = Math.sin(u.walkPhase) * 0.14;
-            // Alternating arm swing
-            u.leftArm.rotation.x = -0.25 + Math.sin(u.walkPhase) * 0.55;
-            u.rightArm.rotation.x = -0.25 - Math.sin(u.walkPhase) * 0.55;
-            // Alternating leg kick & foot tilt
-            u.leftLeg.rotation.x = -Math.sin(u.walkPhase) * 0.48;
-            u.rightLeg.rotation.x = Math.sin(u.walkPhase) * 0.48;
+          if (spd > 0.35 && !ent.stunTimer) {
+            const isRun = spd > 7.0 || ent.dashTimer > 0 || (slot && slot.rocketTimer > 0);
+
+            // Dynamic stride frequency: walks briskly, sprints fast during dash/high speed
+            const cadence = isRun ? 13.0 + (spd - 7.0) * 0.8 : 7.2 + spd * 0.9;
+            u.walkPhase = (u.walkPhase || 0) + dt * cadence;
+            const phase = u.walkPhase;
+
+            const sinL = Math.sin(phase);
+            const sinR = -sinL; // 180° alternating mirror stride
+
+            // 1. Thighs / Upper Legs (Alternating stride forward/backward)
+            const thighAmp = isRun ? 0.95 : 0.62;
+            u.leftLeg.rotation.x = -sinL * thighAmp;
+            u.rightLeg.rotation.x = -sinR * thighAmp;
+
+            // 2. Knees / Lower Legs (Bends backward during swing-forward to clear ground, straightens on plant/push-off)
+            if (u.leftLowerLeg && u.rightLowerLeg) {
+              const kneeBendMax = isRun ? 1.35 : 0.85;
+              // Left knee bends when swinging forward (sinL > 0)
+              u.leftLowerLeg.rotation.x = Math.max(0, sinL * kneeBendMax);
+              // Right knee bends when swinging forward (sinR > 0)
+              u.rightLowerLeg.rotation.x = Math.max(0, sinR * kneeBendMax);
+            }
+
+            // 3. Sneakers / Feet (Toe push-off backward, heel strike forward)
             if (u.leftFoot && u.rightFoot) {
-              u.leftFoot.rotation.x = Math.sin(u.walkPhase) * 0.22;
-              u.rightFoot.rotation.x = -Math.sin(u.walkPhase) * 0.22;
+              const footAmp = isRun ? 0.45 : 0.28;
+              u.leftFoot.rotation.x = -sinL * footAmp;
+              u.rightFoot.rotation.x = -sinR * footAmp;
+            }
+
+            // 4. Pelvis & Hips (Yaw swivel with advancing leg + vertical step bounce)
+            if (u.hips) {
+              // Pelvis swivels slightly toward the forward stepping leg
+              u.hips.rotation.y = -sinL * (isRun ? 0.16 : 0.09);
+              // Up-and-down double-frequency step bounce (peaks mid-stride, dips at foot strike)
+              const stepBounce = Math.abs(Math.sin(phase)) * (isRun ? 0.065 : 0.035);
+              u.hips.position.y = stepBounce - (isRun ? 0.03 : 0.015);
+            }
+
+            // 5. Torso (Aerodynamic forward lean + counter-twist + side sway)
+            const forwardLean = isRun ? Math.min(0.38, 0.18 + (spd - 7.0) * 0.02) : 0.08;
+            u.torso.rotation.x = forwardLean + (slope ? slope.pitch * 0.45 : 0);
+            u.torso.rotation.y = sinL * (isRun ? 0.14 : 0.08); // Counter-twist opposite hips
+            u.torso.rotation.z = Math.sin(phase) * (isRun ? 0.06 : 0.09); // Side-to-side weight transfer
+
+            // 6. Arms & Forearms (Alternating opposition swing)
+            // Left arm swings forward with right leg (when sinL < 0)
+            const armSwingAmp = isRun ? 1.15 : 0.68;
+            u.leftArm.rotation.x = -0.28 + sinL * armSwingAmp;
+            u.leftArm.rotation.z = 0.32 + Math.sin(phase) * 0.08;
+
+            if (u.leftForearm) {
+              // Forearm bends into running 90-degree pump on forward swing
+              const elbowBend = isRun ? -0.75 - Math.max(0, -sinL) * 0.75 : -0.35 - Math.max(0, -sinL) * 0.45;
+              u.leftForearm.rotation.x = elbowBend;
+            }
+
+            // Right arm (unless currently punching)
+            if (ent.punchCd <= 0) {
+              u.rightArm.rotation.x = -0.28 - sinL * armSwingAmp;
+              u.rightArm.rotation.z = -0.32 - Math.sin(phase) * 0.08;
+              if (u.rightForearm) {
+                const elbowBend = isRun ? -0.75 - Math.max(0, sinL) * 0.75 : -0.35 - Math.max(0, sinL) * 0.45;
+                u.rightForearm.rotation.x = elbowBend;
+              }
             }
           } else {
-            // Idle breathing sway & gentle bounce
-            u.torso.rotation.z = 0;
-            u.leftArm.rotation.x = -0.25 + Math.sin(now * 0.003) * 0.06;
-            u.rightArm.rotation.x = -0.25 - Math.sin(now * 0.003) * 0.06;
-            u.leftLeg.rotation.x = 0;
-            u.rightLeg.rotation.x = 0;
-            if (u.leftFoot && u.rightFoot) {
-              u.leftFoot.rotation.x = 0;
-              u.rightFoot.rotation.x = 0;
+            // Idle Stance: Smooth natural return to standing resting pose
+            const lerpSpeed = Math.min(1.0, 14.0 * dt);
+            u.torso.rotation.x += (0 - u.torso.rotation.x) * lerpSpeed;
+            u.torso.rotation.y += (0 - u.torso.rotation.y) * lerpSpeed;
+            u.torso.rotation.z += (0 - u.torso.rotation.z) * lerpSpeed;
+
+            if (u.hips) {
+              u.hips.rotation.y += (0 - u.hips.rotation.y) * lerpSpeed;
+              u.hips.position.y += (0 - u.hips.position.y) * lerpSpeed;
+            }
+
+            u.leftLeg.rotation.x += (0 - u.leftLeg.rotation.x) * lerpSpeed;
+            u.rightLeg.rotation.x += (0 - u.rightLeg.rotation.x) * lerpSpeed;
+
+            if (u.leftLowerLeg) u.leftLowerLeg.rotation.x += (0 - u.leftLowerLeg.rotation.x) * lerpSpeed;
+            if (u.rightLowerLeg) u.rightLowerLeg.rotation.x += (0 - u.rightLowerLeg.rotation.x) * lerpSpeed;
+
+            if (u.leftFoot) u.leftFoot.rotation.x += (0 - u.leftFoot.rotation.x) * lerpSpeed;
+            if (u.rightFoot) u.rightFoot.rotation.x += (0 - u.rightFoot.rotation.x) * lerpSpeed;
+
+            // Idle breathing sway on arms
+            u.leftArm.rotation.x = -0.22 + Math.sin(now * 0.003) * 0.05;
+            u.leftArm.rotation.z = 0.35;
+            if (u.leftForearm) u.leftForearm.rotation.x = -0.28;
+
+            if (ent.punchCd <= 0) {
+              u.rightArm.rotation.x = -0.22 - Math.sin(now * 0.003) * 0.05;
+              u.rightArm.rotation.z = -0.35;
+              if (u.rightForearm) u.rightForearm.rotation.x = -0.28;
             }
           }
 

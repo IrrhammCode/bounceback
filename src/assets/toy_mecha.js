@@ -882,6 +882,8 @@ export default function generate(THREE, options = {}) {
     rightHand,
     leftLeg: leftUpperLeg,
     rightLeg: rightUpperLeg,
+    leftLowerLeg,
+    rightLowerLeg,
     leftFoot,
     rightFoot,
     eyes: [lEye, rEye],
