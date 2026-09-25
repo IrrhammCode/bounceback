@@ -173,8 +173,14 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
     engineRef.current?.skipRoundCelebration();
   }, []);
 
-  // Transition from Title Screen into 3v3 TV Intro Cutscene with camera dive
+  // Immediate Arena Match Start (for instant gameplay & 404 Jam gate runner)
   const handleStartMatchFromTitle = useCallback(() => {
+    setAppMode("game");
+    engineRef.current?.startMatch();
+  }, []);
+
+  // Optional 3v3 TV Intro Cutscene Preview
+  const handleWatchIntroFromTitle = useCallback(() => {
     setAppMode("intro");
     engineRef.current?.startIntro();
   }, []);
@@ -281,7 +287,10 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
 
       {/* 1. Reality TV Title Screen Overlay (Drone Orbit View) */}
       {appMode === "title" && (
-        <TitleScreenOverlay onStartMatch={handleStartMatchFromTitle} />
+        <TitleScreenOverlay
+          onStartMatch={handleStartMatchFromTitle}
+          onWatchIntro={handleWatchIntroFromTitle}
+        />
       )}
 
       {/* 2. 3v3 TV Broadcast Match Intro Cutscene Overlay (Cinematic Camera Swoops) */}

@@ -366,7 +366,21 @@ export class BouncebackEngine {
     // Start 3D animation loop immediately so Title Screen has a live dynamic arena background!
     this.running = true;
     this.lastTime = performance.now();
+    (window as any).__READY__ = true;
     this.animId = requestAnimationFrame(this.loop);
+  }
+
+  private updateGameStats(dt: number) {
+    const p = this.entities && this.entities[0];
+    const speed = p ? Math.hypot(p.vx, p.vz) : 0;
+    (window as any).__GAME__ = {
+      fps: Math.round(1 / Math.max(dt, 0.001)),
+      draws: this.renderer ? this.renderer.info.render.calls : 0,
+      tris: this.renderer ? this.renderer.info.render.triangles : 0,
+      pos: p ? [Number(p.x.toFixed(2)), Number(p.z.toFixed(2))] : [0, 0],
+      speed: Number(speed.toFixed(2)),
+    };
+    (window as any).__SCENE__ = this.scene;
   }
 
   private setupLighting() {
@@ -1474,6 +1488,7 @@ export class BouncebackEngine {
       this.updateTitleEntities(now * 0.001);
 
       this.renderer.render(this.scene, this.camera);
+      this.updateGameStats(dt);
       return;
     }
 
@@ -1496,6 +1511,7 @@ export class BouncebackEngine {
       this.updateIntroOverheadTags();
 
       this.renderer.render(this.scene, this.camera);
+      this.updateGameStats(dt);
       return;
     }
 
@@ -1517,6 +1533,7 @@ export class BouncebackEngine {
 
       this.arenaController?.update(dt, now * 0.001);
       this.renderer.render(this.scene, this.camera);
+      this.updateGameStats(dt);
       return;
     }
 
@@ -2409,16 +2426,7 @@ export class BouncebackEngine {
     });
 
     this.renderer.render(this.scene, this.camera);
-
-    const p = this.entities[0];
-    const speed = p ? Math.hypot(p.vx, p.vz) : 0;
-    (window as any).__GAME__ = {
-      fps: Math.round(1 / Math.max(dt, 0.001)),
-      draws: this.renderer.info.render.calls,
-      tris: this.renderer.info.render.triangles,
-      pos: p ? [p.x, p.z] : [0, 0],
-      speed: Number(speed.toFixed(2)),
-    };
+    this.updateGameStats(dt);
     } catch (err) {
       console.error("[BouncebackEngine Error in loop]", err);
     }

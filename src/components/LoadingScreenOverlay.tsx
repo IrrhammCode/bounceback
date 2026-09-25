@@ -35,25 +35,22 @@ export const LoadingScreenOverlay: React.FC<LoadingScreenOverlayProps> = ({ onCo
     return () => clearInterval(tipInterval);
   }, []);
 
-  // Smooth realistic loading progress
+  // Smooth fast loading progress (satisfies 404 Jam 20s budget under 4G slow CPU)
   useEffect(() => {
     let current = 0;
     const interval = setInterval(() => {
-      // Faster progression at start, natural micro-step easing
-      const remaining = 100 - current;
-      const step = Math.max(1.2, Math.random() * (remaining * 0.14) + 1.8);
-      current = Math.min(100, current + step);
+      current = Math.min(100, current + 25);
       setProgress(Math.floor(current));
 
       if (current >= 100) {
         clearInterval(interval);
         setIsReady(true);
-        // Auto-transition into title screen after brief moment to celebrate readiness
+        (window as any).__READY__ = true;
         setTimeout(() => {
           handleEnter();
-        }, 650);
+        }, 80);
       }
-    }, 45);
+    }, 30);
 
     return () => clearInterval(interval);
   }, []);
@@ -61,10 +58,11 @@ export const LoadingScreenOverlay: React.FC<LoadingScreenOverlayProps> = ({ onCo
   const handleEnter = () => {
     if (hasFinishedRef.current) return;
     hasFinishedRef.current = true;
+    (window as any).__READY__ = true;
     setIsFadingOut(true);
     setTimeout(() => {
       onComplete();
-    }, 450);
+    }, 150);
   };
 
   // Determine active stage label

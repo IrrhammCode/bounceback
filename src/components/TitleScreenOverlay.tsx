@@ -12,9 +12,10 @@ import FullscreenButton from "./FullscreenButton";
 
 interface TitleScreenOverlayProps {
   onStartMatch: () => void;
+  onWatchIntro?: () => void;
 }
 
-export default function TitleScreenOverlay({ onStartMatch }: TitleScreenOverlayProps) {
+export default function TitleScreenOverlay({ onStartMatch, onWatchIntro }: TitleScreenOverlayProps) {
   const [showGuide, setShowGuide] = useState(false);
   const [muted, setMutedState] = useState(isMuted());
 
@@ -165,18 +166,31 @@ export default function TitleScreenOverlay({ onStartMatch }: TitleScreenOverlayP
 
         {/* CTA Button Group */}
         <div className="title-cta-group animate-slide-up-buttons">
-          <button className="btn-enter-arena" onClick={handleStart}>
+          <button id="startb" className="btn-enter-arena" onClick={handleStart}>
             <span className="btn-glare" />
             <span className="btn-main-text">ENTER ARENA • START MATCH</span>
             <span className="btn-sub-text">PRESS SPACE OR CLICK TO BEGIN</span>
           </button>
 
-          <button
-            className="btn-show-guide"
-            onClick={() => setShowGuide(true)}
-          >
-            ARENA RULES & DISASTER GUIDE
-          </button>
+          <div style={{ display: "flex", gap: "10px", width: "100%", justifyContent: "center", flexWrap: "wrap" }}>
+            {onWatchIntro && (
+              <button
+                type="button"
+                className="btn-show-guide"
+                onClick={onWatchIntro}
+                style={{ borderColor: "rgba(39, 229, 255, 0.6)", color: "#7eeeff" }}
+              >
+                WATCH 3V3 TV INTRO
+              </button>
+            )}
+            <button
+              type="button"
+              className="btn-show-guide"
+              onClick={() => setShowGuide(true)}
+            >
+              ARENA RULES & DISASTER GUIDE
+            </button>
+          </div>
         </div>
       </main>
 
