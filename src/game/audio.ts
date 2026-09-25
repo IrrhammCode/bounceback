@@ -14,9 +14,6 @@ let muted = false;
 
 // BGM State
 let bgmAudio: HTMLAudioElement | null = null;
-let bgmSourceNode: MediaElementAudioSourceNode | null = null;
-let bgmInterval: number | null = null;
-let bgmStep = 0;
 let bgmPlaying = false;
 
 export function initAudio() {
@@ -77,7 +74,7 @@ export function setMuted(v: boolean) {
     masterGain.gain.value = v ? 0 : 0.45;
   }
   if (bgmAudio) {
-    bgmAudio.muted = v;
+    bgmAudio.volume = v ? 0 : 0.35;
   }
 }
 
@@ -138,11 +135,11 @@ function playNoise(dur: number, vol = 0.2, filterFreq = 800) {
   }
 }
 
-// ─── Yellow Shell Hustle BGM Player (HTML5 Audio + WebAudio routing) ───
+// ─── Yellow Shell Hustle BGM Player (AI Generated Audio Asset) ───
 export function startBGM() {
   if (!ctx) initAudio();
   resumeAudio();
-  if (bgmPlaying) return;
+  if (bgmPlaying && bgmAudio && !bgmAudio.paused) return;
   bgmPlaying = true;
 
   try {
@@ -150,27 +147,16 @@ export function startBGM() {
       bgmAudio = new Audio("/Yellow_Shell_Hustle.mp3");
       bgmAudio.loop = true;
       bgmAudio.preload = "auto";
-      bgmAudio.volume = muted ? 0 : 0.22;
-      if (ctx && bgmGain) {
-        try {
-          bgmSourceNode = ctx.createMediaElementSource(bgmAudio);
-          bgmSourceNode.connect(bgmGain);
-          bgmAudio.volume = 1.0;
-        } catch {
-          // Fallback to direct HTML5 audio volume if media element source cannot attach
-        }
-      }
     }
+    bgmAudio.volume = muted ? 0 : 0.35;
     const p = bgmAudio.play();
     if (p !== undefined) {
-      p.catch((err) => {
-        console.warn("BGM autoplay postponed until user gesture, falling back to procedural", err);
-        startProceduralBGM();
+      p.catch(() => {
+        // Autoplay wait for user gesture; will automatically resume on next interaction
       });
     }
   } catch (err) {
-    console.warn("HTML5 audio playback error, falling back to procedural", err);
-    startProceduralBGM();
+    console.warn("HTML5 audio playback error", err);
   }
 }
 
@@ -180,168 +166,6 @@ export function stopBGM() {
     bgmAudio.pause();
     bgmAudio.currentTime = 0;
   }
-  if (bgmInterval !== null) {
-    clearInterval(bgmInterval);
-    bgmInterval = null;
-  }
-}
-
-// ─── Procedural Fall Guys Arcade BGM Loop (Zero-Asset Fallback) ───
-export function startProceduralBGM() {
-  if (!ctx) initAudio();
-  resumeAudio();
-  if (bgmInterval !== null) return;
-  bgmStep = 0;
-
-  // 128 BPM = 16th note interval ~ 117.18ms
-  const stepMs = (60 / 128 / 4) * 1000;
-
-  // Cheerful pentatonic melody & bouncy bass notes (Hz)
-  const bassNotes = [
-    130.81, 0, 130.81, 0, 164.81, 0, 146.83, 0, // C3, E3, D3
-    130.81, 0, 196.00, 0, 174.61, 0, 146.83, 0, // C3, G3, F3, D3
-    130.81, 0, 130.81, 0, 164.81, 0, 196.00, 0, // C3, E3, G3
-    220.00, 0, 196.00, 0, 164.81, 0, 146.83, 0  // A3, G3, E3, D3
-  ];
-
-  const leadNotes = [
-    523.25, 0, 659.25, 523.25, 0, 783.99, 0, 659.25,
-    0, 523.25, 0, 587.33, 659.25, 0, 523.25, 0,
-    783.99, 0, 880.00, 0, 783.99, 659.25, 0, 523.25,
-    587.33, 659.25, 587.33, 0, 523.25, 0, 0, 0
-  ];
-
-  const chordProg = [
-    [261.63, 329.63, 392.00], // C maj
-    [293.66, 349.23, 440.00], // D min
-    [329.63, 392.00, 493.88], // E min
-    [349.23, 440.00, 523.25], // F maj
-  ];
-
-  bgmInterval = window.setInterval(() => {
-    if (!ctx || !bgmGain || muted || !bgmPlaying) return;
-    const now = ctx.currentTime;
-    const step = bgmStep % 32;
-
-    // 1. Kick Drum (every 4 steps: 0, 4, 8, 12...)
-    if (step % 4 === 0) {
-      try {
-        const osc = ctx.createOscillator();
-        const g = ctx.createGain();
-        osc.frequency.setValueAtTime(140, now);
-        osc.frequency.exponentialRampToValueAtTime(35, now + 0.08);
-        g.gain.setValueAtTime(0.35, now);
-        g.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
-        osc.connect(g);
-        g.connect(bgmGain);
-        osc.start(now);
-        osc.stop(now + 0.09);
-      } catch {}
-    }
-
-    // 2. Snare / Clap (on beats 4 and 12 of each 16)
-    if (step % 8 === 4) {
-      try {
-        const bufSize = Math.floor(ctx.sampleRate * 0.08);
-        const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
-        const d = buf.getChannelData(0);
-        for (let i = 0; i < bufSize; i++) d[i] = (Math.random() * 2 - 1) * 0.4;
-        const src = ctx.createBufferSource();
-        src.buffer = buf;
-        const g = ctx.createGain();
-        g.gain.setValueAtTime(0.2, now);
-        g.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
-        const bp = ctx.createBiquadFilter();
-        bp.type = "bandpass";
-        bp.frequency.value = 1400;
-        src.connect(bp);
-        bp.connect(g);
-        g.connect(bgmGain);
-        src.start(now);
-      } catch {}
-    }
-
-    // 3. Hi-Hat (every odd 16th step)
-    if (step % 2 === 1) {
-      try {
-        const bufSize = Math.floor(ctx.sampleRate * 0.03);
-        const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
-        const d = buf.getChannelData(0);
-        for (let i = 0; i < bufSize; i++) d[i] = (Math.random() * 2 - 1) * 0.25;
-        const src = ctx.createBufferSource();
-        src.buffer = buf;
-        const g = ctx.createGain();
-        g.gain.setValueAtTime(0.08, now);
-        g.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
-        const hp = ctx.createBiquadFilter();
-        hp.type = "highpass";
-        hp.frequency.value = 6000;
-        src.connect(hp);
-        hp.connect(g);
-        g.connect(bgmGain);
-        src.start(now);
-      } catch {}
-    }
-
-    // 4. Bass synth (bouncy saw)
-    const bFreq = bassNotes[step];
-    if (bFreq > 0) {
-      try {
-        const osc = ctx.createOscillator();
-        const g = ctx.createGain();
-        osc.type = "sawtooth";
-        osc.frequency.setValueAtTime(bFreq, now);
-        g.gain.setValueAtTime(0.18, now);
-        g.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-        const lp = ctx.createBiquadFilter();
-        lp.type = "lowpass";
-        lp.frequency.value = 600;
-        osc.connect(lp);
-        lp.connect(g);
-        g.connect(bgmGain);
-        osc.start(now);
-        osc.stop(now + 0.12);
-      } catch {}
-    }
-
-    // 5. Offbeat Chord Stabs (every 4 steps offbeat: 2, 6, 10...)
-    if (step % 4 === 2) {
-      const chord = chordProg[Math.floor(step / 8) % chordProg.length];
-      for (const cf of chord) {
-        try {
-          const osc = ctx.createOscillator();
-          const g = ctx.createGain();
-          osc.type = "triangle";
-          osc.frequency.setValueAtTime(cf, now);
-          g.gain.setValueAtTime(0.08, now);
-          g.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
-          osc.connect(g);
-          g.connect(bgmGain);
-          osc.start(now);
-          osc.stop(now + 0.11);
-        } catch {}
-      }
-    }
-
-    // 6. Lead melody (sweet square wave with vibrato)
-    const lFreq = leadNotes[step];
-    if (lFreq > 0) {
-      try {
-        const osc = ctx.createOscillator();
-        const g = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(lFreq, now);
-        g.gain.setValueAtTime(0.12, now);
-        g.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
-        osc.connect(g);
-        g.connect(bgmGain);
-        osc.start(now);
-        osc.stop(now + 0.14);
-      } catch {}
-    }
-
-    bgmStep++;
-  }, stepMs);
 }
 
 // ─── Realistic Crowd Cheering ("Woooo-YEAAAH!") ───
