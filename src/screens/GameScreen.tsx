@@ -9,6 +9,7 @@ import RoundVictoryOverlay from "../components/RoundVictoryOverlay";
 import FullscreenButton from "../components/FullscreenButton";
 import PauseSettingsModal from "../components/PauseSettingsModal";
 import OrientationPromptModal from "../components/OrientationPromptModal";
+import LoadingScreenOverlay from "../components/LoadingScreenOverlay";
 import ResultScreen from "./ResultScreen";
 import { type RoundResult } from "../game/tournament";
 import { sfxWhistle, sfxGoal, sfxMatchStart } from "../game/audio";
@@ -18,7 +19,7 @@ interface GameScreenProps {
   onExit?: () => void;
 }
 
-type AppMode = "title" | "intro" | "game" | "result";
+type AppMode = "loading" | "title" | "intro" | "game" | "result";
 
 const initialState: GameState = {
   timer: "3:00",
@@ -62,7 +63,7 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<BouncebackEngine | null>(null);
   const [gameState, setGameState] = useState<GameState>(initialState);
-  const [appMode, setAppMode] = useState<AppMode>("title");
+  const [appMode, setAppMode] = useState<AppMode>("loading");
   const [seriesResult, setSeriesResult] = useState<{
     winner: number;
     scores: [number, number];
@@ -78,8 +79,9 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
   const [isPaused, setIsPaused] = useState(false);
   const [showOrientationGuide, setShowOrientationGuide] = useState(false);
 
-  // Signal ready to 404 test runner
-  useEffect(() => {
+  const handleLoadingComplete = useCallback(() => {
+    setAppMode("title");
+    // Signal ready to 404 test runner once loading completes
     (window as any).__READY__ = true;
   }, []);
 
@@ -271,6 +273,11 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
 
       {/* Unified 3D WebGL Canvas — always active across Title, Intro, Game, and Result */}
       <canvas ref={canvasRef} className="game-canvas" />
+
+      {/* 0. Reality TV Broadcast Loading Screen Overlay */}
+      {appMode === "loading" && (
+        <LoadingScreenOverlay onComplete={handleLoadingComplete} />
+      )}
 
       {/* 1. Reality TV Title Screen Overlay (Drone Orbit View) */}
       {appMode === "title" && (
