@@ -1,0 +1,24 @@
+{
+  "title": "BounceBack",
+  "slug": "bounceback",
+  "team": ["IrrhammCode"],
+  "play_url": "https://bounceback-beta.vercel.app",
+  "source_url": "https://github.com/IrrhammCode/bounceback",
+  "commit": "72442e95451cc6820fbf999796968bcb89b75198",
+  "genre": "other",
+  "agent": "Antigravity IDE",
+  "models": ["Gemini 3.8 Flash", "Claude Opus 4.6"],
+  "own_art": true,
+  "own_art_list": [
+    "Yellow_Shell_Hustle.mp3",
+    "public/arena_floor_map.jpg",
+    "public/stadium_jumbotron.jpg",
+    "public/stadium_sky_env.jpg",
+    "public/tiered_stadium_map.jpg",
+    "public/logo.png",
+    "public/favicon.png"
+  ],
+  "what_i_found": "Transforming traditional Indonesian street boi-boian into an arena 5v5 dodgeball esport created an exhilarating dynamic where rebuilding a physics-driven pyramid clashes against hunter snipers. Real-time broadcast audience polls triggering arena disasters—from twisters to orbital gravity rifts—shatter tower fragments and instantly flip team momentum. Autonomous AI teammates executing authentic flank passes, sacrificial catches, and pincer tactics make the compact toy-mecha coliseum feel vibrant and alive.",
+  "wallet": "5DiLBCDbZHzhfJSxYXMw1DtkBSxCgWinnF9bmsfmLjDVJ8ZT",
+  "contact": "hammxweb3@gmail.com"
+}
