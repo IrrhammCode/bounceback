@@ -628,10 +628,28 @@ body,
   padding-bottom: env(safe-area-inset-bottom, 0px);
   padding-left: env(safe-area-inset-left, 0px);
   padding-right: env(safe-area-inset-right, 0px);
+  transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
-.touch-controls > * {
+.touch-controls.is-dormant {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
+.touch-controls.is-active {
+  opacity: 1 !important;
+  pointer-events: none;
+  visibility: visible !important;
+}
+
+.touch-controls.is-active > * {
   pointer-events: auto;
+}
+
+.touch-controls.is-dormant .stick-zone {
+  display: none !important;
+  pointer-events: none !important;
 }
 
 /* Full-left Dynamic Floating Touch Joystick Area */
@@ -1534,24 +1552,66 @@ body.simulated-fullscreen .screen {
   color: #ffd166;
 }
 
+.ios-fs-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
 .ios-fs-action-btn {
-  background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
-  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
   padding: 12px;
-  color: #ffffff;
   font-family: var(--font-head);
   font-weight: 900;
-  font-size: 0.92rem;
+  font-size: 0.90rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.4);
   transition: all 0.15s;
+  text-align: center;
+}
+
+.ios-fs-action-btn.primary {
+  background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.4);
+}
+
+.ios-fs-action-btn.secondary {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #94a3b8;
+  font-size: 0.80rem;
+  padding: 9px;
+  box-shadow: none;
 }
 
 .ios-fs-action-btn:active {
   transform: scale(0.97);
+}
+
+.title-guide-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(39, 229, 255, 0.12);
+  border: 1px solid rgba(39, 229, 255, 0.45);
+  border-radius: 999px;
+  padding: 6px 14px;
+  color: #27e5ff;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 12px rgba(39, 229, 255, 0.2);
+}
+.title-guide-btn:hover {
+  background: rgba(39, 229, 255, 0.25);
+  transform: translateY(-1px);
 }
 
 /* Legacy single-button fallback */
@@ -4909,12 +4969,14 @@ body.simulated-fullscreen .screen {
   }
 
   .title-sound-btn .btn-label,
-  .title-header-bar .title-fs-btn .fs-btn-label {
+  .title-header-bar .title-fs-btn .fs-btn-label,
+  .title-guide-btn .btn-label {
     display: none;
   }
 
   .title-sound-btn,
-  .title-header-bar .title-fs-btn {
+  .title-header-bar .title-fs-btn,
+  .title-guide-btn {
     padding: 6px;
     border-radius: 50%;
     min-width: 34px;
@@ -5012,8 +5074,8 @@ body.simulated-fullscreen .screen {
   }
 }
 
-/* Mobile Landscape (Common for Mobile Gaming, Height <= 480px) */
-@media (max-height: 480px) {
+/* Mobile Landscape (Height <= 520px) — Fits 100% on any horizontal phone */
+@media (max-height: 520px) {
   .hud-top {
     padding-top: max(4px, calc(env(safe-area-inset-top, 0px) + 2px));
     gap: 2px;
@@ -5067,36 +5129,36 @@ body.simulated-fullscreen .screen {
   }
 
   #stick {
-    width: 95px;
-    height: 95px;
-    min-width: 95px;
-    min-height: 95px;
-    bottom: max(10px, calc(env(safe-area-inset-bottom, 0px) + 4px));
-    left: max(16px, calc(env(safe-area-inset-left, 0px) + 10px));
+    width: 90px;
+    height: 90px;
+    min-width: 90px;
+    min-height: 90px;
+    bottom: max(8px, calc(env(safe-area-inset-bottom, 0px) + 4px));
+    left: max(14px, calc(env(safe-area-inset-left, 0px) + 8px));
   }
 
   .action-buttons {
-    bottom: max(10px, calc(env(safe-area-inset-bottom, 0px) + 4px));
-    right: max(16px, calc(env(safe-area-inset-right, 0px) + 10px));
+    bottom: max(8px, calc(env(safe-area-inset-bottom, 0px) + 4px));
+    right: max(14px, calc(env(safe-area-inset-right, 0px) + 8px));
     gap: 8px;
   }
 
   .action-btn.punch {
-    width: 60px;
-    height: 60px;
-    font-size: 0.7rem;
+    width: 58px;
+    height: 58px;
+    font-size: 0.68rem;
   }
 
   .action-btn.dash {
-    width: 48px;
-    height: 48px;
-    font-size: 0.62rem;
+    width: 46px;
+    height: 46px;
+    font-size: 0.60rem;
   }
 
   .action-btn.skill {
-    width: 48px;
-    height: 48px;
-    font-size: 0.62rem;
+    width: 46px;
+    height: 46px;
+    font-size: 0.60rem;
   }
 
   .arcade-skill-hud {
@@ -5107,34 +5169,103 @@ body.simulated-fullscreen .screen {
     display: none !important;
   }
 
+  /* Title Screen Header Bar in Landscape */
   .title-header-bar {
-    padding: max(6px, calc(env(safe-area-inset-top, 0px) + 2px)) max(16px, calc(env(safe-area-inset-right, 0px) + 12px)) 6px max(16px, calc(env(safe-area-inset-left, 0px) + 12px));
+    padding: max(4px, calc(env(safe-area-inset-top, 0px) + 2px)) max(14px, calc(env(safe-area-inset-right, 0px) + 8px)) 4px max(14px, calc(env(safe-area-inset-left, 0px) + 8px));
   }
 
+  .title-network-brand .net-badge {
+    font-size: 0.72rem;
+    padding: 3px 8px;
+  }
+
+  .title-network-brand .net-subtitle {
+    display: none;
+  }
+
+  .title-header-right {
+    gap: 5px;
+  }
+
+  .title-live-indicator {
+    padding: 2px 7px;
+  }
+
+  .title-sound-btn,
+  .title-header-bar .title-fs-btn,
+  .title-guide-btn {
+    min-width: 32px;
+    min-height: 32px;
+    padding: 5px;
+  }
+
+  .title-sound-btn .btn-label,
+  .title-header-bar .title-fs-btn .fs-btn-label,
+  .title-guide-btn .btn-label {
+    display: none;
+  }
+
+  /* Title Centerpiece in Landscape — fits 100% on any screen height! */
   .title-center-plate {
-    padding: 0 8px;
+    padding: 0 16px;
+    margin: auto;
+    max-height: calc(100dvh - 54px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .title-season-tag {
+    display: none;
+  }
+
+  .title-logo-3d {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: clamp(1.8rem, 6.5vh, 2.5rem);
+    margin: 0 0 2px 0;
+    line-height: 1;
+  }
+
+  .title-tagline {
+    font-size: 0.65rem;
+    margin: 0 0 6px 0;
+    letter-spacing: 0.05em;
   }
 
   .title-feature-pills {
-    margin-bottom: 10px;
-    gap: 6px;
+    display: none;
   }
 
-  .feature-pill {
-    padding: 3px 10px;
-    font-size: 0.68rem;
+  .title-cta-group {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 2px;
   }
 
   .btn-enter-arena {
-    padding: 10px 28px;
+    padding: 8px 22px;
+    border-radius: 10px;
   }
 
   .btn-main-text {
-    font-size: 1rem;
+    font-size: 0.94rem;
   }
 
   .btn-sub-text {
     display: none;
+  }
+
+  .btn-secondary-guide {
+    padding: 8px 16px;
+    font-size: 0.74rem;
+    border-radius: 10px;
   }
 
   .title-bottom-ticker {

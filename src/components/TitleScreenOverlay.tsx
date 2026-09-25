@@ -102,6 +102,29 @@ export default function TitleScreenOverlay({ onStartMatch }: TitleScreenOverlayP
             <span className="btn-label">{muted ? "MUTED" : "SOUND ON"}</span>
           </button>
 
+          <button
+            type="button"
+            className="title-guide-btn"
+            onClick={() => window.dispatchEvent(new CustomEvent("open-ios-fs-modal"))}
+            title="Panduan Fullscreen iPhone / HP"
+            aria-label="Panduan Fullscreen iPhone"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#27e5ff"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+              <line x1="12" y1="18" x2="12.01" y2="18" />
+            </svg>
+            <span className="btn-label">TIPS HP</span>
+          </button>
+
           <FullscreenButton showLabel className="title-fs-btn" />
         </div>
       </header>

@@ -76,87 +76,6 @@ export class PlayerController {
     window.addEventListener("keyup", this._boundKeyUp);
     window.addEventListener("blur", this._boundBlur);
 
-    const stickEl = document.getElementById("stick");
-    const baseEl = document.getElementById("stickbase");
-    const nubEl = document.getElementById("sticknub");
-    if (!stickEl) return;
-    const stickZone = document.getElementById("stick-zone") || stickEl;
-
-    const DEAD = 10;
-    const MAX = 52;
-
-    const triggerHaptic = (ms = 14) => {
-      try {
-        if ("vibrate" in navigator && typeof navigator.vibrate === "function") {
-          navigator.vibrate(ms);
-        }
-      } catch {}
-    };
-
-    const onStickStart = (ev: TouchEvent) => {
-      ev.preventDefault();
-      const t = ev.changedTouches[0];
-      this.stickId = t.identifier;
-      this.stickOriginX = t.clientX;
-      this.stickOriginY = t.clientY;
-      this.stickActive = true;
-      if (baseEl) {
-        baseEl.style.left = t.clientX + "px";
-        baseEl.style.top = t.clientY + "px";
-        baseEl.style.opacity = "1";
-      }
-      if (nubEl) {
-        nubEl.style.left = t.clientX + "px";
-        nubEl.style.top = t.clientY + "px";
-        nubEl.style.opacity = "1";
-      }
-    };
-
-    stickZone.addEventListener("touchstart", onStickStart, { passive: false });
-    if (stickEl !== stickZone) {
-      stickEl.addEventListener("touchstart", onStickStart, { passive: false });
-    }
-
-    const onStickMove = (ev: TouchEvent) => {
-      if (!this.stickActive) return;
-      for (const t of Array.from(ev.changedTouches)) {
-        if (t.identifier !== this.stickId) continue;
-        ev.preventDefault();
-        const dx = t.clientX - this.stickOriginX;
-        const dy = t.clientY - this.stickOriginY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < DEAD) {
-          this.stickX = 0;
-          this.stickZ = 0;
-        } else {
-          const clamped = Math.min(dist, MAX);
-          this.stickX = (dx / dist) * (clamped / MAX);
-          this.stickZ = (-dy / dist) * (clamped / MAX);
-        }
-        if (nubEl) {
-          const cx = Math.min(Math.max(dx, -MAX), MAX);
-          const cy = Math.min(Math.max(dy, -MAX), MAX);
-          nubEl.style.left = this.stickOriginX + cx + "px";
-          nubEl.style.top = this.stickOriginY + cy + "px";
-        }
-      }
-    };
-    window.addEventListener("touchmove", onStickMove, { passive: false });
-
-    const endStick = (ev: TouchEvent) => {
-      for (const t of Array.from(ev.changedTouches)) {
-        if (t.identifier !== this.stickId) continue;
-        this.stickActive = false;
-        this.stickX = 0;
-        this.stickZ = 0;
-        this.stickId = null;
-        if (baseEl) baseEl.style.opacity = "0";
-        if (nubEl) nubEl.style.opacity = "0";
-      }
-    };
-    window.addEventListener("touchend", endStick);
-    window.addEventListener("touchcancel", endStick);
-
     // Global Mouse Click support: Left-Click = Punch, Right-Click = Skill
     this._boundMouseDown = (e: MouseEvent) => {
       if (e.button === 0) {
@@ -175,43 +94,6 @@ export class PlayerController {
     window.addEventListener("mousedown", this._boundMouseDown);
     window.addEventListener("mouseup", this._boundMouseUp);
 
-    // Touch and mouse wire for action buttons with tactile haptics
-    const wireBtn = (id: string, onDown: () => void, onUp: () => void, hapticMs = 15) => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.addEventListener("mousedown", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        onDown();
-        el.classList.add("dn");
-      });
-      el.addEventListener("mouseup", () => {
-        onUp();
-        el.classList.remove("dn");
-      });
-      el.addEventListener("touchstart", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        triggerHaptic(hapticMs);
-        onDown();
-        el.classList.add("dn");
-      }, { passive: false });
-      el.addEventListener("touchend", (e) => {
-        e.preventDefault();
-        onUp();
-        el.classList.remove("dn");
-      });
-      el.addEventListener("touchcancel", () => {
-        onUp();
-        el.classList.remove("dn");
-      });
-    };
-
-    wireBtn("btnA", () => { this.punchPressed = true; }, () => { this.punchPressed = false; }, 20);
-    wireBtn("btnB", () => { this.dashPressed = true; }, () => { this.dashPressed = false; }, 14);
-    wireBtn("btnSkill", () => { this.skillPressed = true; }, () => { this.skillPressed = false; }, 26);
-
-    // Right-click / contextmenu for skill on desktop
     window.addEventListener("contextmenu", (e) => {
       e.preventDefault();
       this.skillPressed = true;
@@ -219,6 +101,157 @@ export class PlayerController {
         this.skillPressed = false;
       }, 100);
     });
+
+    this.bindTouchControls();
+  }
+
+  public bindTouchControls() {
+    const stickEl = document.getElementById("stick");
+    const baseEl = document.getElementById("stickbase");
+    const nubEl = document.getElementById("sticknub");
+    const stickZone = document.getElementById("stick-zone") || stickEl;
+    if (!stickEl || !stickZone) return;
+
+    const DEAD = 8;
+    const MAX = 50;
+
+    const triggerHaptic = (ms = 14) => {
+      try {
+        if ("vibrate" in navigator && typeof navigator.vibrate === "function") {
+          navigator.vibrate(ms);
+        }
+      } catch {}
+    };
+
+    const handleStickStart = (clientX: number, clientY: number, id: number) => {
+      this.stickId = id;
+      this.stickOriginX = clientX;
+      this.stickOriginY = clientY;
+      this.stickActive = true;
+      if (baseEl) {
+        baseEl.style.left = clientX + "px";
+        baseEl.style.top = clientY + "px";
+        baseEl.style.opacity = "1";
+      }
+      if (nubEl) {
+        nubEl.style.left = clientX + "px";
+        nubEl.style.top = clientY + "px";
+        nubEl.style.opacity = "1";
+      }
+    };
+
+    const handleStickMove = (clientX: number, clientY: number, id: number) => {
+      if (!this.stickActive || id !== this.stickId) return;
+      const dx = clientX - this.stickOriginX;
+      const dy = clientY - this.stickOriginY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < DEAD) {
+        this.stickX = 0;
+        this.stickZ = 0;
+      } else {
+        const clamped = Math.min(dist, MAX);
+        this.stickX = (dx / dist) * (clamped / MAX);
+        this.stickZ = (-dy / dist) * (clamped / MAX);
+      }
+      if (nubEl) {
+        const cx = Math.min(Math.max(dx, -MAX), MAX);
+        const cy = Math.min(Math.max(dy, -MAX), MAX);
+        nubEl.style.left = this.stickOriginX + cx + "px";
+        nubEl.style.top = this.stickOriginY + cy + "px";
+      }
+    };
+
+    const handleStickEnd = (id: number) => {
+      if (id !== this.stickId) return;
+      this.stickActive = false;
+      this.stickX = 0;
+      this.stickZ = 0;
+      this.stickId = null;
+      if (baseEl) baseEl.style.opacity = "0";
+      if (nubEl) nubEl.style.opacity = "0";
+    };
+
+    // 1. Pointer Events (Modern standard for iOS / Android / Desktop)
+    stickZone.onpointerdown = (e: PointerEvent) => {
+      e.preventDefault();
+      try { stickZone.setPointerCapture?.(e.pointerId); } catch {}
+      handleStickStart(e.clientX, e.clientY, e.pointerId);
+    };
+    stickZone.onpointermove = (e: PointerEvent) => {
+      handleStickMove(e.clientX, e.clientY, e.pointerId);
+    };
+    stickZone.onpointerup = (e: PointerEvent) => {
+      handleStickEnd(e.pointerId);
+    };
+    stickZone.onpointercancel = (e: PointerEvent) => {
+      handleStickEnd(e.pointerId);
+    };
+
+    // 2. Touch Events Fallback
+    stickZone.ontouchstart = (ev: TouchEvent) => {
+      ev.preventDefault();
+      const t = ev.changedTouches[0];
+      handleStickStart(t.clientX, t.clientY, t.identifier);
+    };
+    stickZone.ontouchmove = (ev: TouchEvent) => {
+      if (!this.stickActive) return;
+      for (const t of Array.from(ev.changedTouches)) {
+        if (t.identifier === this.stickId) {
+          ev.preventDefault();
+          handleStickMove(t.clientX, t.clientY, t.identifier);
+        }
+      }
+    };
+    stickZone.ontouchend = (ev: TouchEvent) => {
+      for (const t of Array.from(ev.changedTouches)) {
+        if (t.identifier === this.stickId) {
+          handleStickEnd(t.identifier);
+        }
+      }
+    };
+    stickZone.ontouchcancel = (ev: TouchEvent) => {
+      for (const t of Array.from(ev.changedTouches)) {
+        if (t.identifier === this.stickId) {
+          handleStickEnd(t.identifier);
+        }
+      }
+    };
+
+    // 3. Action Buttons Wire (Pointer + Touch + Mouse)
+    const wireBtn = (id: string, onDown: () => void, onUp: () => void, hapticMs = 15) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+
+      const pressDown = (e: Event) => {
+        e.preventDefault();
+        e.stopPropagation();
+        triggerHaptic(hapticMs);
+        onDown();
+        el.classList.add("dn");
+      };
+
+      const pressUp = (e: Event) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onUp();
+        el.classList.remove("dn");
+      };
+
+      el.onpointerdown = pressDown;
+      el.onpointerup = pressUp;
+      el.onpointercancel = pressUp;
+
+      el.ontouchstart = pressDown;
+      el.ontouchend = pressUp;
+      el.ontouchcancel = pressUp;
+
+      el.onmousedown = pressDown;
+      el.onmouseup = pressUp;
+    };
+
+    wireBtn("btnA", () => { this.punchPressed = true; }, () => { this.punchPressed = false; }, 20);
+    wireBtn("btnB", () => { this.dashPressed = true; }, () => { this.dashPressed = false; }, 14);
+    wireBtn("btnSkill", () => { this.skillPressed = true; }, () => { this.skillPressed = false; }, 26);
   }
 
   destroy() {

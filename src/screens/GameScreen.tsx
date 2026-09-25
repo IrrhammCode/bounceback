@@ -500,42 +500,6 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
             </div>
           </div>
 
-          {/* Touch Controls — always in DOM for 404 test harness */}
-          <div className="touch-controls">
-            <div id="stick-zone" className="stick-zone" />
-            <div id="stick" />
-            <div id="stickbase" />
-            <div id="sticknub" />
-            <div className="action-buttons">
-              <button
-                id="btnSkill"
-                className={`action-btn skill ${hasSkill ? "ready" : ""}`}
-                onClick={handleActivateSkill}
-              >
-                <span className="icon">
-                  {hasSkill ? (
-                    <SkillIcon skill={gameState.playerSkill} size={24} />
-                  ) : (
-                    <SkillIcon skill={SkillType.None} size={24} />
-                  )}
-                </span>
-                {hasSkill ? "FIRE" : "SKILL"}
-              </button>
-              <button id="btnA" className="action-btn punch">
-                <span className="icon">
-                  <ActionPunchIcon size={24} />
-                </span>
-                PUNCH
-              </button>
-              <button id="btnB" className="action-btn dash">
-                <span className="icon">
-                  <ActionDashIcon size={24} />
-                </span>
-                DASH
-              </button>
-            </div>
-          </div>
-
           {/* Desktop Keyboard Hints */}
           <div className="kb-hints">
             <span>
@@ -554,18 +518,42 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
         </div>
       )}
 
-      {/* Hidden touch controls when not in game, ensuring DOM elements exist for automation */}
-      {appMode !== "game" && (
-        <div style={{ display: "none" }} aria-hidden="true">
-          <div id="stick-zone" className="stick-zone" />
-          <div id="stick" />
-          <div id="stickbase" />
-          <div id="sticknub" />
-          <button id="btnSkill" />
-          <button id="btnA" />
-          <button id="btnB" />
+      {/* Persistent Touch Controls — ALWAYS mounted in DOM, toggled active when in match */}
+      <div className={`touch-controls ${appMode === "game" ? "is-active" : "is-dormant"}`}>
+        <div id="stick-zone" className="stick-zone" />
+        <div id="stick" />
+        <div id="stickbase" />
+        <div id="sticknub" />
+        <div className="action-buttons">
+          <button
+            id="btnSkill"
+            type="button"
+            className={`action-btn skill ${hasSkill ? "ready" : ""}`}
+            onClick={handleActivateSkill}
+          >
+            <span className="icon">
+              {hasSkill ? (
+                <SkillIcon skill={gameState.playerSkill} size={24} />
+              ) : (
+                <SkillIcon skill={SkillType.None} size={24} />
+              )}
+            </span>
+            {hasSkill ? "FIRE" : "SKILL"}
+          </button>
+          <button id="btnA" type="button" className="action-btn punch">
+            <span className="icon">
+              <ActionPunchIcon size={24} />
+            </span>
+            PUNCH
+          </button>
+          <button id="btnB" type="button" className="action-btn dash">
+            <span className="icon">
+              <ActionDashIcon size={24} />
+            </span>
+            DASH
+          </button>
         </div>
-      )}
+      </div>
     </div>
   );
 }

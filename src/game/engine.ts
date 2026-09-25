@@ -833,6 +833,7 @@ export class BouncebackEngine {
     resumeAudio();
     sfxMatchStart();
     startBGM();
+    this.player.bindTouchControls();
 
     // Set map theme on arena controller (skybox, floor texture, obstacle visibility)
     if (this.arenaController) {

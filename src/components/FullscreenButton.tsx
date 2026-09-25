@@ -21,12 +21,18 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastToggleRef = useRef(0);
 
-  const isIOS = useCallback((): boolean => {
-    if (typeof navigator === "undefined") return false;
-    return (
-      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
-    );
+  const isMobileOrIOS = useCallback((): boolean => {
+    if (typeof window === "undefined" || typeof navigator === "undefined") return false;
+    const ua = navigator.userAgent || "";
+    const isIOSDevice =
+      /iPad|iPhone|iPod/i.test(ua) ||
+      (navigator.platform === "MacIntel" && (navigator.maxTouchPoints || 0) > 1);
+    const isTouchMobile =
+      isIOSDevice ||
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua) ||
+      ("ontouchstart" in window) ||
+      ((navigator.maxTouchPoints || 0) > 0 && window.innerWidth <= 1024);
+    return isTouchMobile;
   }, []);
 
   const isStandalone = useCallback((): boolean => {
@@ -67,28 +73,6 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
     }, 3200);
   }, []);
 
-  useEffect(() => {
-    const updateFsState = () => {
-      setIsFullscreen(checkIsFullscreen());
-    };
-
-    updateFsState();
-    document.addEventListener("fullscreenchange", updateFsState);
-    document.addEventListener("webkitfullscreenchange", updateFsState);
-    document.addEventListener("mozfullscreenchange", updateFsState);
-    document.addEventListener("MSFullscreenChange", updateFsState);
-    window.addEventListener("fullscreen-mode-change", updateFsState);
-
-    return () => {
-      document.removeEventListener("fullscreenchange", updateFsState);
-      document.removeEventListener("webkitfullscreenchange", updateFsState);
-      document.removeEventListener("mozfullscreenchange", updateFsState);
-      document.removeEventListener("MSFullscreenChange", updateFsState);
-      window.removeEventListener("fullscreen-mode-change", updateFsState);
-      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    };
-  }, [checkIsFullscreen]);
-
   const applySimulatedFullscreen = useCallback((enable: boolean) => {
     if (enable) {
       document.documentElement.classList.add("simulated-fullscreen");
@@ -109,17 +93,53 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
     }
   }, []);
 
+  useEffect(() => {
+    const updateFsState = () => {
+      setIsFullscreen(checkIsFullscreen());
+    };
+
+    const handleOpenModal = () => {
+      applySimulatedFullscreen(true);
+      setShowIOSModal(true);
+    };
+
+    updateFsState();
+    document.addEventListener("fullscreenchange", updateFsState);
+    document.addEventListener("webkitfullscreenchange", updateFsState);
+    document.addEventListener("mozfullscreenchange", updateFsState);
+    document.addEventListener("MSFullscreenChange", updateFsState);
+    window.addEventListener("fullscreen-mode-change", updateFsState);
+    window.addEventListener("open-ios-fs-modal", handleOpenModal);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", updateFsState);
+      document.removeEventListener("webkitfullscreenchange", updateFsState);
+      document.removeEventListener("mozfullscreenchange", updateFsState);
+      document.removeEventListener("MSFullscreenChange", updateFsState);
+      window.removeEventListener("fullscreen-mode-change", updateFsState);
+      window.removeEventListener("open-ios-fs-modal", handleOpenModal);
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, [checkIsFullscreen, applySimulatedFullscreen]);
+
   const handleToggle = useCallback(
     async (e: React.SyntheticEvent) => {
       e.stopPropagation();
       e.preventDefault();
 
-      // Debounce fast multi-event touch/click triggers (350ms)
+      // Debounce fast multi-event touch/click triggers (250ms)
       const now = Date.now();
-      if (now - lastToggleRef.current < 350) return;
+      if (now - lastToggleRef.current < 250) return;
       lastToggleRef.current = now;
 
       triggerHaptic(20);
+
+      // On mobile / iPhone: ALWAYS show the guide modal with 3 visual steps to add to home screen!
+      if (isMobileOrIOS()) {
+        applySimulatedFullscreen(true);
+        setShowIOSModal(true);
+        return;
+      }
 
       const currentlyFs = checkIsFullscreen();
       const doc = document as any;
@@ -149,16 +169,7 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
         return;
       }
 
-      // Case B: iPhone / iOS Safari in browser tab
-      // Apple blocks element.requestFullscreen() in iOS Safari tabs.
-      // Show interactive iOS guide explaining Add to Home Screen + activate immersive mode.
-      if (isIOS()) {
-        applySimulatedFullscreen(true);
-        setShowIOSModal(true);
-        return;
-      }
-
-      // Case C: Android Chrome / Desktop browsers with native Fullscreen API support
+      // Case B: Desktop browsers with native Fullscreen API support
       let nativeSucceeded = false;
       try {
         if (docEl.requestFullscreen) {
@@ -185,7 +196,7 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
         showToastMsg("MODE IMMERSIVE AKTIF", "Layar disesuaikan penuh ke tampilan browser");
       }
     },
-    [checkIsFullscreen, isIOS, isStandalone, triggerHaptic, applySimulatedFullscreen, showToastMsg]
+    [checkIsFullscreen, isMobileOrIOS, isStandalone, triggerHaptic, applySimulatedFullscreen, showToastMsg]
   );
 
   return (
@@ -194,7 +205,6 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
         type="button"
         className={`btn-fullscreen-toggle ${isFullscreen ? "is-fullscreen" : ""} ${className}`}
         onClick={handleToggle}
-        onTouchEnd={handleToggle}
         title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
         aria-label={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
       >
@@ -340,17 +350,30 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
                 <strong>Trik Cepat di Browser:</strong> Tekan tombol <strong>aA</strong> di kiri address bar Safari kamu &rarr; pilih <em>"Sembunyikan Bilah Alat" (Hide Toolbar)</em>.
               </div>
 
-              <button
-                type="button"
-                className="ios-fs-action-btn"
-                onClick={() => {
-                  setShowIOSModal(false);
-                  applySimulatedFullscreen(true);
-                  showToastMsg("MODE IMMERSIVE AKTIF", "Layar diperluas penuh!");
-                }}
-              >
-                Lanjutkan Main
-              </button>
+              <div className="ios-fs-modal-actions">
+                <button
+                  type="button"
+                  className="ios-fs-action-btn primary"
+                  onClick={() => {
+                    setShowIOSModal(false);
+                    applySimulatedFullscreen(true);
+                    showToastMsg("MODE IMMERSIVE AKTIF", "Layar diperluas penuh!");
+                  }}
+                >
+                  Lanjutkan Main (Layar Penuh)
+                </button>
+                <button
+                  type="button"
+                  className="ios-fs-action-btn secondary"
+                  onClick={() => {
+                    setShowIOSModal(false);
+                    applySimulatedFullscreen(false);
+                    showToastMsg("MODE JENDELA (WINDOWED)");
+                  }}
+                >
+                  Keluar ke Mode Jendela
+                </button>
+              </div>
             </div>
           </div>,
           document.body
