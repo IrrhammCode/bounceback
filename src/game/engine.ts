@@ -739,23 +739,104 @@ export class BouncebackEngine {
     return trophy;
   }
 
-  private spawnBumpers() {
-    // 13 strategic bumpers spaced across spacious 28x54 arena
-    const positions = [
-      { x: 0, z: 0 },           // Center Dais Peak (y = 1.5m)
-      { x: -7.0, z: -4 },       // Midfield plateau flanking (y = 1.2m)
-      { x: 7.0, z: -4 },
-      { x: -7.0, z: 4 },
-      { x: 7.0, z: 4 },
-      { x: -10.5, z: 0 },       // Side launch wings
-      { x: 10.5, z: 0 },
-      { x: -3.5, z: -11 },      // Ascending ramp crest flank
-      { x: 3.5, z: 11 },        // Descending ramp crest flank
-      { x: -5.5, z: -21 },      // Goal defense zone
-      { x: 5.5, z: -21 },
-      { x: -5.5, z: 21 },
-      { x: 5.5, z: 21 },
-    ];
+  private spawnBumpers(roundNumber = 1) {
+    // Clean up existing bumpers if re-spawning for next round
+    for (const mesh of this.bumperMeshes) {
+      this.scene.remove(mesh);
+    }
+    this.bumperMeshes = [];
+    this.bumpers = [];
+
+    // Distinct Strategic Bumper Layouts per Round Shape
+    let positions: { x: number; z: number }[] = [];
+
+    switch (roundNumber) {
+      case 1:
+        // Round 1 (Kamar Masa Kecil): 8 bumpers
+        // 4 Corner Guardians guarding corner drop cutouts + 4 Midfield toy blocks
+        positions = [
+          { x: -9.5, z: -20.5 },
+          { x: 9.5, z: -20.5 },
+          { x: -9.5, z: 20.5 },
+          { x: 9.5, z: 20.5 },
+          { x: -6.0, z: -3.5 },
+          { x: 6.0, z: -3.5 },
+          { x: -6.0, z: 3.5 },
+          { x: 6.0, z: 3.5 },
+        ];
+        break;
+
+      case 2:
+        // Round 2 (Kota Mainan Speedway): 6 bumpers
+        // 3 in Cyan Bowl, 3 in Coral Bowl (narrow bridge corridor kept open for duels & conveyors!)
+        positions = [
+          { x: 0, z: -18.0 },
+          { x: -7.5, z: -14.0 },
+          { x: 7.5, z: -14.0 },
+          { x: 0, z: 18.0 },
+          { x: -7.5, z: 14.0 },
+          { x: 7.5, z: 14.0 },
+        ];
+        break;
+
+      case 3:
+        // Round 3 (Layangan Sore Grand Octagon): 8 bumpers
+        // Octagon Terraces arranged symmetrically around the hill peak
+        positions = [
+          { x: -8.0, z: -9.0 },
+          { x: 8.0, z: -9.0 },
+          { x: -8.0, z: 9.0 },
+          { x: 8.0, z: 9.0 },
+          { x: -11.5, z: 0 },
+          { x: 11.5, z: 0 },
+          { x: 0, z: -12.5 },
+          { x: 0, z: 12.5 },
+        ];
+        break;
+
+      case 4:
+        // Round 4 (Pasar Malam Pinball Velodrome): 11 bumpers
+        // Central 5-Bumper Diamond Cluster + 4 Slingshot Corner Bumpers + 2 Goal Defenses
+        positions = [
+          { x: 0, z: 0 },
+          { x: -4.5, z: -4.5 },
+          { x: 4.5, z: -4.5 },
+          { x: -4.5, z: 4.5 },
+          { x: 4.5, z: 4.5 },
+          { x: -9.0, z: -11.0 },
+          { x: 9.0, z: -11.0 },
+          { x: -9.0, z: 11.0 },
+          { x: 9.0, z: 11.0 },
+          { x: 0, z: -22.0 },
+          { x: 0, z: 22.0 },
+        ];
+        break;
+
+      case 5:
+        // Round 5 (Atap Penuh Bintang Celestial Starcross): 8 bumpers
+        // 4 Wing Guards + 4 Singularity Approach Guards
+        positions = [
+          { x: -11.5, z: -4.0 },
+          { x: -11.5, z: 4.0 },
+          { x: 11.5, z: -4.0 },
+          { x: 11.5, z: 4.0 },
+          { x: 0, z: -8.0 },
+          { x: 0, z: 8.0 },
+          { x: -5.5, z: 0 },
+          { x: 5.5, z: 0 },
+        ];
+        break;
+
+      default:
+        positions = [
+          { x: 0, z: 0 },
+          { x: -7.0, z: -4 },
+          { x: 7.0, z: -4 },
+          { x: -7.0, z: 4 },
+          { x: 7.0, z: 4 },
+        ];
+        break;
+    }
 
     for (const pos of positions) {
       const bData: BumperData = { x: pos.x, z: pos.z, hitFlash: 0 };
@@ -776,7 +857,7 @@ export class BouncebackEngine {
       const bscl = desiredH / (h || 1);
       mesh.scale.setScalar(bscl);
       mesh.userData.baseScale = bscl;
-      const bH = getArenaHeight(pos.x, pos.z);
+      const bH = getArenaHeight(pos.x, pos.z, roundNumber);
       mesh.position.set(pos.x, bH, pos.z);
       this.bumperMeshes.push(mesh);
       this.scene.add(mesh);
@@ -856,6 +937,7 @@ export class BouncebackEngine {
     if (this.arenaController) {
       this.arenaController.setMapTheme(1);
     }
+    this.spawnBumpers(1);
     applyRoundPalette(1, this.scene, this.renderer, this.hemiLight, this.sunLight, this.fillLight, this.rimLight);
     if (this.worldBackdrop) {
       this.worldBackdrop.loadRoundWorld(1);
@@ -923,6 +1005,7 @@ export class BouncebackEngine {
     if (this.arenaController) {
       this.arenaController.setMapTheme(currentRoundDef.roundNumber);
     }
+    this.spawnBumpers(currentRoundDef.roundNumber);
     applyRoundPalette(
       currentRoundDef.roundNumber,
       this.scene,
@@ -1016,6 +1099,7 @@ export class BouncebackEngine {
     if (this.arenaController) {
       this.arenaController.setMapTheme(1);
     }
+    this.spawnBumpers(1);
     applyRoundPalette(1, this.scene, this.renderer, this.hemiLight, this.sunLight, this.fillLight, this.rimLight);
     if (this.worldBackdrop) {
       this.worldBackdrop.loadRoundWorld(1);
@@ -1850,14 +1934,14 @@ export class BouncebackEngine {
         this.arenaController?.triggerLightning?.();
       }
 
-      // Round 4: Cyberpinball Jump Pads
-      if (this.arenaController?.jumpPads && currentRoundDef.roundNumber === 4) {
+      // Jump Pads (Mushroom Trampolines in R3, Circus Trampolines in R4, Nebula Wells in R5)
+      if (this.arenaController?.jumpPads && this.arenaController.jumpPads.length > 0) {
         for (const pad of this.arenaController.jumpPads) {
           for (const ent of this.entities) {
             const dx = ent.x - pad.x;
             const dz = ent.z - pad.z;
             const dist = Math.hypot(dx, dz);
-            if (dist < pad.radius + ent.radius && ent.y <= 0.25 && ent.immuneTimer <= 0) {
+            if (dist < pad.radius + ent.radius && ent.y <= 0.35 && ent.immuneTimer <= 0) {
               ent.vy = pad.impulseY;
               ent.vz += pad.impulseZ;
               ent.immuneTimer = 0.6;
@@ -1868,6 +1952,52 @@ export class BouncebackEngine {
                 z: pad.z,
                 text: "BOING!",
               });
+            }
+          }
+        }
+      }
+
+      // Round 4: Active Motorized Pinball Flippers
+      if (this.arenaController?.flippers && currentRoundDef.roundNumber === 4) {
+        for (const flipper of this.arenaController.flippers) {
+          for (const ent of this.entities) {
+            if (ent.immuneTimer > 0) continue;
+            const dx = ent.x - flipper.pivot.x;
+            const dz = ent.z - flipper.pivot.z;
+            const dist = Math.hypot(dx, dz);
+            if (dist <= flipper.length + ent.radius) {
+              const armAngle = flipper.angle;
+              const armDirX = Math.sin(armAngle);
+              const armDirZ = Math.cos(armAngle);
+              const proj = dx * armDirX + dz * armDirZ;
+              if (proj >= 0 && proj <= flipper.length) {
+                const perpDist = Math.abs(-dx * armDirZ + dz * armDirX);
+                if (perpDist <= flipper.thickness + ent.radius) {
+                  // Flipper strike kick!
+                  const kickNx = -armDirZ * flipper.dir;
+                  const kickNz = armDirX * flipper.dir;
+                  const kickSpeed = flipper.isFlipping ? 28.5 : 18.0;
+
+                  ent.vx = kickNx * kickSpeed;
+                  ent.vz = kickNz * kickSpeed;
+                  ent.launched = true;
+                  ent.launchTimer = 0;
+                  ent.launchSpeed = kickSpeed;
+                  ent.bounceCount = (ent.bounceCount || 0) + 1;
+                  ent.immuneTimer = 0.45;
+
+                  flipper.isFlipping = true;
+                  flipper.flipTimer = 0;
+
+                  sfxBumperHit();
+                  this.juice.trigger("bumper", {
+                    x: ent.x,
+                    y: getArenaHeight(ent.x, ent.z) + 1.0,
+                    z: ent.z,
+                    text: "FLIP!",
+                  });
+                }
+              }
             }
           }
         }

@@ -25,11 +25,13 @@ import { getArenaHeight, setArenaRound } from "./arenaHeight";
 import {
   createSkyTexture,
   createFloorTexture,
+  createPlaygroundObstacles,
   createSpeedwayBelts,
   createStormlandFeatures,
   createPinballJumpPads,
   createCosmicSingularity,
 } from "./arenaThemes";
+import { getArenaPerimeterPolygon, getArenaBoundaryInfo } from "./arenaShapes";
 import { getRoundPalette } from "./visual/palettes";
 import { createOutlineMesh } from "./visual/toon";
 import { getLoadedGLTF, loadGLTF, MODEL_PATHS } from "./visual/assets";
@@ -60,6 +62,18 @@ export interface ArenaController {
     radius: number;
     impulseY: number;
     impulseZ: number;
+  }[];
+  flippers?: {
+    pivot: THREE.Vector3;
+    angle: number;
+    length: number;
+    thickness: number;
+    restAngle: number;
+    activeAngle: number;
+    isFlipping: boolean;
+    flipTimer: number;
+    mesh: THREE.Object3D;
+    dir: number;
   }[];
   triggerLightning?: () => void;
   setCosmicVortexActive?: (active: boolean) => void;
@@ -409,10 +423,10 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   });
 
   // ─── 4. FLOATING COLOSSEUM ISLAND FOUNDATION & CORE ─────
-  // Base foundation slab directly hugging court platform (W x L) to expose the 8.5m drop abyss around it!
+  // Base foundation slab directly hugging court platform (W x L) - hidden in favor of dynamic updateFoundationMesh
   const baseSlab = new THREE.Mesh(new THREE.BoxGeometry(W, 2.2, L), foundationMat);
   baseSlab.position.y = -1.1;
-  baseSlab.receiveShadow = true;
+  baseSlab.visible = false;
   root.add(baseSlab);
 
   // Undercarriage floating keel steps (tapering inwards to reveal the open chasm)
@@ -479,15 +493,19 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   }
 
   // Platform Edge Metallic Coping Rim (Beveled gold/chrome molding)
+  const staticRimGroup = new THREE.Group();
+  staticRimGroup.name = "StaticRimGroup";
+  root.add(staticRimGroup);
+
   for (const side of [-1, 1]) {
     const sideRim = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.3, L), goldDecoMat);
     sideRim.position.set(side * (hW + 0.08), 0.08, 0);
-    root.add(sideRim);
+    staticRimGroup.add(sideRim);
   }
   for (const end of [-1, 1]) {
     const endRim = new THREE.Mesh(new THREE.BoxGeometry(W + 0.5, 0.3, 0.35), goldDecoMat);
     endRim.position.set(0, 0.08, end * (hL + 0.08));
-    root.add(endRim);
+    staticRimGroup.add(endRim);
   }
 
   // Raised Center Gold Ring Rim (r = 4.4m)
@@ -632,7 +650,11 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   midRibbon.position.set(0, getArenaHeight(0, 0) + 0.02, 0);
   giftRibbonGroup.add(midRibbon);
 
-  // Intermediate support stanchions along perimeter
+  // Intermediate support stanchions and static perimeter ropes
+  const staticRopeGroup = new THREE.Group();
+  staticRopeGroup.name = "StaticRopeGroup";
+  root.add(staticRopeGroup);
+
   const stanchionPositions = [
     { x: -hW, z: -13.5 },
     { x: -hW, z: 0 },
@@ -654,7 +676,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     );
     post.position.set(sp.x, postH / 2 + getArenaHeight(sp.x, sp.z), sp.z);
     post.castShadow = true;
-    root.add(post);
+    staticRopeGroup.add(post);
   }
 
   // 3-Tier Elastic Glowing Perimeter Ropes:
@@ -684,7 +706,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
       emissiveIntensity: 0.8,
       roughness: 0.2,
     });
-    root.add(new THREE.Mesh(topGeo, topMat));
+    staticRopeGroup.add(new THREE.Mesh(topGeo, topMat));
 
     // Mid Rope: Golden laser cable
     const midCurve = new THREE.CatmullRomCurve3(midPts);
@@ -695,7 +717,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
       emissiveIntensity: 0.7,
       roughness: 0.2,
     });
-    root.add(new THREE.Mesh(midGeo, midMat));
+    staticRopeGroup.add(new THREE.Mesh(midGeo, midMat));
 
     // Bottom Bumper Rail: Solid chrome rebound bar
     const botCurve = new THREE.CatmullRomCurve3(botPts);
@@ -705,7 +727,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
       roughness: 0.3,
       metalness: 0.7,
     });
-    root.add(new THREE.Mesh(botGeo, botMat));
+    staticRopeGroup.add(new THREE.Mesh(botGeo, botMat));
   }
 
   // North & South Endline Ropes
@@ -717,7 +739,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     );
     tMesh.rotateZ(Math.PI / 2);
     tMesh.position.set(0, 1.15, pz);
-    root.add(tMesh);
+    staticRopeGroup.add(tMesh);
 
     // Mid Rope
     const mMesh = new THREE.Mesh(
@@ -726,7 +748,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     );
     mMesh.rotateZ(Math.PI / 2);
     mMesh.position.set(0, 0.65, pz);
-    root.add(mMesh);
+    staticRopeGroup.add(mMesh);
 
     // Bottom Rail
     const bMesh = new THREE.Mesh(
@@ -735,7 +757,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     );
     bMesh.rotateZ(Math.PI / 2);
     bMesh.position.set(0, 0.22, pz);
-    root.add(bMesh);
+    staticRopeGroup.add(bMesh);
   };
 
   addEndRopes(-hL, C.TEAM_CYAN);
@@ -2516,6 +2538,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     confMesh.instanceMatrix.needsUpdate = true;
 
     // 14. Update Map Biome Obstacles & 3D Dioramas
+    playground.update(dt, time);
     speedway.update(dt, time);
     stormland.update(dt, time);
     pinball.update(dt, time);
@@ -2524,16 +2547,121 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   }
 
   // ─── 18. MAP BIOME MANAGERS & OBSTACLES ───────────────
+  const playground = createPlaygroundObstacles(root);
   const speedway = createSpeedwayBelts(root);
   const stormland = createStormlandFeatures(root);
   const pinball = createPinballJumpPads(root);
   const cosmic = createCosmicSingularity(root);
   const dioramas = createThemedPerimeterDioramas(root);
 
+  playground.group.visible = true;
   speedway.group.visible = false;
   stormland.group.visible = false;
   pinball.group.visible = false;
   cosmic.group.visible = false;
+
+  // Dynamic 3D Platform Foundation Mesh that hugs the exact shape of each round
+  let currentFoundationMesh: THREE.Mesh | null = null;
+  function updateFoundationMesh(roundNumber: number) {
+    if (currentFoundationMesh) {
+      root.remove(currentFoundationMesh);
+      currentFoundationMesh.geometry.dispose();
+      currentFoundationMesh = null;
+    }
+
+    const pts = getArenaPerimeterPolygon(roundNumber);
+    const shape = new THREE.Shape();
+    shape.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) {
+      shape.lineTo(pts[i].x, pts[i].y);
+    }
+    shape.closePath();
+
+    if (roundNumber === 5) {
+      // Cut central 7.2m hole in the starcross platform
+      const hole = new THREE.Path();
+      hole.absarc(0, 0, 3.6, 0, Math.PI * 2, true);
+      shape.holes.push(hole);
+    }
+
+    const extrudeGeo = new THREE.ExtrudeGeometry(shape, {
+      depth: 3.2,
+      bevelEnabled: true,
+      bevelSegments: 2,
+      steps: 1,
+      bevelSize: 0.35,
+      bevelThickness: 0.25,
+    });
+    extrudeGeo.rotateX(Math.PI / 2);
+
+    currentFoundationMesh = new THREE.Mesh(extrudeGeo, foundationMat);
+    currentFoundationMesh.position.y = -0.05;
+    currentFoundationMesh.receiveShadow = true;
+    root.add(currentFoundationMesh);
+  }
+
+  // Dynamic Perimeter Boundary Group (adaptive ropes, posts, and glowing hazard cliff strips)
+  const dynamicPerimeterGroup = new THREE.Group();
+  dynamicPerimeterGroup.name = "DynamicPerimeterBoundaries";
+  root.add(dynamicPerimeterGroup);
+
+  const neonRopeMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
+  const openCliffWarningMat = new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.85, side: THREE.DoubleSide });
+
+  function updatePerimeterBoundaries(roundNumber: number) {
+    while (dynamicPerimeterGroup.children.length > 0) {
+      const child = dynamicPerimeterGroup.children[0];
+      dynamicPerimeterGroup.remove(child);
+      if ((child as THREE.Mesh).geometry) (child as THREE.Mesh).geometry.dispose();
+    }
+
+    const pts = getArenaPerimeterPolygon(roundNumber);
+    for (let i = 0; i < pts.length; i++) {
+      const p1 = pts[i];
+      const p2 = pts[(i + 1) % pts.length];
+      const midX = (p1.x + p2.x) * 0.5;
+      const midZ = (p1.y + p2.y) * 0.5;
+      const bInfo = getArenaBoundaryInfo(midX, midZ, roundNumber);
+
+      const dx = p2.x - p1.x;
+      const dz = p2.y - p1.y;
+      const segLen = Math.hypot(dx, dz);
+      const angle = Math.atan2(dx, dz);
+      const midY = getArenaHeight(midX, midZ, roundNumber);
+
+      if (bInfo.isDropEdge) {
+        // Open Drop Cliff: Glowing red warning laser strip along the edge
+        const warningStrip = new THREE.Mesh(
+          new THREE.PlaneGeometry(0.55, segLen),
+          openCliffWarningMat
+        );
+        warningStrip.rotation.x = -Math.PI / 2;
+        warningStrip.rotation.z = -angle;
+        warningStrip.position.set(midX, midY + 0.04, midZ);
+        dynamicPerimeterGroup.add(warningStrip);
+      } else if (roundNumber > 1) {
+        // Roped Edge on custom shapes (Rounds 2-5): 3 tiers of neon glowing tension cables
+        for (const ry of [0.35, 0.85, 1.35]) {
+          const ropeMesh = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.04, 0.04, segLen, 6),
+            neonRopeMat
+          );
+          ropeMesh.rotation.x = Math.PI / 2;
+          ropeMesh.rotation.z = -angle;
+          ropeMesh.position.set(midX, midY + ry, midZ);
+          dynamicPerimeterGroup.add(ropeMesh);
+        }
+
+        // Support Post at p1
+        const post = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.12, 0.14, 1.5, 8),
+          chromeMat
+        );
+        post.position.set(p1.x, getArenaHeight(p1.x, p1.y, roundNumber) + 0.75, p1.y);
+        dynamicPerimeterGroup.add(post);
+      }
+    }
+  }
 
   const skyCache: Record<number, THREE.CanvasTexture> = { 1: skyTex };
   const floorCache: Record<number, THREE.CanvasTexture> = { 1: floorTex };
@@ -2548,6 +2676,21 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     return floorCache[rn];
   }
 
+  const controller: ArenaController = {
+    update,
+    onGoalCelebration,
+    setMapTheme,
+    sweeperArms: sweepers,
+    conveyorBelts: undefined,
+    jumpPads: undefined,
+    flippers: undefined,
+    triggerLightning: stormland.triggerLightning,
+    setCosmicVortexActive: cosmic.setVortexActive,
+    isCosmicVortexActive: cosmic.isVortexActive,
+    floorMesh,
+    dispose,
+  };
+
   function setMapTheme(roundNumber: number) {
     setArenaRound(roundNumber);
 
@@ -2556,7 +2699,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     floorMat.map = getFloor(roundNumber);
     floorMat.needsUpdate = true;
 
-    // Morph 3D sculpted arena floor geometry to round topology
+    // Morph 3D sculpted arena floor geometry to round topology & shape drop
     const posAttr = floorGeo.attributes.position;
     for (let i = 0; i < posAttr.count; i++) {
       const vx = posAttr.getX(i);
@@ -2569,25 +2712,57 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     // Center ribbon stays flush on midfield height
     midRibbon.position.y = getArenaHeight(0, 0, roundNumber) + 0.02;
 
+    // Dynamic 3D Foundation and Perimeter Ropes
+    staticRimGroup.visible = (roundNumber === 1);
+    staticRopeGroup.visible = (roundNumber === 1);
+    updateFoundationMesh(roundNumber);
+    updatePerimeterBoundaries(roundNumber);
+
     // Toggle map-specific interactive obstacle groups & 3D dioramas
+    playground.group.visible = (roundNumber === 1);
     speedway.group.visible = (roundNumber === 2);
     stormland.group.visible = (roundNumber === 3);
     pinball.group.visible = (roundNumber === 4);
     cosmic.group.visible = (roundNumber === 5);
     dioramas.setTheme(roundNumber);
 
-    // Hazard sweepers: active in round 1, 2, 3 (hyper-spin in round 3), retracted in 4 & 5
-    for (let i = 0; i < sweepers.length; i++) {
-      const sc = sweeperConfigs[i];
-      const floorH = getArenaHeight(sc.x, sc.z, roundNumber);
-      if (sweeperBaseGroups[i]) {
-        sweeperBaseGroups[i].position.y = floorH;
+    // Configure active sweepers and obstacles on controller
+    if (roundNumber === 1) {
+      controller.sweeperArms = sweepers;
+      controller.conveyorBelts = undefined;
+      controller.jumpPads = undefined;
+      controller.flippers = undefined;
+      for (let i = 0; i < sweepers.length; i++) {
+        sweeperGroups[i].visible = true;
+        const sc = sweeperConfigs[i];
+        const floorH = getArenaHeight(sc.x, sc.z, roundNumber);
+        if (sweeperBaseGroups[i]) sweeperBaseGroups[i].position.y = floorH;
+        if (sweepers[i]) sweepers[i].center.y = floorH + 0.50;
       }
-      if (sweepers[i]) {
-        sweepers[i].center.y = floorH + 0.50;
-      }
-      sweeperGroups[i].visible = (roundNumber <= 3);
-      sweepers[i].rotSpeed = (roundNumber === 3 ? (i === 0 ? 1.9 : -1.9) : (i === 0 ? 1.25 : -1.25));
+    } else if (roundNumber === 2) {
+      controller.sweeperArms = speedway.sweeperArms || [];
+      controller.conveyorBelts = speedway.conveyorBelts;
+      controller.jumpPads = undefined;
+      controller.flippers = undefined;
+      for (let i = 0; i < sweepers.length; i++) sweeperGroups[i].visible = false;
+    } else if (roundNumber === 3) {
+      controller.sweeperArms = stormland.sweeperArms || [];
+      controller.conveyorBelts = undefined;
+      controller.jumpPads = stormland.jumpPads;
+      controller.flippers = undefined;
+      for (let i = 0; i < sweepers.length; i++) sweeperGroups[i].visible = false;
+    } else if (roundNumber === 4) {
+      controller.sweeperArms = [];
+      controller.conveyorBelts = undefined;
+      controller.jumpPads = pinball.jumpPads;
+      controller.flippers = pinball.flippers;
+      for (let i = 0; i < sweepers.length; i++) sweeperGroups[i].visible = false;
+    } else if (roundNumber === 5) {
+      controller.sweeperArms = [];
+      controller.conveyorBelts = undefined;
+      controller.jumpPads = cosmic.jumpPads;
+      controller.flippers = undefined;
+      for (let i = 0; i < sweepers.length; i++) sweeperGroups[i].visible = false;
     }
 
     // Dynamic Cloud Sea color using Tripothon Round Palettes
@@ -2607,17 +2782,8 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     scene.remove(root);
   }
 
-  return {
-    update,
-    onGoalCelebration,
-    setMapTheme,
-    sweeperArms: sweepers,
-    conveyorBelts: speedway.conveyorBelts,
-    jumpPads: pinball.jumpPads,
-    triggerLightning: stormland.triggerLightning,
-    setCosmicVortexActive: cosmic.setVortexActive,
-    isCosmicVortexActive: cosmic.isVortexActive,
-    floorMesh,
-    dispose,
-  };
+  // Initial call to set round 1
+  setMapTheme(1);
+
+  return controller;
 }

@@ -22,6 +22,8 @@
  *   and an elevated Champion's Star Dais (+1.0m) at the exact center (r <= 3.2m).
  */
 
+import { isPointInsideArena, getArenaBoundaryInfo } from "./arenaShapes";
+
 let currentArenaRound = 1;
 
 export function setArenaRound(roundNumber: number): void {
@@ -38,6 +40,13 @@ function smoothstep(min: number, max: number, value: number): number {
 }
 
 export function getArenaHeight(x: number, z: number, roundNumber: number = currentArenaRound): number {
+  const bInfo = getArenaBoundaryInfo(x, z, roundNumber);
+  if (!bInfo.inside) {
+    // Sheer vertical drop into the 18m canyon abyss
+    const dropT = Math.min(1.0, bInfo.distToEdge / 1.2);
+    return -18.0 * dropT;
+  }
+
   switch (roundNumber) {
     case 1: {
       // Round 1: Elevated midfield plateau

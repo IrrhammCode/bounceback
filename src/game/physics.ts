@@ -4,6 +4,8 @@
  */
 import * as THREE from "three";
 import * as C from "./config";
+import { getArenaRound } from "./arenaHeight";
+import { getArenaBoundaryInfo, isPointInsideArena } from "./arenaShapes";
 
 export interface BumperData {
   x: number;
@@ -169,37 +171,44 @@ export function updatePhysics(
 
     e.speed = Math.sqrt(e.vx * e.vx + e.vz * e.vz);
 
-    // 3. Perimeter Boundary Check (Elastic Ropes vs Ring-Out Vault)
-    const beyondWest = e.x - e.radius < -halfW;
-    const beyondEast = e.x + e.radius > halfW;
-    const beyondNorth = e.z - e.radius < -halfL;
-    const beyondSouth = e.z + e.radius > halfL;
+    // 3. Perimeter Boundary Check (Multi-Shape Collision & Ring-Out Vault)
+    const roundNumber = getArenaRound();
+    const bInfo = getArenaBoundaryInfo(e.x, e.z, roundNumber);
 
-    if (beyondWest || beyondEast || beyondNorth || beyondSouth) {
-      const isHighVelocity = e.launched || e.launchSpeed > 10.0 || e.speed > 11.0;
-      if (isHighVelocity) {
-        // Vault over boundary ropes into the void abyss!
+    if (!bInfo.inside) {
+      if (bInfo.isDropEdge) {
+        // Stepped or knocked off into open cliff / abyss / black hole!
         e.isFalling = true;
-        e.vy = 5.0; // Initial upward arc over rope
+        e.vy = Math.min(e.vy, 2.0);
         e.launched = true;
       } else {
-        // Elastic rebound off ring ropes
-        if (beyondWest) {
-          e.x = -halfW + e.radius;
-          e.vx = Math.abs(e.vx) * C.WALL_RESTITUTION;
+        // Boundary rope/curb zone
+        const isHighVelocity = e.launched || e.launchSpeed > 10.0 || e.speed > 11.0;
+        if (isHighVelocity) {
+          // Vault over ropes into the chasm!
+          e.isFalling = true;
+          e.vy = 5.0;
+          e.launched = true;
+        } else {
+          // Elastic rebound along boundary normal
+          e.x += bInfo.nx * (bInfo.distToEdge + e.radius);
+          e.z += bInfo.nz * (bInfo.distToEdge + e.radius);
+          const dot = e.vx * bInfo.nx + e.vz * bInfo.nz;
+          if (dot < 0) {
+            e.vx -= (1 + C.WALL_RESTITUTION) * dot * bInfo.nx;
+            e.vz -= (1 + C.WALL_RESTITUTION) * dot * bInfo.nz;
+          }
         }
-        if (beyondEast) {
-          e.x = halfW - e.radius;
-          e.vx = -Math.abs(e.vx) * C.WALL_RESTITUTION;
-        }
-        if (beyondNorth) {
-          e.z = -halfL + e.radius;
-          e.vz = Math.abs(e.vz) * C.WALL_RESTITUTION;
-        }
-        if (beyondSouth) {
-          e.z = halfL - e.radius;
-          e.vz = -Math.abs(e.vz) * C.WALL_RESTITUTION;
-        }
+      }
+    } else if (bInfo.distToEdge < e.radius && !bInfo.isDropEdge) {
+      // Touching roped edge from inside: prevent penetrating boundary
+      const overlap = e.radius - bInfo.distToEdge;
+      e.x += bInfo.nx * overlap;
+      e.z += bInfo.nz * overlap;
+      const dot = e.vx * bInfo.nx + e.vz * bInfo.nz;
+      if (dot < 0) {
+        e.vx -= (1 + C.WALL_RESTITUTION) * dot * bInfo.nx;
+        e.vz -= (1 + C.WALL_RESTITUTION) * dot * bInfo.nz;
       }
     }
 
@@ -298,9 +307,24 @@ export function updatePhysics(
 }
 
 function respawnEntity(e: Entity, halfW: number, halfL: number) {
+  const roundNumber = getArenaRound();
   const side = e.team === 0 ? -1 : 1;
-  e.x = (Math.random() - 0.5) * (halfW * 1.1);
-  e.z = side * (halfL * 0.35 + Math.random() * halfL * 0.35);
+  let targetX = 0;
+  let targetZ = side * (halfL * 0.45);
+
+  // Pick safe spot inside the active arena shape
+  for (let attempt = 0; attempt < 12; attempt++) {
+    const rx = (Math.random() - 0.5) * (halfW * 0.85);
+    const rz = side * (halfL * 0.25 + Math.random() * halfL * 0.4);
+    if (isPointInsideArena(rx, rz, roundNumber)) {
+      targetX = rx;
+      targetZ = rz;
+      break;
+    }
+  }
+
+  e.x = targetX;
+  e.z = targetZ;
   e.y = 12.0; // Drops from the sky!
   e.vy = -18.0;
   e.vx = 0;

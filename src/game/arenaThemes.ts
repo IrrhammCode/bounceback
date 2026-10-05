@@ -811,102 +811,266 @@ export function createFloorTexture(roundNumber: number): THREE.CanvasTexture {
 // ─── 3. ROUND-SPECIFIC PHYSICAL OBSTACLE GROUPS ─────────────────────────────
 
 /**
- * Map 2: Dual Sideline Toy Train Express Tracks
+ * Map 1: Kamar Masa Kecil — Giant Alphabet Toy Blocks & Pop-Up Scissor Fists
+ */
+export function createPlaygroundObstacles(root: THREE.Group) {
+  const group = new THREE.Group();
+  group.name = "Map1_PlaygroundObstacles";
+  group.visible = false;
+
+  const blockDefs = [
+    { x: -8.5, z: -7.0, char: "A", color: 0x38bdf8, border: "#0284c7" },
+    { x: 8.5, z: -7.0, char: "B", color: 0xf43f5e, border: "#be123c" },
+    { x: -8.5, z: 7.0, char: "C", color: 0xfacc15, border: "#b45309" },
+    { x: 8.5, z: 7.0, char: "1", color: 0xa855f7, border: "#7e22ce" },
+  ];
+
+  const blocks: THREE.Mesh[] = [];
+  for (const bd of blockDefs) {
+    const bY = getArenaHeight(bd.x, bd.z, 1);
+    const blockTex = makeCanvasTex(512, 512, (ctx) => {
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, 512, 512);
+      ctx.strokeStyle = bd.border;
+      ctx.lineWidth = 28;
+      ctx.strokeRect(16, 16, 480, 480);
+      ctx.font = "900 300px Outfit, sans-serif";
+      ctx.fillStyle = bd.border;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(bd.char, 256, 256);
+    });
+
+    const blockMat = new THREE.MeshStandardMaterial({
+      map: blockTex,
+      roughness: 0.35,
+      metalness: 0.1,
+    });
+    const blockMesh = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.4, 2.4), blockMat);
+    blockMesh.position.set(bd.x, bY + 1.2, bd.z);
+    blockMesh.castShadow = true;
+    blockMesh.receiveShadow = true;
+    group.add(blockMesh);
+    blocks.push(blockMesh);
+  }
+
+  // 2 Sideline Accordion Pop-Up Scissor Fists
+  const puncherGroups: { group: THREE.Group; side: number }[] = [];
+  for (const side of [-1, 1]) {
+    const pGroup = new THREE.Group();
+    const floorH = getArenaHeight(side * 14.0, 0, 1);
+    pGroup.position.set(side * 14.0, floorH, 0);
+    pGroup.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
+
+    const baseBox = new THREE.Mesh(
+      new THREE.BoxGeometry(1.4, 1.8, 1.4),
+      new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4 })
+    );
+    baseBox.position.y = 0.9;
+    pGroup.add(baseBox);
+
+    const gloveMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(0.85, 16, 16),
+      new THREE.MeshStandardMaterial({ color: side > 0 ? 0xf43f5e : 0x06b6d4, roughness: 0.25 })
+    );
+    gloveMesh.scale.set(1.0, 1.2, 1.4);
+    gloveMesh.position.set(0, 0.9, 1.0);
+    pGroup.add(gloveMesh);
+
+    group.add(pGroup);
+    puncherGroups.push({ group: pGroup, side });
+  }
+
+  root.add(group);
+
+  return {
+    group,
+    update: (_dt: number, time: number) => {
+      for (let i = 0; i < blocks.length; i++) {
+        blocks[i].position.y = getArenaHeight(blockDefs[i].x, blockDefs[i].z, 1) + 1.2 + Math.sin(time * 3 + i) * 0.06;
+      }
+      for (const pg of puncherGroups) {
+        const ext = Math.max(0, Math.sin(time * 2.5 + pg.side * 1.5)) * 2.4;
+        pg.group.children[1].position.z = 1.0 + ext;
+      }
+    },
+  };
+}
+
+/**
+ * Map 2: Kota Mainan — Narrow Chasm Bridge Conveyors & Center Whirlygig Propeller
  */
 export function createSpeedwayBelts(root: THREE.Group) {
   const group = new THREE.Group();
   group.name = "Map2_SpeedwayObstacles";
   group.visible = false;
 
-  // Wooden Track Bed
-  const trackBedMat = new THREE.MeshStandardMaterial({
-    color: 0x78350f,
-    roughness: 0.7,
-    metalness: 0.1,
-  });
+  const trackBedMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.3 });
+  const railMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.2, metalness: 0.8 });
+  const arrowMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.85 });
 
-  // Toy Train Steel Rails
-  const railMat = new THREE.MeshStandardMaterial({
-    color: 0xfacc15,
-    roughness: 0.2,
-    metalness: 0.8,
-  });
-
-  // Wooden Railroad Ties (Sleepers)
-  const sleeperMat = new THREE.MeshStandardMaterial({
-    color: 0x451a03,
-    roughness: 0.8,
-  });
-
-  const arrowMat = new THREE.MeshBasicMaterial({
-    color: 0x38bdf8,
-    transparent: true,
-    opacity: 0.85,
-  });
-
-  const beltLength = 44;
-  const beltWidth = 3.2;
+  const beltLength = 18; // spans across the 17m narrow bridge corridor
+  const beltWidth = 2.4;
   const beltGeo = new THREE.BoxGeometry(beltWidth, 0.1, beltLength);
 
-  for (const side of [-1, 1]) {
-    const beltX = side * 13.2;
-    const bY = getArenaHeight(beltX, 0, 2);
+  // Dual contra-directional belts along the narrow bridge
+  const conveyorBelts = [
+    { x: -2.4, zMin: -9, zMax: 9, width: 2.4, directionZ: -1, speed: 18 },
+    { x: 2.4, zMin: -9, zMax: 9, width: 2.4, directionZ: 1, speed: 18 },
+  ];
 
-    // Track bed
+  for (const b of conveyorBelts) {
+    const bY = getArenaHeight(b.x, 0, 2);
     const belt = new THREE.Mesh(beltGeo, trackBedMat);
-    belt.position.set(beltX, bY + 0.04, 0);
+    belt.position.set(b.x, bY + 0.04, 0);
     belt.receiveShadow = true;
     group.add(belt);
 
-    // Left & Right metal rails along track
-    for (const rx of [-1.1, 1.1]) {
-      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.14, beltLength), railMat);
-      rail.position.set(beltX + rx, bY + 0.12, 0);
+    for (const rx of [-1.0, 1.0]) {
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.14, beltLength), railMat);
+      rail.position.set(b.x + rx, bY + 0.1, 0);
       group.add(rail);
     }
 
-    // Wooden cross-ties every 2 meters
-    for (let z = -20; z <= 20; z += 2.2) {
-      const sleeper = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.08, 0.4), sleeperMat);
-      sleeper.position.set(beltX, bY + 0.08, z);
-      group.add(sleeper);
-    }
-
-    // Glowing toy train direction arrows
-    for (let z = -18; z <= 18; z += 4.5) {
-      const chevronGeo = new THREE.ConeGeometry(0.55, 1.1, 3);
-      chevronGeo.rotateX(side > 0 ? Math.PI : 0);
+    for (let z = -7.5; z <= 7.5; z += 3.0) {
+      const chevronGeo = new THREE.ConeGeometry(0.45, 0.9, 3);
+      chevronGeo.rotateX(b.directionZ > 0 ? Math.PI : 0);
       const chevron = new THREE.Mesh(chevronGeo, arrowMat);
       chevron.rotation.x = -Math.PI / 2;
-      chevron.position.set(beltX, bY + 0.15, z);
+      chevron.position.set(b.x, bY + 0.12, z);
       group.add(chevron);
     }
   }
 
+  // Center 3-Arm Whirlygig Rotary Propeller right at (0, 0) on the bridge!
+  const propGroup = new THREE.Group();
+  const propY = getArenaHeight(0, 0, 2);
+  propGroup.position.set(0, propY, 0);
+
+  const hubMesh = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.7, 0.8, 1.2, 16),
+    new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.3, metalness: 0.8 })
+  );
+  hubMesh.position.y = 0.6;
+  propGroup.add(hubMesh);
+
+  const bladeGroup = new THREE.Group();
+  bladeGroup.position.y = 0.85;
+
+  const bladeMat = new THREE.MeshStandardMaterial({
+    color: 0xfbbf24,
+    roughness: 0.3,
+    metalness: 0.6,
+  });
+
+  const armLength = 3.6;
+  for (let i = 0; i < 3; i++) {
+    const angle = (i * Math.PI * 2) / 3;
+    const armMesh = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.35, armLength), bladeMat);
+    armMesh.position.set(Math.sin(angle) * (armLength * 0.5), 0, Math.cos(angle) * (armLength * 0.5));
+    armMesh.rotation.y = angle;
+    bladeGroup.add(armMesh);
+  }
+  propGroup.add(bladeGroup);
+  group.add(propGroup);
+
+  // Side Chasm Laser Warning Fences along x = +/-5.6m
+  const fenceMat = new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.75, side: THREE.DoubleSide });
+  for (const side of [-1, 1]) {
+    const fenceMesh = new THREE.Mesh(new THREE.PlaneGeometry(17, 0.8), fenceMat);
+    fenceMesh.position.set(side * 5.6, propY + 0.4, 0);
+    fenceMesh.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
+    group.add(fenceMesh);
+  }
+
   root.add(group);
 
-  // Unaltered physics parameters
-  const conveyorBelts = [
-    { x: -13.2, zMin: -22, zMax: 22, width: 3.2, directionZ: -1, speed: 16 },
-    { x: 13.2, zMin: -22, zMax: 22, width: 3.2, directionZ: 1, speed: 16 },
-  ];
+  const sweeperArmDef = {
+    center: new THREE.Vector3(0, propY + 0.85, 0),
+    angle: 0,
+    armLength: 3.6,
+    armRadius: 0.45,
+    rotSpeed: 2.2,
+  };
 
   return {
     group,
     conveyorBelts,
+    sweeperArms: [sweeperArmDef],
     update: (dt: number, time: number) => {
-      arrowMat.color.setHex((Math.sin(time * 6) > 0) ? 0xfacc15 : 0xe63946);
+      arrowMat.color.setHex((Math.sin(time * 6) > 0) ? 0xfacc15 : 0x00f0ff);
+      bladeGroup.rotation.y += sweeperArmDef.rotSpeed * dt;
+      sweeperArmDef.angle = bladeGroup.rotation.y;
     },
   };
 }
 
 /**
- * Map 3: Layangan Sore Sunset Glow Flash & Ambient Light
+ * Map 3: Layangan Sore — Grand Octagon Hilltop & Monumental 4-Blade Sky Windmill
  */
 export function createStormlandFeatures(root: THREE.Group) {
   const group = new THREE.Group();
   group.name = "Map3_StormlandFeatures";
   group.visible = false;
+
+  const hillH = getArenaHeight(0, 0, 3);
+
+  // Monumental 4-Blade Sky Meadow Windmill at (0, 0)
+  const windmillGroup = new THREE.Group();
+  windmillGroup.position.set(0, hillH, 0);
+
+  const postMesh = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.8, 1.1, 1.4, 16),
+    new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.7 })
+  );
+  postMesh.position.y = 0.7;
+  windmillGroup.add(postMesh);
+
+  const sailsGroup = new THREE.Group();
+  sailsGroup.position.y = 0.95;
+
+  const bladeColors = [0xef4444, 0x06b6d4, 0xfacc15, 0x22c55e];
+  const sailLength = 5.2;
+
+  for (let i = 0; i < 4; i++) {
+    const angle = (i * Math.PI) / 2;
+    const sailMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(0.4, 0.35, sailLength),
+      new THREE.MeshStandardMaterial({ color: bladeColors[i], roughness: 0.3 })
+    );
+    sailMesh.position.set(Math.sin(angle) * (sailLength * 0.5), 0, Math.cos(angle) * (sailLength * 0.5));
+    sailMesh.rotation.y = angle;
+    sailsGroup.add(sailMesh);
+  }
+  windmillGroup.add(sailsGroup);
+  group.add(windmillGroup);
+
+  // 4 Giant Bouncy Mushroom Trampolines
+  const mushroomConfigs = [
+    { x: -10.5, z: 0 },
+    { x: 10.5, z: 0 },
+    { x: 0, z: -17.0 },
+    { x: 0, z: 17.0 },
+  ];
+
+  const mushroomMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.3 });
+  const stalkMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, roughness: 0.6 });
+
+  for (const mc of mushroomConfigs) {
+    const mY = getArenaHeight(mc.x, mc.z, 3);
+    const mGroup = new THREE.Group();
+    mGroup.position.set(mc.x, mY, mc.z);
+
+    const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.7, 0.6, 12), stalkMat);
+    stalk.position.y = 0.3;
+    mGroup.add(stalk);
+
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(1.4, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.5), mushroomMat);
+    cap.position.y = 0.55;
+    mGroup.add(cap);
+
+    group.add(mGroup);
+  }
 
   // Warm Golden Sunset Sunbeam Flash
   const sunsetFlashLight = new THREE.DirectionalLight(0xffedd5, 0.0);
@@ -918,13 +1082,26 @@ export function createStormlandFeatures(root: THREE.Group) {
   let nextFlashTime = 6.0;
   let flashDuration = 0;
 
+  const sweeperArmDef = {
+    center: new THREE.Vector3(0, hillH + 0.95, 0),
+    angle: 0,
+    armLength: 5.2,
+    armRadius: 0.5,
+    rotSpeed: 1.45,
+  };
+
   return {
     group,
+    sweeperArms: [sweeperArmDef],
+    jumpPads: mushroomConfigs.map(c => ({ x: c.x, z: c.z, radius: 1.8, impulseY: 22, impulseZ: 0 })),
     triggerLightning: () => {
       sunsetFlashLight.intensity = 4.2;
       flashDuration = 0.25;
     },
     update: (dt: number, _time: number) => {
+      sailsGroup.rotation.y += sweeperArmDef.rotSpeed * dt;
+      sweeperArmDef.angle = sailsGroup.rotation.y;
+
       if (flashDuration > 0) {
         flashDuration -= dt;
         sunsetFlashLight.intensity = (flashDuration / 0.25) * 4.2;
@@ -942,50 +1119,88 @@ export function createStormlandFeatures(root: THREE.Group) {
 }
 
 /**
- * Map 4: Pasar Malam Circus Trampolines
+ * Map 4: Pasar Malam — Banked Pinball Velodrome & 4 Active Motorized Flippers
  */
 export function createPinballJumpPads(root: THREE.Group) {
   const group = new THREE.Group();
   group.name = "Map4_PinballObstacles";
   group.visible = false;
 
-  // Trampoline Bouncy Mat & Metal Spring Frame
-  const frameMat = new THREE.MeshStandardMaterial({
-    color: 0xfacc15,
-    roughness: 0.2,
-    metalness: 0.8,
-  });
+  const flipperMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.2, metalness: 0.7 });
+  const flipperRubberMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.4 });
 
-  const canvasMat = new THREE.MeshStandardMaterial({
-    color: 0xe0218a,
-    roughness: 0.4,
-  });
-
-  const neonRingMat = new THREE.MeshBasicMaterial({
-    color: 0xffd166,
-  });
-
-  const jumpPadConfigs = [
-    { x: -6.5, z: -10, impulseY: 20, impulseZ: 8 },
-    { x: 6.5, z: -10, impulseY: 20, impulseZ: 8 },
-    { x: -6.5, z: 10, impulseY: 20, impulseZ: -8 },
-    { x: 6.5, z: 10, impulseY: 20, impulseZ: -8 },
+  // 4 Active Motorized Pinball Flippers
+  const flipperConfigs = [
+    { x: -4.5, z: -17.5, restAngle: -0.4, activeAngle: 0.6, team: 0, dir: 1 },
+    { x: 4.5, z: -17.5, restAngle: 0.4, activeAngle: -0.6, team: 0, dir: -1 },
+    { x: -4.5, z: 17.5, restAngle: Math.PI + 0.4, activeAngle: Math.PI - 0.6, team: 1, dir: -1 },
+    { x: 4.5, z: 17.5, restAngle: Math.PI - 0.4, activeAngle: Math.PI + 0.6, team: 1, dir: 1 },
   ];
+
+  const flippers: {
+    pivot: THREE.Vector3;
+    angle: number;
+    length: number;
+    thickness: number;
+    restAngle: number;
+    activeAngle: number;
+    isFlipping: boolean;
+    flipTimer: number;
+    mesh: THREE.Object3D;
+    dir: number;
+  }[] = [];
+
+  for (const fc of flipperConfigs) {
+    const fY = getArenaHeight(fc.x, fc.z, 4);
+    const fGroup = new THREE.Group();
+    fGroup.position.set(fc.x, fY + 0.15, fc.z);
+    fGroup.rotation.y = fc.restAngle;
+
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.4, 0.5, 16), flipperMat);
+    fGroup.add(post);
+
+    const bat = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.35, 3.2), flipperRubberMat);
+    bat.position.set(0, 0, 1.6);
+    fGroup.add(bat);
+
+    group.add(fGroup);
+
+    flippers.push({
+      pivot: new THREE.Vector3(fc.x, fY + 0.15, fc.z),
+      angle: fc.restAngle,
+      length: 3.2,
+      thickness: 0.4,
+      restAngle: fc.restAngle,
+      activeAngle: fc.activeAngle,
+      isFlipping: false,
+      flipTimer: 0,
+      mesh: fGroup,
+      dir: fc.dir,
+    });
+  }
+
+  // 4 Circus Spring Trampolines
+  const jumpPadConfigs = [
+    { x: -6.5, z: -8, impulseY: 18, impulseZ: 8 },
+    { x: 6.5, z: -8, impulseY: 18, impulseZ: 8 },
+    { x: -6.5, z: 8, impulseY: 18, impulseZ: -8 },
+    { x: 6.5, z: 8, impulseY: 18, impulseZ: -8 },
+  ];
+
+  const frameMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.2, metalness: 0.8 });
+  const canvasMat = new THREE.MeshStandardMaterial({ color: 0xe0218a, roughness: 0.4 });
+  const neonRingMat = new THREE.MeshBasicMaterial({ color: 0xffd166 });
 
   for (const pc of jumpPadConfigs) {
     const bH = getArenaHeight(pc.x, pc.z, 4);
-
-    // Frame
     const frame = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.6, 0.16, 24), frameMat);
     frame.position.set(pc.x, bH + 0.08, pc.z);
     group.add(frame);
 
-    // Bouncy canvas center
     const mat = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 0.18, 24), canvasMat);
     mat.position.set(pc.x, bH + 0.09, pc.z);
     group.add(mat);
 
-    // Glowing festive ring
     const ring = new THREE.Mesh(new THREE.TorusGeometry(1.3, 0.07, 8, 24), neonRingMat);
     ring.rotation.x = Math.PI / 2;
     ring.position.set(pc.x, bH + 0.18, pc.z);
@@ -996,15 +1211,38 @@ export function createPinballJumpPads(root: THREE.Group) {
 
   return {
     group,
+    flippers,
     jumpPads: jumpPadConfigs.map(c => ({ x: c.x, z: c.z, radius: 1.6, impulseY: c.impulseY, impulseZ: c.impulseZ })),
-    update: (_dt: number, time: number) => {
+    update: (dt: number, time: number) => {
       neonRingMat.color.setHex((Math.sin(time * 8) > 0) ? 0xffd166 : 0x00f0ff);
+
+      // Automatic arcade flipper cadence
+      for (const f of flippers) {
+        if (!f.isFlipping) {
+          f.flipTimer += dt;
+          if (f.flipTimer >= 1.8 + Math.random() * 0.8) {
+            f.isFlipping = true;
+            f.flipTimer = 0;
+          }
+        } else {
+          f.flipTimer += dt;
+          const strokeT = Math.sin((f.flipTimer / 0.35) * Math.PI);
+          f.angle = THREE.MathUtils.lerp(f.restAngle, f.activeAngle, Math.max(0, strokeT));
+          f.mesh.rotation.y = f.angle;
+          if (f.flipTimer >= 0.35) {
+            f.isFlipping = false;
+            f.flipTimer = 0;
+            f.angle = f.restAngle;
+            f.mesh.rotation.y = f.restAngle;
+          }
+        }
+      }
     },
   };
 }
 
 /**
- * Map 5: Midnight Starlight Gift Singularity Vortex
+ * Map 5: Atap Penuh Bintang — Central Black Hole Abyss & Sweeping Orbital Laser Gate
  */
 export function createCosmicSingularity(root: THREE.Group) {
   const group = new THREE.Group();
@@ -1012,41 +1250,75 @@ export function createCosmicSingularity(root: THREE.Group) {
   group.visible = false;
 
   const coreGroup = new THREE.Group();
-  coreGroup.position.set(0, getArenaHeight(0, 0, 5) + 0.05, 0);
+  coreGroup.position.set(0, -2.4, 0); // Sunk down in the 7m void pit!
 
-  // Golden Gift Ribbon Ring
+  // Central Event Horizon Sphere
+  const singularitySphere = new THREE.Mesh(
+    new THREE.SphereGeometry(2.2, 32, 32),
+    new THREE.MeshBasicMaterial({ color: 0x050510 })
+  );
+  coreGroup.add(singularitySphere);
+
+  // Swirling Purple Accretion Disk
   const ring1 = new THREE.Mesh(
-    new THREE.RingGeometry(2.4, 3.2, 36),
-    new THREE.MeshBasicMaterial({ color: 0xffd166, side: THREE.DoubleSide, transparent: true, opacity: 0.9 })
+    new THREE.RingGeometry(2.6, 3.8, 48),
+    new THREE.MeshBasicMaterial({ color: 0xa855f7, side: THREE.DoubleSide, transparent: true, opacity: 0.9 })
   );
   ring1.rotation.x = -Math.PI / 2;
   coreGroup.add(ring1);
 
-  // Starlight Cyan Outer Ribbon
+  // Swirling Cyan Outer Accretion Ribbon
   const ring2 = new THREE.Mesh(
-    new THREE.RingGeometry(3.6, 4.3, 36),
-    new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide, transparent: true, opacity: 0.8 })
+    new THREE.RingGeometry(4.0, 5.2, 48),
+    new THREE.MeshBasicMaterial({ color: 0x06b6d4, side: THREE.DoubleSide, transparent: true, opacity: 0.85 })
   );
   ring2.rotation.x = -Math.PI / 2;
   coreGroup.add(ring2);
 
+  // Sweeping Orbital Double Laser Beam across the Cross Bridges
+  const laserBeamMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.85 });
+  const laserBeam = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.25, 14.0), laserBeamMat);
+  laserBeam.position.y = 2.8; // player waist height above void pit
+  coreGroup.add(laserBeam);
+
   group.add(coreGroup);
+
+  // 4 Zero-G Nebula Jump Wells on the 4 Cross Wings
+  const jumpWellConfigs = [
+    { x: -11.5, z: 0 },
+    { x: 11.5, z: 0 },
+    { x: 0, z: -21.0 },
+    { x: 0, z: 21.0 },
+  ];
+
+  const wellMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide, transparent: true, opacity: 0.75 });
+  for (const jc of jumpWellConfigs) {
+    const jY = getArenaHeight(jc.x, jc.z, 5);
+    const well = new THREE.Mesh(new THREE.RingGeometry(0.8, 1.8, 24), wellMat);
+    well.rotation.x = -Math.PI / 2;
+    well.position.set(jc.x, jY + 0.05, jc.z);
+    group.add(well);
+  }
+
   root.add(group);
 
   let vortexActive = false;
 
   return {
     group,
+    jumpPads: jumpWellConfigs.map(c => ({ x: c.x, z: c.z, radius: 1.8, impulseY: 22, impulseZ: 0 })),
     setVortexActive: (active: boolean) => {
       vortexActive = active;
-      ring1.scale.setScalar(active ? 1.4 : 1.0);
+      singularitySphere.scale.setScalar(active ? 1.3 : 1.0);
     },
     isVortexActive: () => vortexActive,
     update: (dt: number, time: number) => {
       ring1.rotation.z += dt * (vortexActive ? 4.5 : 1.2);
       ring2.rotation.z -= dt * (vortexActive ? 3.5 : 0.9);
+      laserBeam.rotation.y += dt * 1.1;
+
       if (vortexActive) {
-        ring1.position.y = 0.05 + Math.sin(time * 12) * 0.08;
+        ring1.position.y = Math.sin(time * 12) * 0.12;
       }
     },
   };

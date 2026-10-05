@@ -19,6 +19,8 @@ import * as C from "./config";
 import { Entity, applyPunch, type BumperData, type GateData } from "./physics";
 import type { JuiceFn } from "./player";
 import { SkillType, type SkillSlot } from "./skills";
+import { getArenaRound } from "./arenaHeight";
+import { getArenaBoundaryInfo } from "./arenaShapes";
 
 export const ROLES = ["striker", "interceptor", "flanker", "guardian", "sweeper"] as const;
 export type BotRole = typeof ROLES[number];
@@ -545,6 +547,20 @@ export function updateBots(
 
       if (shouldActivateSkill && Math.random() < 0.45) {
         onActivateSkill(i);
+      }
+    }
+
+    // 4.5. Multi-Shape Open Cliff & Chasm Edge Avoidance
+    const roundNum = getArenaRound();
+    const bInfo = getArenaBoundaryInfo(bot.x, bot.z, roundNum);
+    if (bInfo.isDropEdge && bInfo.distToEdge < 4.2) {
+      const danger = (4.2 - bInfo.distToEdge) / 4.2;
+      moveX += bInfo.nx * danger * 2.4;
+      moveZ += bInfo.nz * danger * 2.4;
+      // Inhibit dash towards open abyss
+      const dot = moveX * bInfo.nx + moveZ * bInfo.nz;
+      if (dot < 0) {
+        shouldDash = false;
       }
     }
 
