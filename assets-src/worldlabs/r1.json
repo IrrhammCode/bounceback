@@ -1,0 +1,66 @@
+{
+  "operation_id": "464dea12-1861-4a51-ad31-85eca722fe4d",
+  "created_at": "2026-10-05T04:41:05Z",
+  "updated_at": "2026-10-05T04:41:32Z",
+  "expires_at": "2026-10-05T07:41:05Z",
+  "done": true,
+  "error": null,
+  "metadata": {
+    "progress": {
+      "status": "SUCCEEDED",
+      "description": "World generation completed successfully"
+    },
+    "world_id": "c2e8fa05-5fb4-44ca-8e45-7d81c341aabc",
+    "operation_type": "world_generation",
+    "public_model_name": "marble-1.0-draft"
+  },
+  "response": {
+    "world_id": "c2e8fa05-5fb4-44ca-8e45-7d81c341aabc",
+    "display_name": "",
+    "tags": null,
+    "assets": {
+      "mesh": {
+        "collider_mesh_url": "https://cdn.marble.worldlabs.ai/c2e8fa05-5fb4-44ca-8e45-7d81c341aabc/8706900a.glb",
+        "hq_mesh_url": null,
+        "full_res_mesh_url": null
+      },
+      "imagery": {
+        "pano_url": null
+      },
+      "splats": {
+        "spz_urls": {
+          "500k": "https://cdn.marble.worldlabs.ai/c2e8fa05-5fb4-44ca-8e45-7d81c341aabc/8f52ccbd-c6ee-4b40-86df-bf85682309b0_sand_500k.spz",
+          "100k": "https://cdn.marble.worldlabs.ai/c2e8fa05-5fb4-44ca-8e45-7d81c341aabc/99999d50-9810-4459-8cc5-5fa9d1021a1e_sand_100k.spz",
+          "full_res": "https://cdn.marble.worldlabs.ai/c2e8fa05-5fb4-44ca-8e45-7d81c341aabc/680a5d7c-5daf-4e79-9155-239e50a1697e_sand.spz"
+        },
+        "semantics_metadata": null
+      },
+      "thumbnail_url": "https://cdn.marble.worldlabs.ai/c2e8fa05-5fb4-44ca-8e45-7d81c341aabc/72111b39-233c-4ec1-a2f8-cfa8b4f9e9e5_sand_mpi/thumbnail.webp",
+      "caption": "The scene is a whimsical child's bedroom, rendered in a painted diorama style with soft, hand-painted textures, evoking a Saturday-morning cartoon aesthetic. The overall tone is playful and nostalgic, capturing the magic of a child's imagination. The room is designed with chunky, rounded shapes, and a gentle morning light filters through the curtains. A massive blanket fort dominates one section of the room, its fabric draped and folded to create an inviting hideaway. Oversized building blocks, in vibrant primary colors, are scattered around the perimeter, some stacked precariously, others forming small structures. A plush teddy bear, larger than life, sits comfortably amidst the blocks, its soft fur texture evident. An old CRT television glows with the colorful static of cartoons, its screen casting a soft, flickering light. The morning sun streams through sheer curtains, creating warm, diffused light across the scene. The center of the room remains an open, empty circular clearing, providing a sense of vastness from a toy's perspective. All the described scenery is arranged around the edges and in the distance, emphasizing the immense scale of the room. The blanket fort is positioned to the left, with the building blocks extending from its base towards the right. The plush teddy bear is nestled among the blocks, and the CRT TV is further to the right, its light a focal point. The curtains are visible along the far wall, allowing the morning light to penetrate the space. The 360 scene is faultless."
+    },
+    "created_at": null,
+    "updated_at": null,
+    "permission": {
+      "public": false,
+      "allowed_readers": [],
+      "allowed_writers": [],
+      "allow_id_access": false
+    },
+    "world_prompt": null,
+    "world_marble_url": "https://marble.worldlabs.ai/world/c2e8fa05-5fb4-44ca-8e45-7d81c341aabc",
+    "model": null
+  },
+  "cost": {
+    "total_credits": 230,
+    "line_items": [
+      {
+        "name": "Pano generation (text)",
+        "credits": 80
+      },
+      {
+        "name": "Draft world generation",
+        "credits": 150
+      }
+    ]
+  }
+}

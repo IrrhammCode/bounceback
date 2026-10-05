@@ -185,14 +185,28 @@ node 404-game-recipe/harness/jam.mjs http://localhost:4173 --start="#startb" --h
 
 ---
 
-## 🎨 How Tripo 3D AI Was Used (Tripothon Visual Upgrade)
+## 🎨 How Tripo 3D and World Labs Were Used (Tripothon Visual Upgrade)
 
-Every fighter is a Tripo-generated vinyl-toy character (P1 low-poly text-to-3D, auto-rigged Mixamo biped), standing in an arena equipped with Tripo-generated accessories, pinball bumpers, mystery gift boxes, and championship trophies, all toon-shaded and outlined in one Saturday-morning cartoon art direction.
+Every fighter is a Tripo-generated chibi vinyl model rigged and toon-shaded with Mixamo skeletons. Every prop—from the gift pinball bumpers to the mystery power-up cubes and tournament trophy—is an optimized Tripo 3D asset. Every round backdrop is a World Labs Marble 3D Gaussian Splatting diorama loaded dynamically via Spark (`@sparkjsdev/spark`), placing the floating arena directly inside a living childhood memory:
+- **Round 1 (Kado #1: Kamar Masa Kecil):** Bedroom Sunrise diorama with an oversized blanket fort, building blocks, and an old CRT TV glowing with morning cartoons.
+- **Round 2 (Kado #2: Kota Mainan):** Toy Block City diorama with primary-colored cardboard block skyscrapers, toy train bridges, and wooden cars.
+- **Round 3 (Kado #3: Layangan Sore):** Backyard Kite Season diorama with colorful kites soaring through an orange-green sunset sky and garden hose rainbows.
+- **Round 4 (Kado #4: Pasar Malam):** Indonesian Night Market diorama with a glowing carousel, wooden gerobak food carts, warm string bulbs, and a festive Ferris wheel.
+- **Round 5 (Kado #5: Atap Penuh Bintang):** Rooftop Stargazing diorama overlooking distant city lights under a crescent moon with a giant glowing gift box.
 
-### Assets & Tripo Task IDs
+### 🌐 World Labs Marble 3D Gaussian Splats (Phase 3)
+| Round | Theme | World Labs ID | Operation ID | Tiers | Size |
+|---|---|---|---|---|---|
+| **R1** | Kamar Masa Kecil | `c2e8fa05-5fb4-44ca-8e45-7d81c341aabc` | `464dea12-1861-4a51-ad31-85eca722fe4d` | 500k / 100k / Pano | 5.2 MB / 1.1 MB |
+| **R2** | Kota Mainan | `cde5a25b-7315-4359-b1ad-96f4d1a76ed4` | `46bfc245-17ae-4af8-9223-aef99dddc7a5` | 500k / 100k / Pano | 5.3 MB / 1.1 MB |
+| **R3** | Layangan Sore | `d2c20b91-6555-491b-b1f5-1f918ddbf068` | `de1e63bf-7ed9-4a1c-b8ec-f80712ed875e` | 500k / 100k / Pano | 5.0 MB / 1.1 MB |
+| **R4** | Pasar Malam | `27a22429-77d6-4811-8e63-90d430d0a60f` | `4585d2d2-fe3d-4993-895a-30129d5079a8` | 500k / 100k / Pano | 5.2 MB / 1.1 MB |
+| **R5** | Atap Penuh Bintang | `c8935492-db91-4160-bdf4-47b14b7496c9` | `4ed77cc4-26b3-45a1-9349-e1ceb984c336` | 500k / 100k / Pano | 5.1 MB / 1.1 MB |
+
+### 🧸 Tripo 3D Models & Pipeline (Phase 1)
 | Asset | Category | Tripo Model / Pipeline | Tripo Task ID | Tris | Optimized Size |
 |---|---|---|---|---|---|
-| **Fighter Base** | Skinned Biped Character | P1-20260311 + Rig Mixamo | `e25c78a7-bc1c-4e8d-aa53-26a2c389c6e2` (Rig: `ae2ac987`) | 4,824 | 90 KB |
+| **Fighter Base** | Skinned Biped Character | P1-20260311 + Rig Mixamo | `e25c78a7-bc1c-4e8d-aa53-26a2c389c6e2` | 4,824 | 90 KB |
 | **Ribbon Bow** | Cyan Team Head Accessory | P1-20260311 Text-to-3D | `084ab53c-14bb-49f7-bc03-e15a5e74d9a3` | 760 | 14.9 KB |
 | **Party Hat** | Coral Team Head Accessory | P1-20260311 Text-to-3D | `140c5fe7-8830-4543-82d8-5c42da8f6fde` | 788 | 28.2 KB |
 | **Player Crown** | Human Player Head Accessory | P1-20260311 Text-to-3D | `ee467e01-3243-4d41-86a9-9b87a757988c` | 980 | 22.0 KB |
@@ -201,13 +215,19 @@ Every fighter is a Tripo-generated vinyl-toy character (P1 low-poly text-to-3D, 
 | **Host Present** | Gift Title Unboxing | P1-20260311 Text-to-3D | `832b7442-5be4-4051-af18-035566c295de` | 2,380 | 59.1 KB |
 | **Golden Trophy** | Grand Championship Award | P1-20260311 Text-to-3D | `84922522-8aa8-403d-b042-df569fb4400f` | 2,410 | 41.1 KB |
 
-*Note: All assets are fully optimized with `@gltf-transform` using Meshopt geometry compression and WebP textures. Total asset bundle size across all 8 models is **~331 KB** (far within the 3 MB budget).*
+*Note: All assets are fully optimized with `@gltf-transform` using Meshopt geometry compression and WebP textures. Total asset bundle size across all 8 models is **~331 KB**.*
 
-### Demo & Fallback Keys
+### 🛠️ Multi-Tier Performance & Fallback Flags
 - **Demo Mode:** Append `?demo=1` to the URL.
-- **Audience Voting / Round Jump:** Keys `1`, `2`, `3`, `4`, and `5` jump straight into Round 1–5 on the fly!
+- **Round Jump Keys:** Keys `1`, `2`, `3`, `4`, and `5` jump straight into Round 1–5 on the fly!
 - **Direct Round Boot:** Append `?demo=1&round=N` to boot directly into Round N.
-- **Legacy Fallback:** Append `?fighters=legacy` to compare with the original procedural geometry.
+- **Splat Tier Overrides:**
+  - `?splats=500k`: Forces Desktop 500k Gaussian Splats tier.
+  - `?splats=100k`: Forces Mobile 100k Gaussian Splats tier.
+  - `?splats=pano`: Forces 360 equirectangular panorama sphere fallback.
+  - `?splats=0` or `?worlds=off`: Disables 3D Gaussian Splats, falling back to Phase 2 painted 2D Canvas sky.
+- **Legacy Fallback:** Append `?fighters=legacy` to compare with original procedural bean fighters.
+- **Legacy Stadium:** Append `?stadium=legacy` to toggle high-draw-call stadium bleachers.
 
 ---
 

@@ -1,0 +1,66 @@
+{
+  "operation_id": "46bfc245-17ae-4af8-9223-aef99dddc7a5",
+  "created_at": "2026-10-05T04:42:05Z",
+  "updated_at": "2026-10-05T04:42:31Z",
+  "expires_at": "2026-10-05T07:42:05Z",
+  "done": true,
+  "error": null,
+  "metadata": {
+    "progress": {
+      "status": "SUCCEEDED",
+      "description": "World generation completed successfully"
+    },
+    "world_id": "cde5a25b-7315-4359-b1ad-96f4d1a76ed4",
+    "operation_type": "world_generation",
+    "public_model_name": "marble-1.0-draft"
+  },
+  "response": {
+    "world_id": "cde5a25b-7315-4359-b1ad-96f4d1a76ed4",
+    "display_name": "",
+    "tags": null,
+    "assets": {
+      "mesh": {
+        "collider_mesh_url": "https://cdn.marble.worldlabs.ai/cde5a25b-7315-4359-b1ad-96f4d1a76ed4/6d2738ac.glb",
+        "hq_mesh_url": null,
+        "full_res_mesh_url": null
+      },
+      "imagery": {
+        "pano_url": null
+      },
+      "splats": {
+        "spz_urls": {
+          "500k": "https://cdn.marble.worldlabs.ai/cde5a25b-7315-4359-b1ad-96f4d1a76ed4/ab112474-15a5-45c6-9f4b-79ce914288f1_sand_500k.spz",
+          "100k": "https://cdn.marble.worldlabs.ai/cde5a25b-7315-4359-b1ad-96f4d1a76ed4/f9d2cc1e-bcc4-4fd3-800b-48c2cf485dc2_sand_100k.spz",
+          "full_res": "https://cdn.marble.worldlabs.ai/cde5a25b-7315-4359-b1ad-96f4d1a76ed4/1ade1da1-aa6c-4d72-8c6c-3686afccc6a1_sand.spz"
+        },
+        "semantics_metadata": null
+      },
+      "thumbnail_url": "https://cdn.marble.worldlabs.ai/cde5a25b-7315-4359-b1ad-96f4d1a76ed4/cd67330c-4b7a-4d4b-a9f8-b9ca99e992c7_sand_mpi/thumbnail.webp",
+      "caption": "The scene is a vibrant, whimsical city constructed entirely from colorful toy building blocks, rendered in a Saturday-morning cartoon style with soft, hand-painted textures. The overall tone is playful and imaginative, evoking a sense of childhood wonder. The city sprawls around an open, empty circular clearing at its center, with all the scenery concentrated around the edges and in the distance. Towering block skyscrapers, constructed from primary-colored blocks, define the skyline, their chunky, rounded shapes contributing to the toy-like aesthetic. A toy train bridge, also made of blocks, arches gracefully across a section of the city, connecting different areas. Block roads crisscross the landscape, populated by an assortment of toy cars, each with simple, rounded forms. Puffy cloud props, mounted on thin sticks, are strategically placed throughout the scene, adding to the diorama's charm. The entire city is bathed in bright daylight, casting gentle, even light across the scene. The block skyscrapers are arranged in clusters, forming distinct neighborhoods around the central clearing. The toy train bridge spans a gap between two of these block formations, with the block roads winding beneath and around it. The toy cars are scattered along the block roads, appearing to be in motion. The cloud props are positioned at varying heights, creating a sense of depth above the block structures. The 360 scene is faultless."
+    },
+    "created_at": null,
+    "updated_at": null,
+    "permission": {
+      "public": false,
+      "allowed_readers": [],
+      "allowed_writers": [],
+      "allow_id_access": false
+    },
+    "world_prompt": null,
+    "world_marble_url": "https://marble.worldlabs.ai/world/cde5a25b-7315-4359-b1ad-96f4d1a76ed4",
+    "model": null
+  },
+  "cost": {
+    "total_credits": 230,
+    "line_items": [
+      {
+        "name": "Pano generation (text)",
+        "credits": 80
+      },
+      {
+        "name": "Draft world generation",
+        "credits": 150
+      }
+    ]
+  }
+}

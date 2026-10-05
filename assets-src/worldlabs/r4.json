@@ -1,0 +1,66 @@
+{
+  "operation_id": "4585d2d2-fe3d-4993-895a-30129d5079a8",
+  "created_at": "2026-10-05T04:46:50Z",
+  "updated_at": "2026-10-05T04:47:15Z",
+  "expires_at": "2026-10-05T07:46:50Z",
+  "done": true,
+  "error": null,
+  "metadata": {
+    "progress": {
+      "status": "SUCCEEDED",
+      "description": "World generation completed successfully"
+    },
+    "world_id": "27a22429-77d6-4811-8e63-90d430d0a60f",
+    "operation_type": "world_generation",
+    "public_model_name": "marble-1.0-draft"
+  },
+  "response": {
+    "world_id": "27a22429-77d6-4811-8e63-90d430d0a60f",
+    "display_name": "",
+    "tags": null,
+    "assets": {
+      "mesh": {
+        "collider_mesh_url": "https://cdn.marble.worldlabs.ai/27a22429-77d6-4811-8e63-90d430d0a60f/b01d24c0.glb",
+        "hq_mesh_url": null,
+        "full_res_mesh_url": null
+      },
+      "imagery": {
+        "pano_url": null
+      },
+      "splats": {
+        "spz_urls": {
+          "500k": "https://cdn.marble.worldlabs.ai/27a22429-77d6-4811-8e63-90d430d0a60f/79f86cb9-480d-4f44-bd4f-cfe9d63fbbd2_sand_500k.spz",
+          "100k": "https://cdn.marble.worldlabs.ai/27a22429-77d6-4811-8e63-90d430d0a60f/42d3bb16-7871-4e69-9d4a-9867bf324a77_sand_100k.spz",
+          "full_res": "https://cdn.marble.worldlabs.ai/27a22429-77d6-4811-8e63-90d430d0a60f/daa3dbb5-96ab-4588-a5aa-a0ece5802605_sand.spz"
+        },
+        "semantics_metadata": null
+      },
+      "thumbnail_url": "https://cdn.marble.worldlabs.ai/27a22429-77d6-4811-8e63-90d430d0a60f/de1cd831-bde8-4984-b943-36219718a77c_sand_mpi/thumbnail.webp",
+      "caption": "The scene is an Indonesian pasar malam night market, rendered in a charming painted diorama style, reminiscent of a Saturday-morning cartoon with soft, hand-painted textures and chunky, rounded shapes. The overall tone is festive and warm, evoking a sense of nostalgic joy. The center of the market features an open, empty circular clearing, providing a spacious area for imaginary activity. Around the edges of this clearing, a vibrant array of attractions and stalls creates a lively perimeter. A glowing carousel, adorned with whimsical animals and intricate details, stands prominently, its gentle lights casting a soft radiance. Strings of warm light bulbs crisscross overhead, illuminating the entire market with a cozy glow. Numerous wooden gerobak food carts, each featuring traditional designs and illuminated by charming lanterns, are strategically placed, offering a variety of imaginary culinary delights. A small Ferris wheel, with its chunky, rounded gondolas, rises into the distance, adding to the festive atmosphere. All scenery is carefully arranged around the edges and in the distance, ensuring the central clearing remains open and inviting. The 360 scene is faultless."
+    },
+    "created_at": null,
+    "updated_at": null,
+    "permission": {
+      "public": false,
+      "allowed_readers": [],
+      "allowed_writers": [],
+      "allow_id_access": false
+    },
+    "world_prompt": null,
+    "world_marble_url": "https://marble.worldlabs.ai/world/27a22429-77d6-4811-8e63-90d430d0a60f",
+    "model": null
+  },
+  "cost": {
+    "total_credits": 230,
+    "line_items": [
+      {
+        "name": "Pano generation (text)",
+        "credits": 80
+      },
+      {
+        "name": "Draft world generation",
+        "credits": 150
+      }
+    ]
+  }
+}

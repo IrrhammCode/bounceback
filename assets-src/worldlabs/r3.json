@@ -1,0 +1,66 @@
+{
+  "operation_id": "de1e63bf-7ed9-4a1c-b8ec-f80712ed875e",
+  "created_at": "2026-10-05T04:45:35Z",
+  "updated_at": "2026-10-05T04:45:57Z",
+  "expires_at": "2026-10-05T07:45:35Z",
+  "done": true,
+  "error": null,
+  "metadata": {
+    "progress": {
+      "status": "SUCCEEDED",
+      "description": "World generation completed successfully"
+    },
+    "world_id": "d2c20b91-6555-491b-b1f5-1f918ddbf068",
+    "operation_type": "world_generation",
+    "public_model_name": "marble-1.0-draft"
+  },
+  "response": {
+    "world_id": "d2c20b91-6555-491b-b1f5-1f918ddbf068",
+    "display_name": "",
+    "tags": null,
+    "assets": {
+      "mesh": {
+        "collider_mesh_url": "https://cdn.marble.worldlabs.ai/d2c20b91-6555-491b-b1f5-1f918ddbf068/e61cff53.glb",
+        "hq_mesh_url": null,
+        "full_res_mesh_url": null
+      },
+      "imagery": {
+        "pano_url": null
+      },
+      "splats": {
+        "spz_urls": {
+          "500k": "https://cdn.marble.worldlabs.ai/d2c20b91-6555-491b-b1f5-1f918ddbf068/ee1e4c3e-7155-4f98-a52f-5d70a1eaea21_sand_500k.spz",
+          "100k": "https://cdn.marble.worldlabs.ai/d2c20b91-6555-491b-b1f5-1f918ddbf068/f655514b-a59e-4fe4-bc32-9d159dcc3c59_sand_100k.spz",
+          "full_res": "https://cdn.marble.worldlabs.ai/d2c20b91-6555-491b-b1f5-1f918ddbf068/1df23757-932c-4fc5-84f4-ca7def44c5b1_sand.spz"
+        },
+        "semantics_metadata": null
+      },
+      "thumbnail_url": "https://cdn.marble.worldlabs.ai/d2c20b91-6555-491b-b1f5-1f918ddbf068/ceddc2f0-0d64-44b2-896f-53ec5e86e7cc_sand_mpi/thumbnail.webp",
+      "caption": "The scene is a vibrant, sunny suburban backyard, rendered in a charming Saturday-morning cartoon style with soft, hand-painted textures and chunky, rounded shapes, evoking the playful aesthetic of a cartoon toy set. The overall tone is joyful and whimsical, capturing the essence of a perfect late afternoon during kite season. The sky above is a delightful blend of orange and green hues, indicating the late afternoon light, and is dotted with numerous colorful kites, each with distinct shapes and patterns, soaring gracefully. A white picket fence, with its characteristic evenly spaced vertical slats and rounded tops, delineates the perimeter of the yard. A lush green tree, with a sturdy branch extending outward, supports a classic tire swing, its dark rubber contrasting with the bright foliage. A garden hose, coiled near the fence, is actively spraying sparkly arcs of water, catching the sunlight and creating miniature rainbows. The ground is covered in soft, green grass, meticulously manicured and free of debris. The center of the backyard remains an open, empty circular clearing, providing a sense of spaciousness and inviting imaginative play. All the described scenery, including the fence, tree, and garden hose, is positioned around the edges of this clearing and extends into the distance, creating a panoramic view. The colorful kites are scattered across the orange-green sky, some appearing closer and more detailed, while others are smaller and further away. The picket fence runs along the back of the yard, forming a gentle curve. The tree with the tire swing stands prominently to one side of the clearing, its branches reaching towards the sky. The garden hose is situated near the fence, its sparkling water arcs extending into the air. The 360 scene is faultless."
+    },
+    "created_at": null,
+    "updated_at": null,
+    "permission": {
+      "public": false,
+      "allowed_readers": [],
+      "allowed_writers": [],
+      "allow_id_access": false
+    },
+    "world_prompt": null,
+    "world_marble_url": "https://marble.worldlabs.ai/world/d2c20b91-6555-491b-b1f5-1f918ddbf068",
+    "model": null
+  },
+  "cost": {
+    "total_credits": 230,
+    "line_items": [
+      {
+        "name": "Pano generation (text)",
+        "credits": 80
+      },
+      {
+        "name": "Draft world generation",
+        "credits": 150
+      }
+    ]
+  }
+}

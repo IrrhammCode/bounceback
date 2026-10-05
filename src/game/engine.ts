@@ -68,6 +68,7 @@ import { createTripoFighter } from "../assets/tripo_fighter";
 import { getLoadedGLTF, isLegacyFightersForced } from "./visual/assets";
 import { applyToonAndOutline } from "./visual/toon";
 import { applyRoundPalette } from "./visual/palettes";
+import { WorldBackdropManager } from "./visual/worldBackdrop";
 
 export interface GameState {
   timer: string;
@@ -180,6 +181,7 @@ export class BouncebackEngine {
   // Arena visual meshes & controller
   private floorMesh!: THREE.Mesh;
   private arenaController: ArenaController | null = null;
+  private worldBackdrop: WorldBackdropManager | null = null;
 
   // Scene Lights for dynamic round palette tinting
   private hemiLight: THREE.HemisphereLight | null = null;
@@ -261,6 +263,10 @@ export class BouncebackEngine {
     // Apply initial round palette (Kado #1)
     applyRoundPalette(1, this.scene, this.renderer, this.hemiLight, this.sunLight, this.fillLight, this.rimLight);
 
+    // World Labs Marble 3D Gaussian Splats Backdrop
+    this.worldBackdrop = new WorldBackdropManager(this.scene, this.renderer);
+    this.worldBackdrop.loadRoundWorld(1);
+
     // Entities (5v5)
     this.spawnEntities();
 
@@ -333,6 +339,9 @@ export class BouncebackEngine {
       this.isGrandChampionship = this.tournament.isTournamentOver;
       this.isCelebratingRound = true;
       this.roundCelebrationTimer = this.isGrandChampionship ? 5.2 : 3.6;
+      if (!this.isGrandChampionship && this.worldBackdrop) {
+        this.worldBackdrop.preloadNextRound(this.tournament.currentRound + 1);
+      }
 
       if (this.isGrandChampionship) {
         this.winningTeam = this.tournament.tournamentWinner;
@@ -847,6 +856,9 @@ export class BouncebackEngine {
       this.arenaController.setMapTheme(1);
     }
     applyRoundPalette(1, this.scene, this.renderer, this.hemiLight, this.sunLight, this.fillLight, this.rimLight);
+    if (this.worldBackdrop) {
+      this.worldBackdrop.loadRoundWorld(1);
+    }
     this.introPhase = "opener";
     this.setIntroPhase("opener");
   }
@@ -919,6 +931,9 @@ export class BouncebackEngine {
       this.fillLight,
       this.rimLight
     );
+    if (this.worldBackdrop) {
+      this.worldBackdrop.loadRoundWorld(currentRoundDef.roundNumber);
+    }
 
     this.match.start();
     this.disasterManager.reset();
@@ -982,6 +997,9 @@ export class BouncebackEngine {
       this.arenaController.setMapTheme(1);
     }
     applyRoundPalette(1, this.scene, this.renderer, this.hemiLight, this.sunLight, this.fillLight, this.rimLight);
+    if (this.worldBackdrop) {
+      this.worldBackdrop.loadRoundWorld(1);
+    }
     this.startMatch(1);
   }
 
@@ -998,6 +1016,9 @@ export class BouncebackEngine {
       this.arenaController.setMapTheme(1);
     }
     applyRoundPalette(1, this.scene, this.renderer, this.hemiLight, this.sunLight, this.fillLight, this.rimLight);
+    if (this.worldBackdrop) {
+      this.worldBackdrop.loadRoundWorld(1);
+    }
     this.disasterManager.reset();
     this.resetEntitiesToSpawn();
     this.match.reset();
@@ -2495,6 +2516,7 @@ export class BouncebackEngine {
     });
 
     this.renderer.render(this.scene, this.camera);
+    this.worldBackdrop?.updatePerformance(performance.now());
     this.updateGameStats(dt);
     } catch (err) {
       console.error("[BouncebackEngine Error in loop]", err);
@@ -2517,6 +2539,8 @@ export class BouncebackEngine {
     this.skills.destroy();
     this.disasterManager.destroy();
     this.arenaController?.dispose();
+    this.worldBackdrop?.dispose();
+    this.worldBackdrop = null;
     this.renderer.dispose();
     this.scene.clear();
   }
