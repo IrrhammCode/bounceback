@@ -105,11 +105,11 @@ export function updatePhysics(
     const e = entities[i];
 
     // Timers
-    if (e.immuneTimer > 0) e.immuneTimer -= dt;
-    if (e.stunTimer > 0) e.stunTimer -= dt;
-    if (e.dashCd > 0) e.dashCd -= dt;
-    if (e.punchCd > 0) e.punchCd -= dt;
-    if (e.dashTimer > 0) e.dashTimer -= dt;
+    if (e.immuneTimer > 0) e.immuneTimer = Math.max(0, e.immuneTimer - dt);
+    if (e.stunTimer > 0) e.stunTimer = Math.max(0, e.stunTimer - dt);
+    if (e.dashCd > 0) e.dashCd = Math.max(0, e.dashCd - dt);
+    if (e.punchCd > 0) e.punchCd = Math.max(0, e.punchCd - dt);
+    if (e.dashTimer > 0) e.dashTimer = Math.max(0, e.dashTimer - dt);
 
     // 1. Ring-Out Abyss Fall State
     if (e.isFalling) {
@@ -137,6 +137,7 @@ export function updatePhysics(
         e.y = 0;
         e.vy = 0;
         e.respawning = false;
+        e.stunTimer = 0;
         e.immuneTimer = C.IMMUNITY_DUR;
       }
       continue;
@@ -336,6 +337,6 @@ function respawnEntity(e: Entity, halfW: number, halfL: number) {
   e.launchSpeed = 0;
   e.bounceCount = 0;
   e.immuneTimer = C.IMMUNITY_DUR + 0.4;
-  e.stunTimer = 0.35;
+  e.stunTimer = 0;
   e.lastHitBy = -1;
 }

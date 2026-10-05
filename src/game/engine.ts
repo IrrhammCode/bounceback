@@ -857,8 +857,14 @@ export class BouncebackEngine {
       const bscl = desiredH / (h || 1);
       mesh.scale.setScalar(bscl);
       mesh.userData.baseScale = bscl;
+
+      // Ensure bumper base plate rests cleanly on top of turf without sinking
+      const scaledBox = new THREE.Box3().setFromObject(mesh);
+      const bottomOffset = Math.max(0.12, -scaledBox.min.y + 0.08);
+      mesh.userData.bottomOffset = bottomOffset;
+
       const bH = getArenaHeight(pos.x, pos.z, roundNumber);
-      mesh.position.set(pos.x, bH, pos.z);
+      mesh.position.set(pos.x, bH + bottomOffset, pos.z);
       this.bumperMeshes.push(mesh);
       this.scene.add(mesh);
     }
@@ -2238,12 +2244,12 @@ export class BouncebackEngine {
           ent.mesh.rotation.y += diffY * Math.min(1.0, 16.0 * dt);
 
           // Dynamic banking lean into turn (clamped subtle lean [-0.22, 0.22])
-          if (!ent.launched && !ent.stunTimer) {
+          if (!ent.launched && (!ent.stunTimer || ent.stunTimer <= 0)) {
             const leanZ = Math.max(-0.22, Math.min(0.22, -diffY * 0.25));
             ent.mesh.rotation.z += (leanZ - ent.mesh.rotation.z) * Math.min(1.0, 18.0 * dt);
             ent.mesh.rotation.x = 0;
           }
-        } else if (!ent.launched && !ent.stunTimer) {
+        } else if (!ent.launched && (!ent.stunTimer || ent.stunTimer <= 0)) {
           ent.mesh.rotation.z += (0 - ent.mesh.rotation.z) * Math.min(1.0, 24.0 * dt);
           if (Math.abs(ent.mesh.rotation.z) < 0.03) ent.mesh.rotation.z = 0;
           ent.mesh.rotation.x = 0;
@@ -2336,7 +2342,7 @@ export class BouncebackEngine {
           }
           // Responsive movement detection: triggers brisk walk cycle even on slight stick tilts or slow speeds
           const isPlayerMoving = i === 0 && (this.player.stickActive || Math.abs(this.player.stickX) > 0.05 || Math.abs(this.player.stickZ) > 0.05);
-          const isMoving = (spd > 0.08 || isPlayerMoving) && !ent.stunTimer;
+          const isMoving = (spd > 0.08 || isPlayerMoving) && (!ent.stunTimer || ent.stunTimer <= 0);
 
           if (isMoving) {
             const isRun = spd > 7.0 || ent.dashTimer > 0 || (slot && slot.rocketTimer > 0);
@@ -2562,7 +2568,8 @@ export class BouncebackEngine {
       const b = this.bumpers[i];
       const mesh = this.bumperMeshes[i];
       if (!mesh) continue;
-      mesh.position.set(b.x, getArenaHeight(b.x, b.z), b.z);
+      const bottomOffset = mesh.userData.bottomOffset || 0.12;
+      mesh.position.set(b.x, getArenaHeight(b.x, b.z, this.state.currentRound) + bottomOffset, b.z);
       if (b.hitFlash > 0) {
         if (b.hitFlash > 0.9) {
           sfxBumperHit(0);

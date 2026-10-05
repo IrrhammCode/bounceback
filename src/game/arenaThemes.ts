@@ -1153,10 +1153,10 @@ export function createPinballJumpPads(root: THREE.Group) {
   for (const fc of flipperConfigs) {
     const fY = getArenaHeight(fc.x, fc.z, 4);
     const fGroup = new THREE.Group();
-    fGroup.position.set(fc.x, fY + 0.15, fc.z);
+    fGroup.position.set(fc.x, fY + 0.35, fc.z);
     fGroup.rotation.y = fc.restAngle;
 
-    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.4, 0.5, 16), flipperMat);
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.4, 0.7, 16), flipperMat);
     fGroup.add(post);
 
     const bat = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.35, 3.2), flipperRubberMat);
@@ -1166,7 +1166,7 @@ export function createPinballJumpPads(root: THREE.Group) {
     group.add(fGroup);
 
     flippers.push({
-      pivot: new THREE.Vector3(fc.x, fY + 0.15, fc.z),
+      pivot: new THREE.Vector3(fc.x, fY + 0.35, fc.z),
       angle: fc.restAngle,
       length: 3.2,
       thickness: 0.4,
@@ -1193,17 +1193,17 @@ export function createPinballJumpPads(root: THREE.Group) {
 
   for (const pc of jumpPadConfigs) {
     const bH = getArenaHeight(pc.x, pc.z, 4);
-    const frame = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.6, 0.16, 24), frameMat);
-    frame.position.set(pc.x, bH + 0.08, pc.z);
+    const frame = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.6, 0.24, 24), frameMat);
+    frame.position.set(pc.x, bH + 0.12, pc.z);
     group.add(frame);
 
-    const mat = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 0.18, 24), canvasMat);
-    mat.position.set(pc.x, bH + 0.09, pc.z);
+    const mat = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 0.26, 24), canvasMat);
+    mat.position.set(pc.x, bH + 0.14, pc.z);
     group.add(mat);
 
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(1.3, 0.07, 8, 24), neonRingMat);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(1.3, 0.08, 8, 24), neonRingMat);
     ring.rotation.x = Math.PI / 2;
-    ring.position.set(pc.x, bH + 0.18, pc.z);
+    ring.position.set(pc.x, bH + 0.28, pc.z);
     group.add(ring);
   }
 

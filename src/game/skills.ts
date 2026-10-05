@@ -15,6 +15,7 @@ import * as THREE from "three";
 import * as C from "./config";
 import { Entity } from "./physics";
 import { sfxSkillSpawn, sfxSkillAcquire } from "./audio";
+import { getArenaHeight, getArenaRound } from "./arenaHeight";
 import * as SkeletonUtils from "three/addons/utils/SkeletonUtils.js";
 import { getLoadedGLTF } from "./visual/assets";
 import { applyToonAndOutline } from "./visual/toon";
@@ -208,10 +209,12 @@ export class SkillManager {
       { x: halfW, z: halfL },
     ];
 
+    const currentRound = getArenaRound();
     for (let i = 0; i < BOX_COUNT; i++) {
       const pos = positions[i];
       const mesh = this.createBoxMesh();
-      mesh.position.set(pos.x, BOX_FLOAT_HEIGHT, pos.z);
+      const groundY = getArenaHeight(pos.x, pos.z, currentRound);
+      mesh.position.set(pos.x, groundY + BOX_FLOAT_HEIGHT, pos.z);
       this.scene.add(mesh);
 
       this.boxes.push({
@@ -230,84 +233,335 @@ export class SkillManager {
     return this.boxes.filter((b) => b.active).map((b) => ({ x: b.x, z: b.z }));
   }
 
+  private sideTexCache: THREE.CanvasTexture | null = null;
+  private topTexCache: THREE.CanvasTexture | null = null;
+
+  private createMysterySideTexture(): THREE.CanvasTexture {
+    if (this.sideTexCache) return this.sideTexCache;
+    const canvas = document.createElement("canvas");
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext("2d")!;
+
+    // 1. Deep Cyber Royal Indigo / Violet gradient background
+    const bgGrad = ctx.createLinearGradient(0, 0, 512, 512);
+    bgGrad.addColorStop(0.0, "#2e1065");
+    bgGrad.addColorStop(0.5, "#581c87");
+    bgGrad.addColorStop(1.0, "#1e1b4b");
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, 512, 512);
+
+    // 2. Energetic Starburst Rays from center
+    ctx.save();
+    ctx.translate(256, 256);
+    ctx.fillStyle = "rgba(192, 132, 252, 0.22)";
+    const numRays = 16;
+    for (let r = 0; r < numRays; r++) {
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      const a1 = (r * Math.PI * 2) / numRays;
+      const a2 = a1 + (Math.PI * 2) / (numRays * 2);
+      ctx.arc(0, 0, 360, a1, a2);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // 3. Heavy-Duty Golden Beveled Frame
+    ctx.strokeStyle = "#f59e0b";
+    ctx.lineWidth = 26;
+    ctx.strokeRect(18, 18, 476, 476);
+
+    ctx.strokeStyle = "#fef08a";
+    ctx.lineWidth = 8;
+    ctx.strokeRect(32, 32, 448, 448);
+
+    // Cyan Neon Inner Border
+    ctx.strokeStyle = "#00f0ff";
+    ctx.lineWidth = 6;
+    ctx.strokeRect(46, 46, 420, 420);
+
+    // 4 Corner Bolt Plates with glowing cyan core
+    const boltPositions = [
+      [36, 36],
+      [476, 36],
+      [36, 476],
+      [476, 476],
+    ];
+    for (const [bx, by] of boltPositions) {
+      ctx.fillStyle = "#fbbf24";
+      ctx.beginPath();
+      ctx.arc(bx, by, 16, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#78350f";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      ctx.fillStyle = "#00f0ff";
+      ctx.beginPath();
+      ctx.arc(bx, by, 6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 4. Iconic Comic 3D Embossed Question Mark "?"
+    ctx.save();
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = "900 290px Outfit, Impact, Arial Black, sans-serif";
+
+    // A. Deep dark shadow
+    ctx.fillStyle = "#0f172a";
+    ctx.fillText("?", 256 + 10, 268 + 14);
+
+    // B. Thick Cyan Neon Outline
+    ctx.strokeStyle = "#00f0ff";
+    ctx.lineWidth = 32;
+    ctx.strokeText("?", 256, 268);
+
+    // C. Dark Golden Bevel Rim
+    ctx.strokeStyle = "#78350f";
+    ctx.lineWidth = 16;
+    ctx.strokeText("?", 256, 268);
+
+    // D. Rich Golden Sunburst Gradient Fill
+    const qGrad = ctx.createLinearGradient(0, 110, 0, 420);
+    qGrad.addColorStop(0.0, "#ffffff");
+    qGrad.addColorStop(0.2, "#fef08a");
+    qGrad.addColorStop(0.6, "#facc15");
+    qGrad.addColorStop(1.0, "#eab308");
+    ctx.fillStyle = qGrad;
+    ctx.fillText("?", 256, 268);
+
+    // E. Glossy White Specular Highlight on hook
+    ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+    ctx.beginPath();
+    ctx.ellipse(256 - 28, 180, 24, 12, -0.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    this.sideTexCache = tex;
+    return tex;
+  }
+
+  private createMysteryTopTexture(): THREE.CanvasTexture {
+    if (this.topTexCache) return this.topTexCache;
+    const canvas = document.createElement("canvas");
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext("2d")!;
+
+    // 1. Deep Cyber Purple gradient
+    const bgGrad = ctx.createLinearGradient(0, 0, 512, 512);
+    bgGrad.addColorStop(0.0, "#2e1065");
+    bgGrad.addColorStop(0.5, "#581c87");
+    bgGrad.addColorStop(1.0, "#1e1b4b");
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, 512, 512);
+
+    // 2. Heavy-Duty Golden Beveled Frame
+    ctx.strokeStyle = "#f59e0b";
+    ctx.lineWidth = 26;
+    ctx.strokeRect(18, 18, 476, 476);
+
+    ctx.strokeStyle = "#fef08a";
+    ctx.lineWidth = 8;
+    ctx.strokeRect(32, 32, 448, 448);
+
+    ctx.strokeStyle = "#00f0ff";
+    ctx.lineWidth = 6;
+    ctx.strokeRect(46, 46, 420, 420);
+
+    // 3. Central 8-Pointed Golden Lucky Star Emblem
+    ctx.save();
+    ctx.translate(256, 256);
+
+    // Concentric glowing rings
+    ctx.strokeStyle = "rgba(0, 240, 255, 0.55)";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(0, 0, 160, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(254, 240, 138, 0.65)";
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.arc(0, 0, 130, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // 8-Point Star
+    ctx.beginPath();
+    const numPoints = 8;
+    const rOuter = 110;
+    const rInner = 48;
+    for (let p = 0; p < numPoints * 2; p++) {
+      const angle = (p * Math.PI) / numPoints - Math.PI / 2;
+      const r = p % 2 === 0 ? rOuter : rInner;
+      const sx = Math.cos(angle) * r;
+      const sy = Math.sin(angle) * r;
+      if (p === 0) ctx.moveTo(sx, sy);
+      else ctx.lineTo(sx, sy);
+    }
+    ctx.closePath();
+
+    ctx.fillStyle = "#0f172a";
+    ctx.fill();
+
+    ctx.strokeStyle = "#00f0ff";
+    ctx.lineWidth = 14;
+    ctx.stroke();
+
+    const starGrad = ctx.createLinearGradient(0, -rOuter, 0, rOuter);
+    starGrad.addColorStop(0.0, "#ffffff");
+    starGrad.addColorStop(0.3, "#fef08a");
+    starGrad.addColorStop(0.7, "#facc15");
+    starGrad.addColorStop(1.0, "#eab308");
+    ctx.fillStyle = starGrad;
+    ctx.fill();
+
+    ctx.restore();
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    this.topTexCache = tex;
+    return tex;
+  }
+
   private createBoxMesh(): THREE.Object3D {
     const group = new THREE.Group();
+    group.name = "ArcadeLuckyMysteryBox";
 
-    const giftGltf = getLoadedGLTF("mystery-gift");
-    if (giftGltf) {
-      const gift = SkeletonUtils.clone(giftGltf.scene) as THREE.Group;
-      const box = new THREE.Box3().setFromObject(gift);
-      const h = box.max.y - box.min.y;
-      const s = 1.3 / (h || 1);
-      gift.scale.setScalar(s);
-      applyToonAndOutline(gift, { thickness: 0.025 });
-      group.add(gift);
+    // 1. High-Impact HD Canvas Textures for the 6 faces
+    const sideTex = this.createMysterySideTexture();
+    const topTex = this.createMysteryTopTexture();
 
-      // Rotating inner star core
-      const innerGeo = new THREE.OctahedronGeometry(0.35, 0);
-      const inner = new THREE.Mesh(innerGeo, this.boxInnerMat);
-      inner.position.y = 0.65;
-      group.add(inner);
-      group.userData.inner = inner;
-      return group;
-    }
-
-    // 1. Translucent Golden Beveled Cube (1.2m size)
-    const outerGeo = new THREE.BoxGeometry(1.2, 1.2, 1.2);
-    const outer = new THREE.Mesh(outerGeo, this.boxMat);
-    outer.castShadow = true;
-    group.add(outer);
-
-    // 2. Rotating Inner Golden Diamond Star Core
-    const innerGeo = new THREE.OctahedronGeometry(0.55, 0);
-    const inner = new THREE.Mesh(innerGeo, this.boxInnerMat);
-    group.add(inner);
-    group.userData.inner = inner;
-
-    // 3. Question mark canvas sprite inside cube
-    if (typeof document !== "undefined") {
-      const canvas = document.createElement("canvas");
-      canvas.width = 128;
-      canvas.height = 128;
-      const c = canvas.getContext("2d")!;
-      c.fillStyle = "#ffffff";
-      c.font = "900 84px 'Arial Black', sans-serif";
-      c.textAlign = "center";
-      c.textBaseline = "middle";
-      c.shadowColor = "#ffd166";
-      c.shadowBlur = 16;
-      c.fillText("?", 64, 66);
-      const tex = new THREE.CanvasTexture(canvas);
-      const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.95 });
-      const sprite = new THREE.Sprite(spriteMat);
-      sprite.scale.set(0.9, 0.9, 1);
-      group.add(sprite);
-    }
-
-    // 4. Orbiting Sparkle Dust Halo Ring (32 particles)
-    const sparkCount = 32;
-    const sparkPositions = new Float32Array(sparkCount * 3);
-    for (let i = 0; i < sparkCount; i++) {
-      const angle = (i / sparkCount) * Math.PI * 2;
-      const r = 1.05;
-      sparkPositions[i * 3] = Math.cos(angle) * r;
-      sparkPositions[i * 3 + 1] = Math.sin(angle * 3) * 0.28;
-      sparkPositions[i * 3 + 2] = Math.sin(angle) * r;
-    }
-    const sparkGeo = new THREE.BufferGeometry();
-    sparkGeo.setAttribute("position", new THREE.BufferAttribute(sparkPositions, 3));
-    const sparkMat = new THREE.PointsMaterial({
-      color: 0xfff3b0,
-      size: 0.15,
-      transparent: true,
-      opacity: 0.95,
-      blending: THREE.AdditiveBlending,
+    const sideMat = new THREE.MeshStandardMaterial({
+      map: sideTex,
+      roughness: 0.22,
+      metalness: 0.35,
+      emissive: 0x3b0764,
+      emissiveIntensity: 0.28,
     });
-    const sparkPoints = new THREE.Points(sparkGeo, sparkMat);
-    group.add(sparkPoints);
-    group.userData.sparks = sparkPoints;
+    const topMat = new THREE.MeshStandardMaterial({
+      map: topTex,
+      roughness: 0.22,
+      metalness: 0.35,
+      emissive: 0x3b0764,
+      emissiveIntensity: 0.28,
+    });
 
-    // 5. Giant 24m Vertical Volumetric Sky Beacon Light Beam
+    // Box Materials: [px, nx, py, ny, pz, nz]
+    const boxMaterials = [sideMat, sideMat, topMat, topMat, sideMat, sideMat];
+    const boxGeo = new THREE.BoxGeometry(1.25, 1.25, 1.25);
+    const box = new THREE.Mesh(boxGeo, boxMaterials);
+    box.castShadow = true;
+    group.add(box);
+
+    // 2. 8 Heavy-Duty Golden Corner Armor Brackets with Neon Cyan LED Rivets
+    const cornerMat = new THREE.MeshStandardMaterial({
+      color: 0xfbbf24,
+      metalness: 0.85,
+      roughness: 0.15,
+      emissive: 0xd97706,
+      emissiveIntensity: 0.25,
+    });
+    const rivetMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
+
+    const cornerDist = 0.625;
+    for (const cx of [-cornerDist, cornerDist]) {
+      for (const cy of [-cornerDist, cornerDist]) {
+        for (const cz of [-cornerDist, cornerDist]) {
+          const corner = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.24, 0.24), cornerMat);
+          corner.position.set(cx, cy, cz);
+          group.add(corner);
+
+          const rivet = new THREE.Mesh(new THREE.SphereGeometry(0.065, 8, 8), rivetMat);
+          rivet.position.set(
+            cx + Math.sign(cx) * 0.08,
+            cy + Math.sign(cy) * 0.08,
+            cz + Math.sign(cz) * 0.08
+          );
+          group.add(rivet);
+        }
+      }
+    }
+
+    // 3. Glowing Neon Edge Bevel Beams (12 edges)
+    const edgeNeonMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
+    const edgeLen = 1.25;
+    const edgeThick = 0.026;
+    // 4 X-parallel edges
+    for (const ey of [-cornerDist, cornerDist]) {
+      for (const ez of [-cornerDist, cornerDist]) {
+        const edge = new THREE.Mesh(new THREE.CylinderGeometry(edgeThick, edgeThick, edgeLen, 6), edgeNeonMat);
+        edge.rotation.z = Math.PI / 2;
+        edge.position.set(0, ey, ez);
+        group.add(edge);
+      }
+    }
+    // 4 Y-parallel edges
+    for (const ex of [-cornerDist, cornerDist]) {
+      for (const ez of [-cornerDist, cornerDist]) {
+        const edge = new THREE.Mesh(new THREE.CylinderGeometry(edgeThick, edgeThick, edgeLen, 6), edgeNeonMat);
+        edge.position.set(ex, 0, ez);
+        group.add(edge);
+      }
+    }
+    // 4 Z-parallel edges
+    for (const ex of [-cornerDist, cornerDist]) {
+      for (const ey of [-cornerDist, cornerDist]) {
+        const edge = new THREE.Mesh(new THREE.CylinderGeometry(edgeThick, edgeThick, edgeLen, 6), edgeNeonMat);
+        edge.rotation.x = Math.PI / 2;
+        edge.position.set(ex, ey, 0);
+        group.add(edge);
+      }
+    }
+
+    // 4. Floating 3D Golden Lucky Star on Top
+    const starGroup = new THREE.Group();
+    starGroup.position.set(0, 0.95, 0);
+    const starMat = new THREE.MeshStandardMaterial({
+      color: 0xffd166,
+      metalness: 0.85,
+      roughness: 0.15,
+      emissive: 0xf59e0b,
+      emissiveIntensity: 0.65,
+    });
+    const starCore = new THREE.Mesh(new THREE.OctahedronGeometry(0.36, 0), starMat);
+    starCore.scale.set(1.25, 1.25, 0.5);
+    starGroup.add(starCore);
+
+    const starHalo = new THREE.Mesh(
+      new THREE.TorusGeometry(0.48, 0.032, 8, 24),
+      new THREE.MeshBasicMaterial({ color: 0xfff066, transparent: true, opacity: 0.85 })
+    );
+    starHalo.rotation.x = Math.PI / 2;
+    starGroup.add(starHalo);
+    group.add(starGroup);
+    group.userData.topStar = starGroup;
+
+    // 5. Orbiting Mini Star Satellites (Cyan, Magenta, Gold)
+    const orbitGroup = new THREE.Group();
+    const satConfigs = [
+      { color: 0x00f0ff, angle: 0 },
+      { color: 0xf43f5e, angle: (Math.PI * 2) / 3 },
+      { color: 0xfacc15, angle: (Math.PI * 4) / 3 },
+    ];
+    for (const sc of satConfigs) {
+      const sat = new THREE.Mesh(
+        new THREE.OctahedronGeometry(0.14, 0),
+        new THREE.MeshBasicMaterial({ color: sc.color })
+      );
+      const r = 1.35;
+      sat.position.set(Math.cos(sc.angle) * r, Math.sin(sc.angle * 2) * 0.25, Math.sin(sc.angle) * r);
+      orbitGroup.add(sat);
+    }
+    group.add(orbitGroup);
+    group.userData.orbitGroup = orbitGroup;
+
+    // 6. Giant 24m Vertical Sky Beacon Light Beam
     const beaconGeo = new THREE.CylinderGeometry(0.35, 0.65, 24, 16);
     const beaconMat = new THREE.MeshBasicMaterial({
       color: 0xffd166,
@@ -334,7 +588,7 @@ export class SkillManager {
     crownFlare.position.y = 24.0;
     group.add(crownFlare);
 
-    // 6. Ground Projection Target Ring on arena floor with segmented runes
+    // 7. Ground Projection Target Ring on arena floor
     const ringGeo = new THREE.RingGeometry(0.8, 1.8, 36);
     const ringMat = new THREE.MeshBasicMaterial({
       color: 0xffd166,
@@ -346,14 +600,14 @@ export class SkillManager {
     });
     const floorRing = new THREE.Mesh(ringGeo, ringMat);
     floorRing.rotation.x = -Math.PI / 2;
-    floorRing.position.y = -BOX_FLOAT_HEIGHT + 0.08;
+    floorRing.position.y = -BOX_FLOAT_HEIGHT + 0.04;
     group.add(floorRing);
     group.userData.floorRing = floorRing;
 
     // Outer Target Pulse Ring
     const outerRingGeo = new THREE.RingGeometry(2.1, 2.22, 32);
     const outerRingMat = new THREE.MeshBasicMaterial({
-      color: 0x27e5ff,
+      color: 0x00f0ff,
       transparent: true,
       opacity: 0.5,
       blending: THREE.AdditiveBlending,
@@ -362,36 +616,9 @@ export class SkillManager {
     });
     const outerFloorRing = new THREE.Mesh(outerRingGeo, outerRingMat);
     outerFloorRing.rotation.x = -Math.PI / 2;
-    outerFloorRing.position.y = -BOX_FLOAT_HEIGHT + 0.08;
+    outerFloorRing.position.y = -BOX_FLOAT_HEIGHT + 0.04;
     group.add(outerFloorRing);
     group.userData.outerFloorRing = outerFloorRing;
-
-    // 7. Dual Gyroscope Energy Torus Rings
-    // Ring A: Cyan (X-axis tilt)
-    const torusGeoA = new THREE.TorusGeometry(1.45, 0.045, 8, 32);
-    const torusMatA = new THREE.MeshBasicMaterial({
-      color: 0x27e5ff,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.85,
-    });
-    const torusA = new THREE.Mesh(torusGeoA, torusMatA);
-    torusA.rotation.x = Math.PI / 3;
-    group.add(torusA);
-    group.userData.torusA = torusA;
-
-    // Ring B: Gold/Coral (Y-axis tilt)
-    const torusGeoB = new THREE.TorusGeometry(1.3, 0.04, 8, 32);
-    const torusMatB = new THREE.MeshBasicMaterial({
-      color: 0xffd166,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.75,
-    });
-    const torusB = new THREE.Mesh(torusGeoB, torusMatB);
-    torusB.rotation.y = Math.PI / 3;
-    group.add(torusB);
-    group.userData.torusB = torusB;
 
     return group;
   }
@@ -1521,12 +1748,20 @@ export class SkillManager {
   }
 
   // ─── Title Mode Box Animation ───
+  // ─── Title Mode Box Animation ───
   public updateTitleBoxes() {
     const now = performance.now() * 0.001;
+    const currentRound = getArenaRound();
     for (const box of this.boxes) {
       if (!box.active) continue;
+      const groundY = getArenaHeight(box.x, box.z, currentRound);
       box.mesh.rotation.y = now * BOX_SPIN_SPEED;
-      box.mesh.position.y = BOX_FLOAT_HEIGHT + Math.sin(now * 2 + box.x) * 0.3;
+      box.mesh.position.y = groundY + BOX_FLOAT_HEIGHT + Math.sin(now * 2 + box.x) * 0.28;
+      const u = box.mesh.userData;
+      if (u.floorRing) u.floorRing.position.y = (groundY + 0.04) - box.mesh.position.y;
+      if (u.outerFloorRing) u.outerFloorRing.position.y = (groundY + 0.04) - box.mesh.position.y;
+      if (u.topStar) u.topStar.rotation.y = -now * 2.8;
+      if (u.orbitGroup) u.orbitGroup.rotation.y = now * 1.8;
     }
   }
 
@@ -1565,15 +1800,18 @@ export class SkillManager {
 
     // 3. Animate active boxes (spin + bob + beacon pulse + floor ring + torus)
     const now = performance.now() * 0.001;
+    const currentRound = getArenaRound();
     for (const box of this.boxes) {
       if (!box.active) continue;
       box.mesh.rotation.y = now * BOX_SPIN_SPEED;
+      const groundY = getArenaHeight(box.x, box.z, currentRound);
 
       if (box.dropAnim > 0) {
         box.dropAnim -= dt;
         const t = 1.0 - Math.max(0, box.dropAnim / 0.55);
         // Supersonic ease-in drop
-        const dropH = 22.0 - t * t * (22.0 - BOX_FLOAT_HEIGHT);
+        const baseH = groundY + BOX_FLOAT_HEIGHT;
+        const dropH = 22.0 - t * t * (22.0 - baseH);
         box.mesh.position.y = dropH;
         box.mesh.scale.set(0.7 + t * 0.3, 1.3 - t * 0.3, 0.7 + t * 0.3);
         if (box.dropAnim <= 0 && !box.landed) {
@@ -1582,7 +1820,7 @@ export class SkillManager {
           this.spawnBoxLandingFX(box.x, box.z);
         }
       } else {
-        box.mesh.position.y = BOX_FLOAT_HEIGHT + Math.sin(now * 2.5 + box.x) * 0.28;
+        box.mesh.position.y = groundY + BOX_FLOAT_HEIGHT + Math.sin(now * 2.5 + box.x) * 0.28;
       }
 
       const u = box.mesh.userData;
@@ -1590,13 +1828,22 @@ export class SkillManager {
         u.beacon.material.opacity = 0.28 + Math.sin(now * 4.5) * 0.16;
       }
       if (u.floorRing) {
+        u.floorRing.position.y = (groundY + 0.04) - box.mesh.position.y;
         const ringScale = 1.0 + Math.sin(now * 3.5) * 0.14;
         u.floorRing.scale.set(ringScale, ringScale, ringScale);
       }
       if (u.outerFloorRing) {
+        u.outerFloorRing.position.y = (groundY + 0.04) - box.mesh.position.y;
         u.outerFloorRing.rotation.z = now * 1.5;
         const outerScale = 1.0 + Math.cos(now * 2.8) * 0.1;
         u.outerFloorRing.scale.set(outerScale, outerScale, outerScale);
+      }
+      if (u.topStar) {
+        u.topStar.rotation.y = -now * 2.8;
+        u.topStar.position.y = 0.95 + Math.sin(now * 4.0) * 0.08;
+      }
+      if (u.orbitGroup) {
+        u.orbitGroup.rotation.y = now * 1.8;
       }
       if (u.torusA) {
         u.torusA.rotation.x = now * 2.2;
