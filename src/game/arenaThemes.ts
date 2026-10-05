@@ -822,7 +822,7 @@ export function createPlaygroundObstacles(root: THREE.Group) {
     { x: -8.5, z: -7.0, char: "A", color: 0x38bdf8, border: "#0284c7" },
     { x: 8.5, z: -7.0, char: "B", color: 0xf43f5e, border: "#be123c" },
     { x: -8.5, z: 7.0, char: "C", color: 0xfacc15, border: "#b45309" },
-    { x: 8.5, z: 7.0, char: "1", color: 0xa855f7, border: "#7e22ce" },
+    { x: 8.5, z: 7.0, char: "D", color: 0xa855f7, border: "#7e22ce" },
   ];
 
   const blocks: THREE.Mesh[] = [];
