@@ -33,6 +33,7 @@ import {
 import { getRoundPalette } from "./visual/palettes";
 import { createOutlineMesh } from "./visual/toon";
 import { getLoadedGLTF, loadGLTF, MODEL_PATHS } from "./visual/assets";
+import { createThemedPerimeterDioramas } from "./visual/themedDioramas";
 
 export interface ArenaController {
   update: (dt: number, time: number) => void;
@@ -2517,11 +2518,12 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     }
     confMesh.instanceMatrix.needsUpdate = true;
 
-    // 14. Update Map Biome Obstacles
+    // 14. Update Map Biome Obstacles & 3D Dioramas
     speedway.update(dt, time);
     stormland.update(dt, time);
     pinball.update(dt, time);
     cosmic.update(dt, time);
+    dioramas.update(dt, time);
   }
 
   // ─── 18. MAP BIOME MANAGERS & OBSTACLES ───────────────
@@ -2529,6 +2531,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   const stormland = createStormlandFeatures(root);
   const pinball = createPinballJumpPads(root);
   const cosmic = createCosmicSingularity(root);
+  const dioramas = createThemedPerimeterDioramas(root);
 
   speedway.group.visible = false;
   stormland.group.visible = false;
@@ -2554,11 +2557,12 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     floorMat.map = getFloor(roundNumber);
     floorMat.needsUpdate = true;
 
-    // Toggle map-specific interactive obstacle groups
+    // Toggle map-specific interactive obstacle groups & 3D dioramas
     speedway.group.visible = (roundNumber === 2);
     stormland.group.visible = (roundNumber === 3);
     pinball.group.visible = (roundNumber === 4);
     cosmic.group.visible = (roundNumber === 5);
+    dioramas.setTheme(roundNumber);
 
     // Hazard sweepers: active in round 1, 2, 3 (hyper-spin in round 3), retracted in 4 & 5
     for (let i = 0; i < sweepers.length; i++) {
@@ -2579,6 +2583,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   }
 
   function dispose() {
+    dioramas.dispose();
     scene.remove(root);
   }
 

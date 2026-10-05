@@ -59,33 +59,20 @@ export class WorldBackdropManager {
     if (typeof window === "undefined") return "disabled";
 
     const params = new URLSearchParams(window.location.search);
-    if (params.get("worlds") === "off" || params.get("splats") === "0") {
-      return "disabled";
+    // Volumetric 3D Gaussian Splats are purely opt-in via ?splats=1 or ?splats=500k
+    // because close-up radiance fields occlude dynamic 3rd-person gameplay cameras.
+    if (params.get("splats") === "1" || params.get("splats") === "500k") {
+      return "desktop";
     }
     if (params.get("splats") === "100k") {
       return "mobile";
-    }
-    if (params.get("splats") === "500k") {
-      return "desktop";
     }
     if (params.get("splats") === "pano") {
       return "pano_fallback";
     }
 
-    const isMobile =
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-      ("ontouchstart" in window) ||
-      window.innerWidth <= 840;
-
-    const nav = navigator as any;
-    const deviceMemory = nav.deviceMemory || 8;
-    const hardwareConcurrency = nav.hardwareConcurrency || 8;
-
-    if (isMobile || deviceMemory <= 4 || hardwareConcurrency <= 4) {
-      return "mobile";
-    }
-
-    return "desktop";
+    // Default to clean, ultra-sharp Three.js 3D diorama environments
+    return "disabled";
   }
 
   /**
