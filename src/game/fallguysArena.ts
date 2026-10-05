@@ -197,7 +197,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   for (let i = 0; i < posAttr.count; i++) {
     const vx = posAttr.getX(i);
     const vz = posAttr.getZ(i);
-    const vy = getArenaHeight(vx, vz);
+    const vy = getArenaHeight(vx, vz, 1, true);
     posAttr.setY(i, vy);
   }
   floorGeo.computeVertexNormals();
@@ -513,7 +513,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   daisRingGeo.rotateX(Math.PI / 2);
   const daisRing = new THREE.Mesh(daisRingGeo, goldDecoMat);
   daisRing.position.set(0, 1.24, 0);
-  root.add(daisRing);
+  staticRimGroup.add(daisRing);
 
   // ─── 5. BATAS LUAR: 4 CHAMPIONSHIP TURNBUCKLE CORNER PYLONS & 3-TIER GLOWING ROPES ─────
   const pylonMat = new THREE.MeshStandardMaterial({
@@ -2595,7 +2595,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     extrudeGeo.rotateX(Math.PI / 2);
 
     currentFoundationMesh = new THREE.Mesh(extrudeGeo, foundationMat);
-    currentFoundationMesh.position.y = -0.05;
+    currentFoundationMesh.position.y = -0.80;
     currentFoundationMesh.receiveShadow = true;
     root.add(currentFoundationMesh);
   }
@@ -2704,7 +2704,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     for (let i = 0; i < posAttr.count; i++) {
       const vx = posAttr.getX(i);
       const vz = posAttr.getZ(i);
-      posAttr.setY(i, getArenaHeight(vx, vz, roundNumber));
+      posAttr.setY(i, getArenaHeight(vx, vz, roundNumber, true));
     }
     posAttr.needsUpdate = true;
     floorGeo.computeVertexNormals();

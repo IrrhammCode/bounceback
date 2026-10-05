@@ -573,7 +573,7 @@ export class BouncebackEngine {
 
       // Exact bottom sole contact offset so feet never sink into turf
       const scaledBox = new THREE.Box3().setFromObject(mecha);
-      const footOffset = Math.max(0.04, -scaledBox.min.y + 0.04);
+      const footOffset = Math.max(0.12, -scaledBox.min.y + 0.10);
       mecha.userData.footOffset = footOffset;
       const initH = getArenaHeight(sp.x, sp.z);
       mecha.position.set(sp.x, initH + footOffset, sp.z);
@@ -1136,7 +1136,7 @@ export class BouncebackEngine {
       ent.immuneTimer = 0;
       if (ent.mesh) {
         const u = ent.mesh.userData;
-        const footOffset = u.footOffset || 0.04;
+        const footOffset = u.footOffset || 0.12;
         ent.mesh.position.set(sp.x, getArenaHeight(sp.x, sp.z) + footOffset, sp.z);
         ent.mesh.rotation.set(0, ent.team === 1 ? Math.PI : 0, 0);
         if (u.leftArm) {
@@ -1158,7 +1158,7 @@ export class BouncebackEngine {
       const ent = this.entities[i];
       if (!ent.mesh) continue;
       const u = ent.mesh.userData;
-      const footOffset = u.footOffset || 0.04;
+      const footOffset = u.footOffset || 0.12;
       const baseH = getArenaHeight(ent.x, ent.z);
       ent.mesh.position.set(
         ent.x,
@@ -1175,7 +1175,7 @@ export class BouncebackEngine {
       const ent = this.entities[i];
       if (!ent.mesh) continue;
       const u = ent.mesh.userData;
-      const footOffset = u.footOffset || 0.04;
+      const footOffset = u.footOffset || 0.12;
       const baseH = getArenaHeight(ent.x, ent.z);
 
       let jumpY = 0;
@@ -2142,7 +2142,7 @@ export class BouncebackEngine {
 
         const groundH = getArenaHeight(ent.x, ent.z);
         const slope = getArenaSlope(ent.x, ent.z);
-        const footOffset = u.footOffset || 0.04;
+        const footOffset = u.footOffset || 0.12;
         ent.mesh.position.x = ent.x;
         ent.mesh.position.z = ent.z;
         ent.mesh.rotation.order = "YXZ";
