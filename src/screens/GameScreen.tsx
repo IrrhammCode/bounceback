@@ -11,6 +11,7 @@ import PauseSettingsModal from "../components/PauseSettingsModal";
 import OrientationPromptModal from "../components/OrientationPromptModal";
 import LoadingScreenOverlay from "../components/LoadingScreenOverlay";
 import ResultScreen from "./ResultScreen";
+import GiftTitleCard from "../components/GiftTitleCard";
 import { type RoundResult } from "../game/tournament";
 import { sfxWhistle, sfxGoal, sfxMatchStart } from "../game/audio";
 
@@ -78,6 +79,22 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
 
   const [isPaused, setIsPaused] = useState(false);
   const [showOrientationGuide, setShowOrientationGuide] = useState(false);
+
+  // Tripothon 5 Kado Unboxing Title Card State
+  const [activeGiftCard, setActiveGiftCard] = useState<number | null>(null);
+  const prevRoundRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (appMode === "game") {
+      if (prevRoundRef.current !== gameState.currentRound) {
+        prevRoundRef.current = gameState.currentRound;
+        setActiveGiftCard(gameState.currentRound);
+      }
+    } else {
+      prevRoundRef.current = null;
+      setActiveGiftCard(null);
+    }
+  }, [appMode, gameState.currentRound]);
 
   const isDemoMode = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("demo") === "1";
 
@@ -349,6 +366,14 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
           history={seriesResult.history}
           onRematch={handleRematch}
           onMenu={handleExitToTitle}
+        />
+      )}
+
+      {/* 5. Tripothon Gift Unboxing Title Card Overlay */}
+      {activeGiftCard && (
+        <GiftTitleCard
+          roundNumber={activeGiftCard}
+          onDismiss={() => setActiveGiftCard(null)}
         />
       )}
 

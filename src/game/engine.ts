@@ -67,6 +67,7 @@ import * as SkeletonUtils from "three/addons/utils/SkeletonUtils.js";
 import { createTripoFighter } from "../assets/tripo_fighter";
 import { getLoadedGLTF, isLegacyFightersForced } from "./visual/assets";
 import { applyToonAndOutline } from "./visual/toon";
+import { applyRoundPalette } from "./visual/palettes";
 
 export interface GameState {
   timer: string;
@@ -180,6 +181,12 @@ export class BouncebackEngine {
   private floorMesh!: THREE.Mesh;
   private arenaController: ArenaController | null = null;
 
+  // Scene Lights for dynamic round palette tinting
+  private hemiLight: THREE.HemisphereLight | null = null;
+  private sunLight: THREE.DirectionalLight | null = null;
+  private fillLight: THREE.DirectionalLight | null = null;
+  private rimLight: THREE.DirectionalLight | null = null;
+
   // Round Celebration & Grand Championship State
   public isCelebratingRound = false;
   private roundCelebrationTimer = 0;
@@ -250,6 +257,9 @@ export class BouncebackEngine {
 
     // Arena
     this.buildArena();
+
+    // Apply initial round palette (Kado #1)
+    applyRoundPalette(1, this.scene, this.renderer, this.hemiLight, this.sunLight, this.fillLight, this.rimLight);
 
     // Entities (5v5)
     this.spawnEntities();
@@ -391,6 +401,7 @@ export class BouncebackEngine {
     // 1. Cheerful sunny sky / ground hemisphere light (signature Fall Guys / Nintendo lighting)
     const hemi = new THREE.HemisphereLight(0x7dd3fc, 0xfde047, 0.95);
     this.scene.add(hemi);
+    this.hemiLight = hemi;
 
     const isMobile = this.isMobileDevice();
     const sun = new THREE.DirectionalLight(0xfff8ee, 1.85);
@@ -406,16 +417,19 @@ export class BouncebackEngine {
     sun.shadow.camera.bottom = -40;
     sun.shadow.bias = -0.0003;
     this.scene.add(sun);
+    this.sunLight = sun;
 
     // 3. Soft cyan fill from opposite side
     const fill = new THREE.DirectionalLight(0x38bdf8, 0.45);
     fill.position.set(-14, 20, -14);
     this.scene.add(fill);
+    this.fillLight = fill;
 
     // 4. Bubblegum pink rim light from rear
     const rim = new THREE.DirectionalLight(0xff4081, 0.35);
     rim.position.set(0, 16, -24);
     this.scene.add(rim);
+    this.rimLight = rim;
   }
 
   private buildArena() {
@@ -832,6 +846,7 @@ export class BouncebackEngine {
     if (this.arenaController) {
       this.arenaController.setMapTheme(1);
     }
+    applyRoundPalette(1, this.scene, this.renderer, this.hemiLight, this.sunLight, this.fillLight, this.rimLight);
     this.introPhase = "opener";
     this.setIntroPhase("opener");
   }
@@ -895,6 +910,15 @@ export class BouncebackEngine {
     if (this.arenaController) {
       this.arenaController.setMapTheme(currentRoundDef.roundNumber);
     }
+    applyRoundPalette(
+      currentRoundDef.roundNumber,
+      this.scene,
+      this.renderer,
+      this.hemiLight,
+      this.sunLight,
+      this.fillLight,
+      this.rimLight
+    );
 
     this.match.start();
     this.disasterManager.reset();
@@ -957,6 +981,7 @@ export class BouncebackEngine {
     if (this.arenaController) {
       this.arenaController.setMapTheme(1);
     }
+    applyRoundPalette(1, this.scene, this.renderer, this.hemiLight, this.sunLight, this.fillLight, this.rimLight);
     this.startMatch(1);
   }
 
@@ -972,6 +997,7 @@ export class BouncebackEngine {
     if (this.arenaController) {
       this.arenaController.setMapTheme(1);
     }
+    applyRoundPalette(1, this.scene, this.renderer, this.hemiLight, this.sunLight, this.fillLight, this.rimLight);
     this.disasterManager.reset();
     this.resetEntitiesToSpawn();
     this.match.reset();

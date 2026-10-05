@@ -56,6 +56,11 @@ export default function ResultScreen({
 
         <h1 className={`result-winner ${winnerClass}`}>{winnerText}</h1>
 
+        <div className="tripothon-gift-quote">
+          <span className="quote-icon">🎁</span>
+          <em>"This world was a gift to me as a kid."</em>
+        </div>
+
         {/* Series Score Banner */}
         <div className="series-score-hero">
           <div className="series-hero-team cyan">

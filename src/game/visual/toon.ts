@@ -132,6 +132,43 @@ export function addOutline(
 }
 
 /**
+ * Creates a standalone inverted-hull outline mesh matching a given mesh.
+ */
+export function createOutlineMesh(
+  mesh: THREE.Mesh,
+  thickness: number = 0.025,
+  outlineColor: THREE.ColorRepresentation = 0x141424
+): THREE.Mesh {
+  const outlineMat = new THREE.MeshBasicMaterial({
+    color: outlineColor,
+    side: THREE.BackSide,
+  });
+
+  outlineMat.onBeforeCompile = (shader) => {
+    shader.uniforms.uThickness = { value: thickness };
+    shader.vertexShader = `
+      uniform float uThickness;
+    ` + shader.vertexShader;
+
+    shader.vertexShader = shader.vertexShader.replace(
+      '#include <begin_vertex>',
+      `
+      #include <begin_vertex>
+      transformed += normal * uThickness;
+      `
+    );
+  };
+
+  const outline = new THREE.Mesh(mesh.geometry, outlineMat);
+  outline.position.copy(mesh.position);
+  outline.rotation.copy(mesh.rotation);
+  outline.scale.copy(mesh.scale);
+  outline.userData.isOutlineMesh = true;
+  outline.renderOrder = (mesh.renderOrder || 0) - 1;
+  return outline;
+}
+
+/**
  * Replaces Tripo PBR materials on a hierarchy with toon materials and adds outlines.
  */
 export function applyToonAndOutline(
