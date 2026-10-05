@@ -20,6 +20,19 @@ interface BoneMapping {
   isRightArm?: boolean;
 }
 
+export const CHAR_KEYS = [
+  'char-1-king',   // 0: Cyan Player (You)
+  'char-2-dj',     // 1: Cyan DJ (DJ Bounce)
+  'char-3-ninja',  // 2: Cyan Ninja (Ninja Bean)
+  'char-4-aviator',// 3: Cyan Turbo (Turbo Copter)
+  'char-5-party',  // 4: Cyan Popper (Party Popper)
+  'char-6-dino',   // 5: Coral Rex (Rex Crush)
+  'char-7-bunny',  // 6: Coral Hopper (Hopper Mad)
+  'char-8-agent',  // 7: Coral Shady (Shady VIP)
+  'char-9-viking', // 8: Coral Spike (Spike Tyrant)
+  'char-10-robot', // 9: Coral Cyber (Cyber Beast)
+];
+
 function findBone(root: THREE.Object3D, searchName: string): THREE.Bone | null {
   const target = searchName.toLowerCase().replace(/[^a-z0-9]/g, '');
   let match: THREE.Bone | null = null;
@@ -38,7 +51,10 @@ function findBone(root: THREE.Object3D, searchName: string): THREE.Bone | null {
 
 /**
  * Creates a Tripo vinyl chibi fighter with proxy Object3Ds that conform 100%
- * to the userData contract expected by engine.ts (lines 910-939 in toy_mecha.js).
+ * to the userData contract expected by engine.ts.
+ *
+ * When a custom Tripo 3D model is loaded for this fighter index, the FULL 3D
+ * TRIPO CHARACTER BODY is rendered directly with toon materials and cel-shading!
  */
 export function createTripoFighter(
   _THREE: typeof THREE,
@@ -46,15 +62,17 @@ export function createTripoFighter(
   opts: TripoFighterOptions
 ): THREE.Group {
   const group = new THREE.Group();
-
-  // 1. Clone skinned mesh with skeleton preserved
-  const clonedScene = SkeletonUtils.clone(fighterGltf.scene) as THREE.Group;
-  group.add(clonedScene);
-
-  // 2. Team color configuration
   const teamColorHex = opts.team === 0 ? 0x27e5ff : 0xff5268;
 
-  // Replace materials with Toon material + team color mask on suit
+  // 1. Check if the FULL custom Tripo 3D character model is available
+  let fullTripoGltf: GLTF | null = null;
+  if (typeof opts.fighterIndex === 'number' && opts.fighterIndex >= 0 && opts.fighterIndex < CHAR_KEYS.length) {
+    fullTripoGltf = getLoadedGLTF(CHAR_KEYS[opts.fighterIndex]);
+  }
+
+  // 2. Clone skinned dummy mesh for Mixamo skeleton calculations
+  const clonedScene = SkeletonUtils.clone(fighterGltf.scene) as THREE.Group;
+
   let sharedToonMat: THREE.MeshToonMaterial | null = null;
   clonedScene.traverse((node) => {
     if ((node as THREE.Mesh).isMesh) {
@@ -71,10 +89,61 @@ export function createTripoFighter(
     }
   });
 
-  // Add crisp cartoon outlines
-  addOutline(clonedScene, 0.022, 0x141424);
+  // 3. Mount Full Tripo Character Body if loaded!
+  let fullTripoBody: THREE.Group | null = null;
+  if (fullTripoGltf?.scene) {
+    fullTripoBody = SkeletonUtils.clone(fullTripoGltf.scene) as THREE.Group;
 
-  // 3. Locate bones in Mixamo biped hierarchy
+    // Apply cartoon cel-shading + team tint
+    fullTripoBody.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh;
+        const origMat = mesh.material as THREE.Material & { map?: THREE.Texture | null; color?: THREE.Color };
+        mesh.material = makeToon({
+          map: origMat?.map || null,
+          color: origMat?.color || 0xffffff,
+          teamColor: teamColorHex,
+          isTeamMasked: true,
+        });
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+      }
+    });
+
+    // Add crisp cartoon outlines
+    addOutline(fullTripoBody, 0.022, 0x141424);
+
+    // Normalize bounds: center on X/Z, base at Y=0, target height = 1.6m
+    const tBox = new THREE.Box3().setFromObject(fullTripoBody);
+    const tHeight = tBox.max.y - tBox.min.y;
+    const tScale = 1.6 / (tHeight || 1.6);
+    fullTripoBody.scale.setScalar(tScale);
+
+    const scaledBox = new THREE.Box3().setFromObject(fullTripoBody);
+    const tCenter = scaledBox.getCenter(new THREE.Vector3());
+    fullTripoBody.position.x = -tCenter.x;
+    fullTripoBody.position.y = -scaledBox.min.y;
+    fullTripoBody.position.z = -tCenter.z;
+
+    group.add(fullTripoBody);
+
+    // The full Tripo model is visible; keep dummy skeleton invisible
+    clonedScene.visible = false;
+    group.add(clonedScene);
+  } else {
+    // Fallback: Show dummy skeleton with head accessory
+    addOutline(clonedScene, 0.022, 0x141424);
+    group.add(clonedScene);
+
+    // Normalize dummy bounds
+    const box = new THREE.Box3().setFromObject(clonedScene);
+    const center = box.getCenter(new THREE.Vector3());
+    clonedScene.position.x = -center.x;
+    clonedScene.position.y = -box.min.y;
+    clonedScene.position.z = -center.z;
+  }
+
+  // 4. Locate bones in Mixamo biped hierarchy for engine contract
   const rawHips = findBone(clonedScene, 'Hips');
   const rawTorso = findBone(clonedScene, 'Spine1') || findBone(clonedScene, 'Spine');
   const rawHead = findBone(clonedScene, 'Head');
@@ -91,7 +160,7 @@ export function createTripoFighter(
   const rawLeftFoot = findBone(clonedScene, 'LeftFoot');
   const rawRightFoot = findBone(clonedScene, 'RightFoot');
 
-  // 4. Create PROXY Object3Ds for the engine
+  // 5. Create PROXY Object3Ds for the engine
   const proxyHips = new THREE.Object3D();
   const proxyTorso = new THREE.Object3D();
   const proxyHead = new THREE.Object3D();
@@ -108,7 +177,6 @@ export function createTripoFighter(
   const proxyLeftFoot = new THREE.Object3D();
   const proxyRightFoot = new THREE.Object3D();
 
-  // Store rest poses for additive blending
   const boneMappings: BoneMapping[] = [];
   function registerMapping(bone: THREE.Bone | null, proxy: THREE.Object3D, isRightArm = false) {
     if (bone) {
@@ -138,65 +206,6 @@ export function createTripoFighter(
   registerMapping(rawLeftFoot, proxyLeftFoot);
   registerMapping(rawRightFoot, proxyRightFoot);
 
-  // 5. Attach accessories / unique 10 Tripo models to the Head bone
-  if (rawHead) {
-    const charKeys = [
-      'char-1-king',   // 0: Cyan Player (You)
-      'char-2-dj',     // 1: Cyan DJ (DJ Bounce)
-      'char-3-ninja',  // 2: Cyan Ninja (Ninja Bean)
-      'char-4-aviator',// 3: Cyan Turbo (Turbo Copter)
-      'char-5-party',  // 4: Cyan Popper (Party Popper)
-      'char-6-dino',   // 5: Coral Rex (Rex Crush)
-      'char-7-bunny',  // 6: Coral Hopper (Hopper Mad)
-      'char-8-agent',  // 7: Coral Shady (Shady VIP)
-      'char-9-viking', // 8: Coral Spike (Spike Tyrant)
-      'char-10-robot', // 9: Coral Cyber (Cyber Beast)
-    ];
-
-    let accessoryGltf: GLTF | null = null;
-    let accScale = 0.46;
-    let accOffset = new THREE.Vector3(0, 0.16, 0);
-
-    // If specific fighter index is passed, load their custom Tripo character model
-    if (typeof opts.fighterIndex === 'number' && opts.fighterIndex >= 0 && opts.fighterIndex < charKeys.length) {
-      accessoryGltf = getLoadedGLTF(charKeys[opts.fighterIndex]);
-    }
-
-    if (!accessoryGltf) {
-      if (opts.isPlayer) {
-        accessoryGltf = getLoadedGLTF('acc-crown');
-        accScale = 0.45;
-        accOffset.set(0, 0.24, 0);
-      } else if (opts.team === 0) {
-        accessoryGltf = getLoadedGLTF('acc-bow');
-        accScale = 0.48;
-        accOffset.set(0, 0.20, -0.05);
-      } else {
-        accessoryGltf = getLoadedGLTF('acc-partyhat');
-        accScale = 0.50;
-        accOffset.set(0, 0.22, 0);
-      }
-    }
-
-    if (accessoryGltf) {
-      const accModel = SkeletonUtils.clone(accessoryGltf.scene) as THREE.Group;
-      accModel.scale.setScalar(accScale);
-      accModel.position.copy(accOffset);
-      accModel.traverse((node) => {
-        if ((node as THREE.Mesh).isMesh) {
-          const mesh = node as THREE.Mesh;
-          const origMat = mesh.material as THREE.Material & { map?: THREE.Texture | null; color?: THREE.Color };
-          mesh.material = makeToon({
-            map: origMat?.map || null,
-            color: origMat?.color || 0xffffff,
-          });
-        }
-      });
-      addOutline(accModel, 0.025, 0x141424);
-      rawHead.add(accModel);
-    }
-  }
-
   // 6. Base aura ring on feet (from toy_mecha contract)
   const auraGeo = new THREE.RingGeometry(0.38, 0.45, 32);
   auraGeo.rotateX(-Math.PI / 2);
@@ -210,23 +219,16 @@ export function createTripoFighter(
   auraRing.position.y = 0.01;
   group.add(auraRing);
 
-  // 7. Normalize placement: Base at y=0, centered on X and Z, front faces +Z
-  const box = new THREE.Box3().setFromObject(clonedScene);
-  const center = box.getCenter(new THREE.Vector3());
-  clonedScene.position.x = -center.x;
-  clonedScene.position.y = -box.min.y;
-  clonedScene.position.z = -center.z;
-
-  // 8. Additive update function called every frame
+  // 7. Additive animation update called every frame
+  let walkPhaseInternal = 0;
   const applyBoneDeltas = () => {
+    // A. Update dummy skeleton
     for (let i = 0; i < boneMappings.length; i++) {
       const m = boneMappings[i];
-      // Blend procedural proxy rotation onto bone's rest orientation
       m.bone.quaternion.copy(m.restQuat).multiply(m.proxy.quaternion);
       m.bone.scale.copy(m.proxy.scale);
 
       if (m.isRightArm) {
-        // Handle punch extension along arm thrust axis
         const punchOffsetZ = m.proxy.position.z - 0.06;
         if (Math.abs(punchOffsetZ) > 0.01) {
           m.bone.position.z = m.restPos.z + punchOffsetZ * 0.8;
@@ -235,12 +237,39 @@ export function createTripoFighter(
         }
       }
     }
+
+    // B. Procedural animation on the Full Tripo Character Body
+    if (fullTripoBody) {
+      // 1. Punch thrust & lunge
+      const punchZ = proxyRightArm.position.z - 0.06;
+      if (punchZ > 0.05) {
+        fullTripoBody.position.z = punchZ * 0.45;
+        fullTripoBody.scale.set(1.0 + punchZ * 0.15, 1.0, 1.0 + punchZ * 0.2);
+        fullTripoBody.rotation.y = -punchZ * 0.25;
+      } else {
+        fullTripoBody.position.z = 0;
+        fullTripoBody.scale.set(1.0, 1.0, 1.0);
+        fullTripoBody.rotation.y = 0;
+      }
+
+      // 2. Waddling leg walk tilt
+      const legRoll = proxyLeftLeg.rotation.x - proxyRightLeg.rotation.x;
+      if (Math.abs(legRoll) > 0.1) {
+        walkPhaseInternal += 0.15;
+        fullTripoBody.rotation.z = Math.sin(walkPhaseInternal) * 0.08;
+        fullTripoBody.position.y = Math.abs(Math.sin(walkPhaseInternal * 2)) * 0.08;
+      } else {
+        fullTripoBody.rotation.z = 0;
+        fullTripoBody.position.y = 0;
+      }
+    }
   };
 
-  // 9. Assign userData contract identical to toy_mecha.js
+  // 8. Assign userData contract identical to toy_mecha.js
   group.userData = {
-    root: clonedScene,
+    root: fullTripoBody || clonedScene,
     isTripoFighter: true,
+    isFullTripoBody: !!fullTripoBody,
     hips: proxyHips,
     baseHipsY: 0.52,
     torso: proxyTorso,
@@ -268,6 +297,7 @@ export function createTripoFighter(
     isPlayer: opts.isPlayer,
     number: opts.number,
     costume: opts.costume,
+    fighterIndex: opts.fighterIndex,
     jerseyMat: sharedToonMat,
     applyBoneDeltas,
   };
