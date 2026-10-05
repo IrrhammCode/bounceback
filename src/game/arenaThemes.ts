@@ -850,7 +850,7 @@ export function createSpeedwayBelts(root: THREE.Group) {
 
   for (const side of [-1, 1]) {
     const beltX = side * 13.2;
-    const bY = getArenaHeight(beltX, 0);
+    const bY = getArenaHeight(beltX, 0, 2);
 
     // Track bed
     const belt = new THREE.Mesh(beltGeo, trackBedMat);
@@ -973,7 +973,7 @@ export function createPinballJumpPads(root: THREE.Group) {
   ];
 
   for (const pc of jumpPadConfigs) {
-    const bH = getArenaHeight(pc.x, pc.z);
+    const bH = getArenaHeight(pc.x, pc.z, 4);
 
     // Frame
     const frame = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.6, 0.16, 24), frameMat);
@@ -1012,7 +1012,7 @@ export function createCosmicSingularity(root: THREE.Group) {
   group.visible = false;
 
   const coreGroup = new THREE.Group();
-  coreGroup.position.set(0, getArenaHeight(0, 0) + 0.05, 0);
+  coreGroup.position.set(0, getArenaHeight(0, 0, 5) + 0.05, 0);
 
   // Golden Gift Ribbon Ring
   const ring1 = new THREE.Mesh(

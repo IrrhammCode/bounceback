@@ -21,7 +21,7 @@
  */
 import * as THREE from "three";
 import * as C from "./config";
-import { getArenaHeight } from "./arenaHeight";
+import { getArenaHeight, setArenaRound } from "./arenaHeight";
 import {
   createSkyTexture,
   createFloorTexture,
@@ -2200,6 +2200,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   }
   const sweepers: SweeperData[] = [];
   const sweeperGroups: THREE.Group[] = [];
+  const sweeperBaseGroups: THREE.Group[] = [];
 
   const sweeperConfigs = [
     { x: -7.5, z: -4.5, speed: 1.25 },
@@ -2253,6 +2254,7 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
 
     sg.add(armGroup);
     root.add(sg);
+    sweeperBaseGroups.push(sg);
 
     sweepers.push({
       center: new THREE.Vector3(sc.x, floorH + 0.50, sc.z),
@@ -2552,10 +2554,25 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   }
 
   function setMapTheme(roundNumber: number) {
+    setArenaRound(roundNumber);
+
     skyMat.map = getSky(roundNumber);
     skyMat.needsUpdate = true;
     floorMat.map = getFloor(roundNumber);
     floorMat.needsUpdate = true;
+
+    // Morph 3D sculpted arena floor geometry to round topology
+    const posAttr = floorGeo.attributes.position;
+    for (let i = 0; i < posAttr.count; i++) {
+      const vx = posAttr.getX(i);
+      const vz = posAttr.getZ(i);
+      posAttr.setY(i, getArenaHeight(vx, vz, roundNumber));
+    }
+    posAttr.needsUpdate = true;
+    floorGeo.computeVertexNormals();
+
+    // Center ribbon stays flush on midfield height
+    midRibbon.position.y = getArenaHeight(0, 0, roundNumber) + 0.02;
 
     // Toggle map-specific interactive obstacle groups & 3D dioramas
     speedway.group.visible = (roundNumber === 2);
@@ -2566,6 +2583,14 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
 
     // Hazard sweepers: active in round 1, 2, 3 (hyper-spin in round 3), retracted in 4 & 5
     for (let i = 0; i < sweepers.length; i++) {
+      const sc = sweeperConfigs[i];
+      const floorH = getArenaHeight(sc.x, sc.z, roundNumber);
+      if (sweeperBaseGroups[i]) {
+        sweeperBaseGroups[i].position.y = floorH;
+      }
+      if (sweepers[i]) {
+        sweepers[i].center.y = floorH + 0.50;
+      }
       sweeperGroups[i].visible = (roundNumber <= 3);
       sweepers[i].rotSpeed = (roundNumber === 3 ? (i === 0 ? 1.9 : -1.9) : (i === 0 ? 1.25 : -1.25));
     }
