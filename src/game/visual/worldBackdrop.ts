@@ -6,11 +6,10 @@
  * - Multi-tiered rendering:
  *     - Tier 1 (Desktop): 500k Gaussian Splats (highest fidelity)
  *     - Tier 2 (Mobile / Low-spec): 100k Gaussian Splats (lightweight, maintains >=50fps)
- *     - Fallback 1: Equirectangular 360 panorama sphere (when SPZ blocked or Spark unavailable)
- *     - Fallback 2: Phase 2 painted 2D cartoon CanvasTexture (zero overhead)
+ *     - Fallback 1: Equirectangular 360 panorama sphere (only when ?splats=pano)
+ *     - Fallback 2: Phase 2 painted 4K Ultra-HD cartoon CanvasTexture (zero overhead)
  * - Single-world memory lifecycle (auto-disposes previous round splats).
  * - Preloads round N+1 during round victory celebration.
- * - Progressive Unboxing: loads fast 360 Pano first, then cross-fades into 3D Gaussian Splats.
  */
 import * as THREE from "three";
 
@@ -22,6 +21,15 @@ interface SplatMeshInstance {
   url: string;
 }
 
+let sparkModulePromise: Promise<typeof import("@sparkjsdev/spark")> | null = null;
+
+function getSpark(): Promise<typeof import("@sparkjsdev/spark")> {
+  if (!sparkModulePromise) {
+    sparkModulePromise = import("@sparkjsdev/spark");
+  }
+  return sparkModulePromise;
+}
+
 export class WorldBackdropManager {
   private scene: THREE.Scene;
   private renderer: THREE.WebGLRenderer;
@@ -31,7 +39,6 @@ export class WorldBackdropManager {
   private panoSphere: THREE.Mesh | null = null;
   private currentRound: number = 0;
   private isInitializing: boolean = false;
-  private sparkFailed: boolean = false;
   private tier: WorldTier = "desktop";
 
   // Dynamic FPS Watchdog
@@ -86,25 +93,24 @@ export class WorldBackdropManager {
    */
   private async ensureSpark(): Promise<boolean> {
     if (this.sparkRenderer) return true;
-    if (this.sparkFailed || this.tier === "disabled" || this.tier === "pano_fallback") return false;
+    if (this.tier === "disabled" || this.tier === "pano_fallback") return false;
 
     try {
       this.isInitializing = true;
-      const spark = await import("@sparkjsdev/spark");
+      const spark = await getSpark();
       this.sparkModule = spark;
 
-      // SparkRenderer attaches to WebGLRenderer and handles splat sorting/drawing
-      this.sparkRenderer = new spark.SparkRenderer({
-        renderer: this.renderer,
-      });
-
-      // SparkRenderer is a Three.js Mesh/Object3D
-      this.scene.add(this.sparkRenderer);
+      if (!this.sparkRenderer) {
+        this.sparkRenderer = new spark.SparkRenderer({
+          renderer: this.renderer,
+        });
+        this.scene.add(this.sparkRenderer);
+      }
       this.isInitializing = false;
       return true;
     } catch (err) {
-      console.warn("[WorldBackdrop] Spark failed to initialize, falling back to pano/gradient:", err);
-      this.sparkFailed = true;
+      console.warn("[WorldBackdrop] Spark failed to initialize, retrying on next attempt:", err);
+      sparkModulePromise = null;
       this.isInitializing = false;
       return false;
     }
@@ -130,40 +136,46 @@ export class WorldBackdropManager {
     const spzUrl = `/worlds/${roundId}/${spzFilename}`;
     const panoUrl = `/worlds/${roundId}/pano.webp`;
 
-    // 1. First show Pano immediately for instantaneous unboxing visual
-    try {
-      const hasPano = await this.checkUrlExists(panoUrl);
-      if (hasPano) {
-        this.loadPanoSphere(panoUrl, roundNumber);
-      }
-    } catch (e) {
-      // Ignore pano error
-    }
-
-    // 2. Try loading 3D Gaussian Splats via Spark
-    if (this.tier !== "pano_fallback") {
-      const sparkReady = await this.ensureSpark();
-
-      if (sparkReady && this.sparkModule && !this.sparkFailed) {
-        try {
-          const hasSpz = await this.checkUrlExists(spzUrl);
-          if (hasSpz) {
-            await this.loadSplatMesh(spzUrl, roundNumber);
-            return;
-          } else {
-            // If 500k not found on desktop, try 100k
-            const fallback100k = `/worlds/${roundId}/100k.spz`;
-            const has100k = await this.checkUrlExists(fallback100k);
-            if (has100k) {
-              await this.loadSplatMesh(fallback100k, roundNumber);
-              return;
-            }
-          }
-        } catch (err) {
-          console.warn(`[WorldBackdrop] Error loading SPZ for ${roundId}:`, err);
+    // If explicit pano fallback requested
+    if (this.tier === "pano_fallback") {
+      try {
+        const hasPano = await this.checkUrlExists(panoUrl);
+        if (hasPano) {
+          this.loadPanoSphere(panoUrl, roundNumber);
+          return;
         }
+      } catch (e) {
+        // Fallback to 4K procedural canvas sky
+      }
+      this.disposeCurrent();
+      return;
+    }
+
+    // Load 3D Gaussian Splats via Spark
+    const sparkReady = await this.ensureSpark();
+
+    if (sparkReady && this.sparkModule) {
+      try {
+        const hasSpz = await this.checkUrlExists(spzUrl);
+        if (hasSpz) {
+          await this.loadSplatMesh(spzUrl, roundNumber);
+          return;
+        } else {
+          // If 500k not found on desktop, try 100k
+          const fallback100k = `/worlds/${roundId}/100k.spz`;
+          const has100k = await this.checkUrlExists(fallback100k);
+          if (has100k) {
+            await this.loadSplatMesh(fallback100k, roundNumber);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn(`[WorldBackdrop] Error loading SPZ for ${roundId}:`, err);
       }
     }
+
+    // If Spark failed, keep the sharp 4K Ultra-HD procedural canvas sky
+    this.disposeCurrent();
   }
 
   /**
@@ -184,13 +196,21 @@ export class WorldBackdropManager {
     splat.quaternion.set(1, 0, 0, 0);
 
     // Position & Scale the diorama around the floating arena ring
-    // Scale ~38m surrounds the ring, Y=-6.5 positions the clearing beneath the arena deck
-    const scale = 38.0;
+    // Scale ~16m wraps tightly around the ring boundaries (ARENA_W=24, ARENA_L=40)
+    // preserving microscopic, dense, ultra-crisp Gaussian splat points!
+    const scale = 15.0;
     splat.scale.set(scale, scale, scale);
-    splat.position.set(0, -6.5, 0);
+    splat.position.set(0, -3.2, 0);
 
     // Add to scene graph
     this.scene.add(splat);
+
+    // Wait for worker parsing
+    splat.initialized?.then(() => {
+      console.log(`[WorldBackdrop] ✓ 3DGS Round ${roundNumber} (${spzUrl}) rendered at ultra-HD density`);
+    }).catch((e: any) => {
+      console.warn(`[WorldBackdrop] Splat initialization error:`, e);
+    });
 
     this.currentSplat = {
       mesh: splat,
@@ -205,7 +225,7 @@ export class WorldBackdropManager {
       },
     };
 
-    // Splats are now ready, gracefully remove the background pano sphere
+    // Remove any fallback pano sphere
     if (this.panoSphere) {
       this.scene.remove(this.panoSphere);
       if (this.panoSphere.geometry) this.panoSphere.geometry.dispose();
@@ -219,7 +239,7 @@ export class WorldBackdropManager {
   }
 
   /**
-   * Loads an equirectangular panorama sphere as 1st fallback
+   * Loads an equirectangular panorama sphere as fallback
    */
   private loadPanoSphere(panoUrl: string, _roundNumber: number): void {
     if (this.panoSphere) {
@@ -239,6 +259,8 @@ export class WorldBackdropManager {
       (texture) => {
         texture.mapping = THREE.EquirectangularReflectionMapping;
         texture.colorSpace = THREE.SRGBColorSpace;
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
 
         const sphereGeo = new THREE.SphereGeometry(220, 32, 24);
         const sphereMat = new THREE.MeshBasicMaterial({
@@ -293,13 +315,16 @@ export class WorldBackdropManager {
       const fps = (this.framesCount * 1000) / elapsed;
       if (fps < 40) {
         this.lowFpsCounter++;
-        // If FPS < 40 for 3 consecutive seconds, downgrade to pano sphere
+        // If FPS < 40 for 3 consecutive seconds, downgrade tier to maintain smoothness
         if (this.lowFpsCounter >= 3) {
-          console.warn("[WorldBackdrop] Low FPS detected over 3s, downgrading to pano sphere fallback");
-          this.tier = "pano_fallback";
-          this.disposeCurrent();
-          if (this.currentRound > 0) {
-            this.loadPanoSphere(`/worlds/r${this.currentRound}/pano.webp`, this.currentRound);
+          console.warn("[WorldBackdrop] Low FPS detected over 3s, downgrading to mobile splat or clean 4K sky");
+          if (this.tier === "desktop") {
+            this.tier = "mobile";
+            this.disposeCurrent();
+            this.loadRoundWorld(this.currentRound);
+          } else {
+            this.tier = "disabled";
+            this.disposeCurrent();
           }
         }
       } else {

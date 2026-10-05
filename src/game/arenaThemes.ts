@@ -13,11 +13,19 @@
 import * as THREE from "three";
 import { getArenaHeight } from "./arenaHeight";
 
-function makeCanvasTex(w: number, h: number, draw: (ctx: CanvasRenderingContext2D) => void): THREE.CanvasTexture {
+function makeCanvasTex(
+  w: number,
+  h: number,
+  draw: (ctx: CanvasRenderingContext2D) => void,
+  scaleFactor: number = 2
+): THREE.CanvasTexture {
   const c = document.createElement("canvas");
-  c.width = w;
-  c.height = h;
+  c.width = w * scaleFactor;
+  c.height = h * scaleFactor;
   const ctx = c.getContext("2d")!;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.scale(scaleFactor, scaleFactor);
   draw(ctx);
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
@@ -797,7 +805,7 @@ export function createFloorTexture(roundNumber: number): THREE.CanvasTexture {
       ctx.arc(W / 2, H / 2, 60, 0, Math.PI * 2);
       ctx.fill();
     }
-  });
+  }, 1);
 }
 
 // ─── 3. ROUND-SPECIFIC PHYSICAL OBSTACLE GROUPS ─────────────────────────────
