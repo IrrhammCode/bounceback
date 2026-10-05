@@ -1,0 +1,78 @@
+{
+  "models": {
+    "fighter": {
+      "file": "public/models/fighter.glb",
+      "bytes": 90040,
+      "tripoTaskIds": {
+        "generation": "e25c78a7-bc1c-4e8d-aa53-26a2c389c6e2",
+        "rigCheck": "e7604036-8044-4e02-bd69-81e0394f05b2",
+        "rig": "ae2ac987-5ebc-4b6f-857e-24513343a5ce"
+      },
+      "prompt": "chunky chibi vinyl toy figure, 2.5-head proportions, big round eyes, small smile, white and light grey body suit, rounded mitten hands, chunky boots, T-pose with arms straight out",
+      "updatedAt": "2026-10-05T02:34:14.634Z"
+    },
+    "acc-bow": {
+      "file": "public/models/acc-bow.glb",
+      "bytes": 14936,
+      "tripoTaskIds": {
+        "generation": "084ab53c-14bb-49f7-bc03-e15a5e74d9a3"
+      },
+      "prompt": "big satin ribbon bow hair accessory",
+      "updatedAt": "2026-10-05T02:34:14.634Z"
+    },
+    "acc-partyhat": {
+      "file": "public/models/acc-partyhat.glb",
+      "bytes": 28232,
+      "tripoTaskIds": {
+        "generation": "140c5fe7-8830-4543-82d8-5c42da8f6fde"
+      },
+      "prompt": "cone party hat with pom-pom",
+      "updatedAt": "2026-10-05T02:34:14.634Z"
+    },
+    "acc-crown": {
+      "file": "public/models/acc-crown.glb",
+      "bytes": 22036,
+      "tripoTaskIds": {
+        "generation": "ee467e01-3243-4d41-86a9-9b87a757988c"
+      },
+      "prompt": "small cartoon golden crown with round gems",
+      "updatedAt": "2026-10-05T02:34:14.634Z"
+    },
+    "bumper": {
+      "file": "public/models/bumper.glb",
+      "bytes": 33824,
+      "tripoTaskIds": {
+        "generation": "5ea057d7-7a1e-4c99-9202-da1947371200"
+      },
+      "prompt": "round toy pinball bumper shaped like a wrapped gift mushroom, ribbon around the rim",
+      "updatedAt": "2026-10-05T02:34:14.634Z"
+    },
+    "mystery-gift": {
+      "file": "public/models/mystery-gift.glb",
+      "bytes": 42140,
+      "tripoTaskIds": {
+        "generation": "61be7278-07fd-47df-90f6-cfb48924acf9"
+      },
+      "prompt": "cube gift box with a big ribbon bow and a question-mark tag",
+      "updatedAt": "2026-10-05T02:34:14.634Z"
+    },
+    "host-gift": {
+      "file": "public/models/host-gift.glb",
+      "bytes": 59128,
+      "tripoTaskIds": {
+        "generation": "832b7442-5be4-4051-af18-035566c295de"
+      },
+      "prompt": "large wrapped present with separate lid and big bow",
+      "updatedAt": "2026-10-05T02:34:14.634Z"
+    },
+    "trophy": {
+      "file": "public/models/trophy.glb",
+      "bytes": 41180,
+      "tripoTaskIds": {
+        "generation": "84922522-8aa8-403d-b042-df569fb4400f"
+      },
+      "prompt": "cartoon golden trophy cup shaped like a gift box with ribbon handles",
+      "updatedAt": "2026-10-05T02:34:14.634Z"
+    }
+  }
+}

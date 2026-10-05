@@ -522,7 +522,45 @@ export function sfxLethalHit() {
   playTone(920, 0.12, "sawtooth", 0.4);
 }
 
+/**
+ * Procedural quiz-show "ding" (two sine partials ~1320 + 1760 Hz, fast decay)
+ * for ring-outs, round starts, and gift box reveals.
+ */
+export function sfxQuizDing() {
+  if (!ctx || !sfxGain || muted) return;
+  try {
+    const now = ctx.currentTime;
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const g1 = ctx.createGain();
+    const g2 = ctx.createGain();
+
+    osc1.type = "sine";
+    osc1.frequency.setValueAtTime(1320, now);
+
+    osc2.type = "sine";
+    osc2.frequency.setValueAtTime(1760, now);
+
+    g1.gain.setValueAtTime(0.35, now);
+    g1.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
+
+    g2.gain.setValueAtTime(0.25, now);
+    g2.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+
+    osc1.connect(g1);
+    osc2.connect(g2);
+    g1.connect(sfxGain);
+    g2.connect(sfxGain);
+
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + 0.6);
+    osc2.stop(now + 0.6);
+  } catch {}
+}
+
 export function sfxRingOut() {
+  sfxQuizDing();
   sfxStadiumAirhorn();
   sfxCrowdCheer(2.5); // Thunderous cheering roar!
   playTone(220, 0.3, "sawtooth", 0.4, false);
@@ -794,6 +832,7 @@ export function sfxConfettiPop() {
 }
 
 export function sfxMatchStart() {
+  sfxQuizDing();
   startBGM();
   sfxWhistle();
   sfxCrowdCheer(0.9);

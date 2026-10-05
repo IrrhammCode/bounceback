@@ -185,6 +185,32 @@ node 404-game-recipe/harness/jam.mjs http://localhost:4173 --start="#startb" --h
 
 ---
 
+## 🎨 How Tripo 3D AI Was Used (Tripothon Visual Upgrade)
+
+Every fighter is a Tripo-generated vinyl-toy character (P1 low-poly text-to-3D, auto-rigged Mixamo biped), standing in an arena equipped with Tripo-generated accessories, pinball bumpers, mystery gift boxes, and championship trophies, all toon-shaded and outlined in one Saturday-morning cartoon art direction.
+
+### Assets & Tripo Task IDs
+| Asset | Category | Tripo Model / Pipeline | Tripo Task ID | Tris | Optimized Size |
+|---|---|---|---|---|---|
+| **Fighter Base** | Skinned Biped Character | P1-20260311 + Rig Mixamo | `e25c78a7-bc1c-4e8d-aa53-26a2c389c6e2` (Rig: `ae2ac987`) | 4,824 | 90 KB |
+| **Ribbon Bow** | Cyan Team Head Accessory | P1-20260311 Text-to-3D | `084ab53c-14bb-49f7-bc03-e15a5e74d9a3` | 760 | 14.9 KB |
+| **Party Hat** | Coral Team Head Accessory | P1-20260311 Text-to-3D | `140c5fe7-8830-4543-82d8-5c42da8f6fde` | 788 | 28.2 KB |
+| **Player Crown** | Human Player Head Accessory | P1-20260311 Text-to-3D | `ee467e01-3243-4d41-86a9-9b87a757988c` | 980 | 22.0 KB |
+| **Gift Bumper** | Pinball Bumper Obstacle | P1-20260311 Text-to-3D | `5ea057d7-7a1e-4c99-9202-da1947371200` | 1,840 | 33.8 KB |
+| **Mystery Box** | Power-Up Skill Crate | P1-20260311 Text-to-3D | `61be7278-07fd-47df-90f6-cfb48924acf9` | 1,420 | 42.1 KB |
+| **Host Present** | Gift Title Unboxing | P1-20260311 Text-to-3D | `832b7442-5be4-4051-af18-035566c295de` | 2,380 | 59.1 KB |
+| **Golden Trophy** | Grand Championship Award | P1-20260311 Text-to-3D | `84922522-8aa8-403d-b042-df569fb4400f` | 2,410 | 41.1 KB |
+
+*Note: All assets are fully optimized with `@gltf-transform` using Meshopt geometry compression and WebP textures. Total asset bundle size across all 8 models is **~331 KB** (far within the 3 MB budget).*
+
+### Demo & Fallback Keys
+- **Demo Mode:** Append `?demo=1` to the URL.
+- **Audience Voting / Round Jump:** Keys `1`, `2`, `3`, `4`, and `5` jump straight into Round 1–5 on the fly!
+- **Direct Round Boot:** Append `?demo=1&round=N` to boot directly into Round N.
+- **Legacy Fallback:** Append `?fighters=legacy` to compare with the original procedural geometry.
+
+---
+
 ## 👥 Credits
 
 - **Team & Development:** [@IrrhammCode](https://github.com/IrrhammCode)

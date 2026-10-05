@@ -1,0 +1,14 @@
+{
+  "id": "trophy",
+  "prompt": "cartoon golden trophy cup shaped like a gift box with ribbon handles, chunky vinyl toy, smooth rounded shapes, simple flat colors, no thin parts, soft matte plastic, Saturday-morning cartoon style, game-ready low poly, single object, centered, plain background",
+  "negative_prompt": "realistic, photoreal, thin parts, spikes, text, logo, multiple objects, base plate, floor, noisy texture, baked harsh shadows",
+  "face_limit": 2500,
+  "tripoTaskIds": {
+    "generation": "84922522-8aa8-403d-b042-df569fb4400f"
+  },
+  "outputUrls": {
+    "model": "https://tripo-data.rg1.data.tripo3d.com/tcli_48ff4ddda93a421fb50460c02f39b978/20261005/84922522-8aa8-403d-b042-df569fb4400f/tripo_model_84922522-8aa8-403d-b042-df569fb4400f.glb?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfNDhmZjRkZGRhOTNhNDIxZmI1MDQ2MGMwMmYzOWI5NzgvMjAyNjEwMDUvODQ5MjI1MjItOGFhOC00MDNkLWIwNDItZGY1NjlmYjQ0MDBmL3RyaXBvX21vZGVsXzg0OTIyNTIyLThhYTgtNDAzZC1iMDQyLWRmNTY5ZmI0NDAwZi5nbGIiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTEyNTQwNTF9fX1dfQ__&Signature=Lasz1MYLu8zaNqIvCpfRjg8qx-GKeuNiYTXCPN4ax8tkpV-j9gc6ngK97jubjBUg8-PaOQD48-spSLk9Wd5O5x1cgcYP~K1xs-0m~N92pOEGXvC0VXImGiB2fGExreARVdpDV0JQBFOe5h-39xFs1lY~UP1sNuj0l6d0t1~5m4GdVktZJcxl2MlWRf9MgeaPqHB7UwsITBEVV86C6CpmXOl1kxB2K4jngtZPA3nf0EbqwhN9BUyKgFBqkNL1HBSZ9ZvvmKw~nQD0~oPtjew5VqipT6zpZ-qR66uxJLolJIfs6VH7-KJDNq~JxSX5YvkqUQRvDHWcOxIPfYFAKD5sCw__&Key-Pair-Id=K1676C64NMVM2J",
+    "renderedImage": "https://tripo-data.rg1.data.tripo3d.com/tcli_48ff4ddda93a421fb50460c02f39b978/20261005/84922522-8aa8-403d-b042-df569fb4400f/legacy_mesh.webp?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfNDhmZjRkZGRhOTNhNDIxZmI1MDQ2MGMwMmYzOWI5NzgvMjAyNjEwMDUvODQ5MjI1MjItOGFhOC00MDNkLWIwNDItZGY1NjlmYjQ0MDBmL2xlZ2FjeV9tZXNoLndlYnAiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTEyNTQwNTF9fX1dfQ__&Signature=H3iJi7XrL~UXSNoCBaySImQmdsgTK4pEpVriVRzt-EGFjKR2~xcQUKhWWlAa64jymH5OfMuRrophYt4KVz4d8KBVb5-7kvx6PKDl7jwuki0OfBV0Clmbi1~1toZLt4BqG2rPyq36wMxFILg-9t8LbkNrF-KW~KUoWW4-Bl0n0LgSQ61CArHGg4X5a6aOm~KddOF4Q07JRsmituKTotUGfXSeNo984I242x1LQNsrhEenjE~03xG9H-V5ykOi9y1o5ucMsWyVGYorPROWrBejCZQVZPepWWrNL0khf9LwE7rzg4dO2ZsntYqpnKp62LlzO0Z-rWV-Gxt9OXEbpVZA5g__&Key-Pair-Id=K1676C64NMVM2J"
+  },
+  "completedAt": "2026-10-05T02:34:11.947Z"
+}

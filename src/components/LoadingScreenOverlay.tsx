@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { preloadGameAssets } from "../game/visual/assets";
 
 interface LoadingScreenOverlayProps {
   onComplete: () => void;
@@ -35,24 +36,41 @@ export const LoadingScreenOverlay: React.FC<LoadingScreenOverlayProps> = ({ onCo
     return () => clearInterval(tipInterval);
   }, []);
 
-  // Smooth fast loading progress (satisfies 404 Jam 20s budget under 4G slow CPU)
+  // Preload Tripo 3D models with smooth fallback and progress updates
   useEffect(() => {
-    let current = 0;
-    const interval = setInterval(() => {
-      current = Math.min(100, current + 25);
-      setProgress(Math.floor(current));
+    let unmounted = false;
+    let minProgress = 0;
 
-      if (current >= 100) {
-        clearInterval(interval);
-        setIsReady(true);
-        (window as any).__READY__ = true;
-        setTimeout(() => {
-          handleEnter();
-        }, 80);
+    // Minimum progress ticker to keep UI moving smoothly even during downloads
+    const minTicker = setInterval(() => {
+      minProgress = Math.min(90, minProgress + 15);
+      setProgress((prev) => Math.max(prev, minProgress));
+    }, 120);
+
+    preloadGameAssets((p) => {
+      if (!unmounted) {
+        setProgress((prev) => Math.max(prev, p));
       }
-    }, 30);
+    })
+      .catch((err) => {
+        console.warn("[LoadingScreen] Asset preload warning, fallback active:", err);
+      })
+      .finally(() => {
+        clearInterval(minTicker);
+        if (!unmounted) {
+          setProgress(100);
+          setIsReady(true);
+          (window as any).__READY__ = true;
+          setTimeout(() => {
+            handleEnter();
+          }, 100);
+        }
+      });
 
-    return () => clearInterval(interval);
+    return () => {
+      unmounted = true;
+      clearInterval(minTicker);
+    };
   }, []);
 
   const handleEnter = () => {

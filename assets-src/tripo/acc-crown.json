@@ -1,0 +1,14 @@
+{
+  "id": "acc-crown",
+  "prompt": "small cartoon golden crown with round gems, chunky vinyl toy, smooth rounded shapes, simple flat colors, no thin parts, soft matte plastic, Saturday-morning cartoon style, game-ready low poly, single object, centered, plain background",
+  "negative_prompt": "realistic, photoreal, thin parts, spikes, text, logo, multiple objects, base plate, floor, noisy texture, baked harsh shadows",
+  "face_limit": 1000,
+  "tripoTaskIds": {
+    "generation": "ee467e01-3243-4d41-86a9-9b87a757988c"
+  },
+  "outputUrls": {
+    "model": "https://tripo-data.rg1.data.tripo3d.com/tcli_48ff4ddda93a421fb50460c02f39b978/20261005/ee467e01-3243-4d41-86a9-9b87a757988c/tripo_model_ee467e01-3243-4d41-86a9-9b87a757988c.glb?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfNDhmZjRkZGRhOTNhNDIxZmI1MDQ2MGMwMmYzOWI5NzgvMjAyNjEwMDUvZWU0NjdlMDEtMzI0My00ZDQxLTg2YTktOWI4N2E3NTc5ODhjL3RyaXBvX21vZGVsX2VlNDY3ZTAxLTMyNDMtNGQ0MS04NmE5LTliODdhNzU3OTg4Yy5nbGIiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTEyNTM4Mzh9fX1dfQ__&Signature=tlt2JsGd0qJciJN1werLw-jxnhe1B0W5Px5mtMplkAWvkN7zfz8kTNH-Lm69HxTCisG8GlGgkbEIUcR04igjm~8pm1Ba6axWbItnO-ii1wXHSIZHcioO95A4R99tJS9wCyqSSp503ziHEIJRqDp9amC3payeeVN~kFuVO5iJYvJSufWQxzXGNZHRN4fwMRlOaDBgroa5842kUuBDQtaqijPCkSkUV9oZR20~Y2X37i47qAjrKzA~HJ~c6hPWvbC8HFfCHqv4e4W0AigCkPLB5nGoV4CLL-HqUjTEVJsIMIqIm-LAq9MhAt1l~YNRa60xqTx2tdcCO3Ohlyy18YFZbg__&Key-Pair-Id=K1676C64NMVM2J",
+    "renderedImage": "https://tripo-data.rg1.data.tripo3d.com/tcli_48ff4ddda93a421fb50460c02f39b978/20261005/ee467e01-3243-4d41-86a9-9b87a757988c/legacy_mesh.webp?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfNDhmZjRkZGRhOTNhNDIxZmI1MDQ2MGMwMmYzOWI5NzgvMjAyNjEwMDUvZWU0NjdlMDEtMzI0My00ZDQxLTg2YTktOWI4N2E3NTc5ODhjL2xlZ2FjeV9tZXNoLndlYnAiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTEyNTM4Mzh9fX1dfQ__&Signature=fN9oAOiRxa35Y3v8aY63Bb1yj4DYwgLaZFVo3pY1Jg8OP8im9-AVpjy0ejmZgiyX9tWSpFZB1UrRKo0Zgzg2wIh351hXJv17HuuHj1dxsLaEoND-X9KoXXn-F3cSgX1I6~UJupb0xjpVozfpA7yA-h-4DKlghTa1YUfCBgM0XiUVIDHx9ag81DuaMwvuwVYo27Vcqn0nldPEnmy90TdfNGfDTCf6mNHy-oQIj1tdtmfoDY8r~izMDEB0BJrHOlF6lhL8B0JYgXiRnk7cp2KmKGzj1VT0m2mSxJ7Y5qDPCc-SoYCe4RO0-9PPcm-VurrST3RMW0bhxa7trO1QG3Dx4Q__&Key-Pair-Id=K1676C64NMVM2J"
+  },
+  "completedAt": "2026-10-05T02:30:38.772Z"
+}

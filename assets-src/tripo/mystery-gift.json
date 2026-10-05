@@ -1,0 +1,14 @@
+{
+  "id": "mystery-gift",
+  "prompt": "cube gift box with a big ribbon bow and a question-mark tag, chunky vinyl toy, smooth rounded shapes, simple flat colors, no thin parts, soft matte plastic, Saturday-morning cartoon style, game-ready low poly, single object, centered, plain background",
+  "negative_prompt": "realistic, photoreal, thin parts, spikes, text, logo, multiple objects, base plate, floor, noisy texture, baked harsh shadows",
+  "face_limit": 1500,
+  "tripoTaskIds": {
+    "generation": "61be7278-07fd-47df-90f6-cfb48924acf9"
+  },
+  "outputUrls": {
+    "model": "https://tripo-data.rg1.data.tripo3d.com/tcli_48ff4ddda93a421fb50460c02f39b978/20261005/61be7278-07fd-47df-90f6-cfb48924acf9/tripo_model_61be7278-07fd-47df-90f6-cfb48924acf9.glb?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfNDhmZjRkZGRhOTNhNDIxZmI1MDQ2MGMwMmYzOWI5NzgvMjAyNjEwMDUvNjFiZTcyNzgtMDdmZC00N2RmLTkwZjYtY2ZiNDg5MjRhY2Y5L3RyaXBvX21vZGVsXzYxYmU3Mjc4LTA3ZmQtNDdkZi05MGY2LWNmYjQ4OTI0YWNmOS5nbGIiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTEyNTM5NDl9fX1dfQ__&Signature=PQMRoU3f8yhTgrquvbk~3Ko8euFYhzjlp0LuKP9e2Z75~2my3bo1I83~mgVRNDCKjD002ep5igiwiTW1Bjei63Cp-rxWu74SchdQ3WX5ixpTRRSd781QQvDG5MTUvr8oMxkAFeOsLr9UwZPHY66HTTHpcmOeETGiL17TGh-boN39~5~qvHPsjYbrmlHFnAqacjssbWB8Kgs5bFY1XawE990SAphFLrLdqbcrkevs~s~IM0gbzxMf8HwZ2k8Zj1C0u7UkkU8m6ZLwo4WVBUyWB1L-kNilolf5CsKzgf94gGqSAsAeT5StcT4VNLBcbpbTS7O4mGwtsnbyTOx6hl5wNw__&Key-Pair-Id=K1676C64NMVM2J",
+    "renderedImage": "https://tripo-data.rg1.data.tripo3d.com/tcli_48ff4ddda93a421fb50460c02f39b978/20261005/61be7278-07fd-47df-90f6-cfb48924acf9/legacy_mesh.webp?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfNDhmZjRkZGRhOTNhNDIxZmI1MDQ2MGMwMmYzOWI5NzgvMjAyNjEwMDUvNjFiZTcyNzgtMDdmZC00N2RmLTkwZjYtY2ZiNDg5MjRhY2Y5L2xlZ2FjeV9tZXNoLndlYnAiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTEyNTM5NDl9fX1dfQ__&Signature=RlYg~U2oZjedSLpANC5t6pmg8WQhRPLo-1~hnAtwec28V4aZ3kNe828Mn462euVSs3AccG7aPEHSj5NVGxhrN7NoPgMoXRvXNr3b5KeLxVBtVOhmxzjkCbvfvsgKJuIi~va6EzMgrtc-84V6iHxTaNi4e60ZHeWzH04fjmyCTaoww2PuGtL8qz5f9-CemSOdLTkM2bIgwAFv1CWeFnHhhviy3z~X1f9IJX7XBNDDvY2n~d-svuPsDZKghFhyb6n9whg9HHqhaC3YJej2gwJSbBoK8AZpIb~Ej0yR9w1vzaFoPhIrYhd0lTkjwqGS-NhIvxIYrvKFNQVpBu6GBU9wRQ__&Key-Pair-Id=K1676C64NMVM2J"
+  },
+  "completedAt": "2026-10-05T02:32:29.567Z"
+}

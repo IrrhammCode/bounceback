@@ -134,7 +134,7 @@ export class JuiceSystem {
     switch (type) {
       case "punch": {
         this.addTrauma(0.12);
-        this.hitStopTimer = 0.04;
+        this.hitStopTimer = 0.07;
         const comicHits = ["WHAM!!", "KAPOW!!", "BAM!!", "SMASH!!", "OUCH!!"];
         const hitText = d.text || comicHits[Math.floor(Math.random() * comicHits.length)];
         this.spawnComicPopup(hitText, x, y + 0.8, z, "crimson");
@@ -217,9 +217,9 @@ export class JuiceSystem {
 
       case "ringout": {
         const isPlayerKill = d.isPlayerKill ?? (d.killerIdx === 0);
-        // Only human player ringout gets cinematic slow-mo and camera trauma
+        const isMobile = typeof window !== "undefined" && /Mobi|Android|iPhone/i.test(navigator.userAgent);
+        this.addTrauma(isMobile ? 0.22 : 0.32);
         if (isPlayerKill) {
-          this.addTrauma(0.20);
           this.triggerSlowMo(0.5, 0.2);
         }
         this.spawnComicPopup("RING OUT! K.O.!!", x, y + 1.8, z, "rainbow");

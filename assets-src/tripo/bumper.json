@@ -1,0 +1,14 @@
+{
+  "id": "bumper",
+  "prompt": "round toy pinball bumper shaped like a wrapped gift mushroom, ribbon around the rim, chunky vinyl toy, smooth rounded shapes, simple flat colors, no thin parts, soft matte plastic, Saturday-morning cartoon style, game-ready low poly, single object, centered, plain background",
+  "negative_prompt": "realistic, photoreal, thin parts, spikes, text, logo, multiple objects, base plate, floor, noisy texture, baked harsh shadows",
+  "face_limit": 2000,
+  "tripoTaskIds": {
+    "generation": "5ea057d7-7a1e-4c99-9202-da1947371200"
+  },
+  "outputUrls": {
+    "model": "https://tripo-data.rg1.data.tripo3d.com/tcli_48ff4ddda93a421fb50460c02f39b978/20261005/5ea057d7-7a1e-4c99-9202-da1947371200/tripo_model_5ea057d7-7a1e-4c99-9202-da1947371200.glb?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfNDhmZjRkZGRhOTNhNDIxZmI1MDQ2MGMwMmYzOWI5NzgvMjAyNjEwMDUvNWVhMDU3ZDctN2ExZS00Yzk5LTkyMDItZGExOTQ3MzcxMjAwL3RyaXBvX21vZGVsXzVlYTA1N2Q3LTdhMWUtNGM5OS05MjAyLWRhMTk0NzM3MTIwMC5nbGIiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTEyNTM4OTN9fX1dfQ__&Signature=ifwZFq9YVUkT28VYfUeec3OAdrvEEig0WGefshq9~SbztQhnRHKLiyscqXNvEdYf3HuB2bhgd4KI5NGupPOvBNc-H0aovl461Jz9RlPZnZg831Ocs5wqVTzXJxN9RPL2k2usH5NGZuRMSyRhnKvKqEQCI6Zdzge4tW6Ojjd23DlVYePeW2HcxsSqI1APoqDAk-~4XY0SRp5VZLKjgKtM4f-wjKupTsyCwKpzXlLxRkD8dydpYACUK5RmxkxrhXZDtHU6LSB45Uq5vBQ5SQUtPHedi78BmZEiCzixxwXfSppmwCYufQSpzw~9K4WNLpl-z2sYFnGOqJBTSHIlhBVAvA__&Key-Pair-Id=K1676C64NMVM2J",
+    "renderedImage": "https://tripo-data.rg1.data.tripo3d.com/tcli_48ff4ddda93a421fb50460c02f39b978/20261005/5ea057d7-7a1e-4c99-9202-da1947371200/legacy_mesh.webp?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfNDhmZjRkZGRhOTNhNDIxZmI1MDQ2MGMwMmYzOWI5NzgvMjAyNjEwMDUvNWVhMDU3ZDctN2ExZS00Yzk5LTkyMDItZGExOTQ3MzcxMjAwL2xlZ2FjeV9tZXNoLndlYnAiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTEyNTM4OTN9fX1dfQ__&Signature=I~U9EtgUdFB~YeUrbt8JLv6EA7GMDK4fB9UFTzc8xw4dgsEmLfPs3~yvrdHzODk-s8nqVfxr~rnpKS4AWYLvTjjvB8SulqY7SHR75nGczGzUi09C7B5Yv47UMXtIgz08BEGyU5qQQjl0AmdEAs7YulcefkaHGSv4PdirUbjQ46ehB3zm40Z-3Uf0w3eqEvRhoiTUwHJ8DjV6UbPKVXXCtTDYB5FLx5l-uuxWRAtHhgEWUugeumwJTMt4lUw1T3xUG639~x3hr~1fe0wJYPLGMrxpjWFq0KkyCwQeNr~zXVzIyJrHzKeNthFraJ5K3QvmwzVLOe8GmlZ5fECgdyccgA__&Key-Pair-Id=K1676C64NMVM2J"
+  },
+  "completedAt": "2026-10-05T02:31:33.247Z"
+}

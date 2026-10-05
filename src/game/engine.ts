@@ -63,6 +63,10 @@ import generateBumper from "../assets/pinball_bumper.js";
 import { createFallGuysArena, type ArenaController } from "./fallguysArena";
 import { getArenaHeight, getArenaSlope } from "./arenaHeight";
 import { TournamentManager, type RoundResult, type RoundDef } from "./tournament";
+import * as SkeletonUtils from "three/addons/utils/SkeletonUtils.js";
+import { createTripoFighter } from "../assets/tripo_fighter";
+import { getLoadedGLTF, isLegacyFightersForced } from "./visual/assets";
+import { applyToonAndOutline } from "./visual/toon";
 
 export interface GameState {
   timer: string;
@@ -514,12 +518,27 @@ export class BouncebackEngine {
       const ent = new Entity(sp.x, sp.z, sp.team, sp.isPlayer || false);
       this.entities.push(ent);
 
-      const mecha = generateMecha(THREE, {
-        team: sp.team,
-        isPlayer: !!sp.isPlayer,
-        number: sp.number,
-        costume: sp.costume,
-      });
+      let mecha: THREE.Object3D;
+      const fighterGltf = !isLegacyFightersForced() ? getLoadedGLTF('fighter') : null;
+      if (fighterGltf) {
+        mecha = createTripoFighter(THREE, fighterGltf, {
+          team: sp.team,
+          isPlayer: !!sp.isPlayer,
+          number: sp.number,
+          costume: sp.costume,
+        });
+      } else {
+        mecha = generateMecha(THREE, {
+          team: sp.team,
+          isPlayer: !!sp.isPlayer,
+          number: sp.number,
+          costume: sp.costume,
+        });
+        applyToonAndOutline(mecha, {
+          teamColor: sp.team === 0 ? 0x27e5ff : 0xff5268,
+          isTeamMasked: true,
+        });
+      }
 
       const desiredHeight = 1.6;
       const box = new THREE.Box3().setFromObject(mecha);
@@ -602,6 +621,18 @@ export class BouncebackEngine {
 
   // ─── 3D Grand Championship Golden Trophy ───
   private createChampionshipTrophy(): THREE.Group {
+    const trophyGltf = getLoadedGLTF("trophy");
+    if (trophyGltf) {
+      const trophy = SkeletonUtils.clone(trophyGltf.scene) as THREE.Group;
+      trophy.name = "GrandChampionshipTrophy";
+      const box = new THREE.Box3().setFromObject(trophy);
+      const h = box.max.y - box.min.y;
+      const s = 3.2 / (h || 1);
+      trophy.scale.setScalar(s);
+      applyToonAndOutline(trophy, { thickness: 0.025 });
+      return trophy;
+    }
+
     const trophy = new THREE.Group();
     trophy.name = "GrandChampionshipTrophy";
 
@@ -706,7 +737,15 @@ export class BouncebackEngine {
       const bData: BumperData = { x: pos.x, z: pos.z, hitFlash: 0 };
       this.bumpers.push(bData);
 
-      const mesh = generateBumper(THREE);
+      let mesh: THREE.Object3D;
+      const bumperGltf = getLoadedGLTF("bumper");
+      if (bumperGltf) {
+        mesh = SkeletonUtils.clone(bumperGltf.scene);
+        applyToonAndOutline(mesh, { thickness: 0.025 });
+      } else {
+        mesh = generateBumper(THREE);
+        applyToonAndOutline(mesh, { thickness: 0.025 });
+      }
       const desiredH = 1.2;
       const box = new THREE.Box3().setFromObject(mesh);
       const h = box.max.y - box.min.y;
@@ -2289,6 +2328,11 @@ export class BouncebackEngine {
               f.scale.set(flameScale, flameScale * (0.8 + Math.random() * 0.4), flameScale);
             }
           }
+        }
+
+        // Apply additive bone deltas to Tripo skeletal mesh
+        if (typeof u.applyBoneDeltas === "function") {
+          u.applyBoneDeltas();
         }
 
         // 3D Character Power-Up Skill Aura Update

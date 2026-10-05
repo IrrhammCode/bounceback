@@ -1,0 +1,14 @@
+{
+  "id": "host-gift",
+  "prompt": "large wrapped present with separate lid and big bow, chunky vinyl toy, smooth rounded shapes, simple flat colors, no thin parts, soft matte plastic, Saturday-morning cartoon style, game-ready low poly, single object, centered, plain background",
+  "negative_prompt": "realistic, photoreal, thin parts, spikes, text, logo, multiple objects, base plate, floor, noisy texture, baked harsh shadows",
+  "face_limit": 2500,
+  "tripoTaskIds": {
+    "generation": "832b7442-5be4-4051-af18-035566c295de"
+  },
+  "outputUrls": {
+    "model": "https://tripo-data.rg1.data.tripo3d.com/tcli_48ff4ddda93a421fb50460c02f39b978/20261005/832b7442-5be4-4051-af18-035566c295de/tripo_model_832b7442-5be4-4051-af18-035566c295de.glb?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfNDhmZjRkZGRhOTNhNDIxZmI1MDQ2MGMwMmYzOWI5NzgvMjAyNjEwMDUvODMyYjc0NDItNWJlNC00MDUxLWFmMTgtMDM1NTY2YzI5NWRlL3RyaXBvX21vZGVsXzgzMmI3NDQyLTViZTQtNDA1MS1hZjE4LTAzNTU2NmMyOTVkZS5nbGIiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTEyNTQwMDB9fX1dfQ__&Signature=j5Z6kesoxvJRGtdAK6TMPoQfU1uWORHsP6O-bG7TPQ5Hu-zX78m4BSauUgrql~Fs~xgqRKhfi861HpTsGZ5qDoNjg49r4RyG7WSiHfgN8jjitV~Gec2NCd8CqHt-qxIGy2nFaHT9cTqwGoLX7BDgapxbGkbr6MwPGqbfns7UJfUTx~CkZOcPZNR~rX0pxMttlBYXMe0XNXaexbG2rQil7FhpgKdGaiSmpS8McFMHEOqb7thM9e0wyN8aR8vkrriOdlev3QOZrFQ-buC0QLEIQ2vP7qs76XsA86-00M0wqt~IX4TZogtxUOsKG-8B0mJMy9WC5d-MGHnaCiSCoSQ1zg__&Key-Pair-Id=K1676C64NMVM2J",
+    "renderedImage": "https://tripo-data.rg1.data.tripo3d.com/tcli_48ff4ddda93a421fb50460c02f39b978/20261005/832b7442-5be4-4051-af18-035566c295de/legacy_mesh.webp?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfNDhmZjRkZGRhOTNhNDIxZmI1MDQ2MGMwMmYzOWI5NzgvMjAyNjEwMDUvODMyYjc0NDItNWJlNC00MDUxLWFmMTgtMDM1NTY2YzI5NWRlL2xlZ2FjeV9tZXNoLndlYnAiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTEyNTQwMDB9fX1dfQ__&Signature=SIulyv0xG2xmVOE423pDS0RphkX-djd8Y~Bvrv2MB3QIKydE~DrhdQJej6wAVXCF0ZJzogyyE4KMOzT1SDYvzhaLxsEQ~n0Qa0MHeUXfOmsfjPZVkWnc~kPOl3wOMm5HglhW6ArIjPgZVQF0eeSsLljiMsJN-WVpHN66iPkAGBW1c-cbpH4XxvY37qw7q2upvrsG-m6jgcdn4~YJgokk3N0c97raDE~i2jkK3t01V-HXk3zCVuJrRiScc64FLY0-prYXVKZ2Sqk5jMLc~3GEX868y~C9vtgKJW61XqLieDPWjqeHK7ZBOLyYn3SoTxXwgAYwdeenttMlwPkLaGcQLg__&Key-Pair-Id=K1676C64NMVM2J"
+  },
+  "completedAt": "2026-10-05T02:33:21.036Z"
+}

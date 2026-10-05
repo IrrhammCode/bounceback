@@ -79,11 +79,41 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
   const [isPaused, setIsPaused] = useState(false);
   const [showOrientationGuide, setShowOrientationGuide] = useState(false);
 
+  const isDemoMode = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("demo") === "1";
+
   const handleLoadingComplete = useCallback(() => {
-    setAppMode("title");
+    const params = new URLSearchParams(window.location.search);
+    const isDemo = params.get("demo") === "1";
+    const roundParam = parseInt(params.get("round") || "0", 10);
+    if (isDemo && roundParam >= 1 && roundParam <= 5) {
+      setAppMode("game");
+      engineRef.current?.startMatch(roundParam);
+    } else {
+      setAppMode("title");
+    }
     // Signal ready to 404 test runner once loading completes
     (window as any).__READY__ = true;
   }, []);
+
+  // Demo keys 1–5 jump straight to round N (only when ?demo=1)
+  useEffect(() => {
+    if (!isDemoMode) return;
+    const handleDemoKeys = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      const num = parseInt(e.key, 10);
+      if (num >= 1 && num <= 5) {
+        e.preventDefault();
+        setAppMode("game");
+        setIsPaused(false);
+        engineRef.current?.setPaused(false);
+        engineRef.current?.startMatch(num);
+      }
+    };
+
+    window.addEventListener("keydown", handleDemoKeys);
+    return () => window.removeEventListener("keydown", handleDemoKeys);
+  }, [isDemoMode]);
 
   const handleOpenPause = useCallback(() => {
     setIsPaused(true);
@@ -320,6 +350,29 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
           onRematch={handleRematch}
           onMenu={handleExitToTitle}
         />
+      )}
+
+      {/* Demo Mode Badge */}
+      {isDemoMode && (
+        <div style={{
+          position: "fixed",
+          top: "14px",
+          left: "14px",
+          backgroundColor: "#f59e0b",
+          color: "#000000",
+          fontWeight: 900,
+          fontSize: "11px",
+          padding: "4px 8px",
+          borderRadius: "6px",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.45)",
+          zIndex: 9999,
+          letterSpacing: "0.08em",
+          pointerEvents: "none",
+          border: "1px solid #fbbf24",
+          textTransform: "uppercase",
+        }}>
+          DEMO • KEYS 1–5 JUMP ROUND
+        </div>
       )}
 
       {/* 6. In-Game HUD Overlay (Only visible during active match) */}

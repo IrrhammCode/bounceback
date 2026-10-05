@@ -15,6 +15,9 @@ import * as THREE from "three";
 import * as C from "./config";
 import { Entity } from "./physics";
 import { sfxSkillSpawn, sfxSkillAcquire } from "./audio";
+import * as SkeletonUtils from "three/addons/utils/SkeletonUtils.js";
+import { getLoadedGLTF } from "./visual/assets";
+import { applyToonAndOutline } from "./visual/toon";
 
 // ─── Skill Type Enum ───
 export enum SkillType {
@@ -229,6 +232,25 @@ export class SkillManager {
 
   private createBoxMesh(): THREE.Object3D {
     const group = new THREE.Group();
+
+    const giftGltf = getLoadedGLTF("mystery-gift");
+    if (giftGltf) {
+      const gift = SkeletonUtils.clone(giftGltf.scene) as THREE.Group;
+      const box = new THREE.Box3().setFromObject(gift);
+      const h = box.max.y - box.min.y;
+      const s = 1.3 / (h || 1);
+      gift.scale.setScalar(s);
+      applyToonAndOutline(gift, { thickness: 0.025 });
+      group.add(gift);
+
+      // Rotating inner star core
+      const innerGeo = new THREE.OctahedronGeometry(0.35, 0);
+      const inner = new THREE.Mesh(innerGeo, this.boxInnerMat);
+      inner.position.y = 0.65;
+      group.add(inner);
+      group.userData.inner = inner;
+      return group;
+    }
 
     // 1. Translucent Golden Beveled Cube (1.2m size)
     const outerGeo = new THREE.BoxGeometry(1.2, 1.2, 1.2);

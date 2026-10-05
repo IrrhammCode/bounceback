@@ -1,0 +1,42 @@
+{
+  "id": "fighter",
+  "name": "Fighter Base",
+  "prompt": "chunky chibi vinyl toy figure, 2.5-head proportions, big round eyes, small smile, white and light grey body suit, rounded mitten hands, chunky boots, T-pose with arms straight out, chunky vinyl toy, smooth rounded shapes, simple flat colors, no thin parts, soft matte plastic, Saturday-morning cartoon style, game-ready low poly, single object, centered, plain background",
+  "negative_prompt": "realistic, photoreal, thin parts, spikes, text, logo, multiple objects, base plate, floor, noisy texture, baked harsh shadows",
+  "face_limit": 5000,
+  "tripoTaskIds": {
+    "generation": "e25c78a7-bc1c-4e8d-aa53-26a2c389c6e2",
+    "rigCheck": "e7604036-8044-4e02-bd69-81e0394f05b2",
+    "rig": "ae2ac987-5ebc-4b6f-857e-24513343a5ce"
+  },
+  "rigDetails": {
+    "spec": "mixamo",
+    "topology": "biped",
+    "bones": [
+      "mixamorig:Hips",
+      "mixamorig:Spine",
+      "mixamorig:Spine1",
+      "mixamorig:Spine2",
+      "mixamorig:Neck",
+      "mixamorig:Head",
+      "mixamorig:LeftShoulder",
+      "mixamorig:LeftArm",
+      "mixamorig:LeftForeArm",
+      "mixamorig:LeftHand",
+      "mixamorig:RightShoulder",
+      "mixamorig:RightArm",
+      "mixamorig:RightForeArm",
+      "mixamorig:RightHand",
+      "mixamorig:LeftUpLeg",
+      "mixamorig:LeftLeg",
+      "mixamorig:LeftFoot",
+      "mixamorig:LeftToeBase",
+      "mixamorig:RightUpLeg",
+      "mixamorig:RightLeg",
+      "mixamorig:RightFoot",
+      "mixamorig:RightToeBase"
+    ]
+  },
+  "outputFile": "public/models/fighter.glb",
+  "completedAt": "2026-10-05T02:26:00.000Z"
+}
