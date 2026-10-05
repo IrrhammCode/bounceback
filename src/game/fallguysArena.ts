@@ -777,15 +777,12 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
   }
 
   // ─── 6. DYNAMIC 360° SCROLLING LED RIBBON VIDEO BOARDS ───
-  // Attached to the bleacher facade across the abyss
-  const SHOW_LEGACY_STADIUM = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("stadium") === "legacy";
-  const legacyStadiumGroup = new THREE.Group();
-  legacyStadiumGroup.name = "LegacyStadiumShell";
-  if (SHOW_LEGACY_STADIUM) {
-    root.add(legacyStadiumGroup);
-  }
+  // 360° Stadium Colosseum Shell & 4 Grandstands (Left, Right, Front, Back)
+  const stadiumGroup = new THREE.Group();
+  stadiumGroup.name = "StadiumShell";
+  root.add(stadiumGroup);
   const addStadium = (child: THREE.Object3D) => {
-    legacyStadiumGroup.add(child);
+    stadiumGroup.add(child);
   };
 
   const ribbonTex = makeCanvasTex(2048, 128, (ctx) => {

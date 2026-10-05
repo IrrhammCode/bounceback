@@ -146,23 +146,24 @@ function playTone(
   }
 }
 
-function playNoise(dur: number, vol = 0.2, filterFreq = 800) {
+function playNoise(dur: number, vol = 0.08, filterFreq = 480) {
   if (!ctx || !sfxGain || muted) return;
   try {
+    const safeVol = Math.min(vol * 0.35, 0.08);
     const bufSize = Math.floor(ctx.sampleRate * dur);
     const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
     const data = buf.getChannelData(0);
-    for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * 0.5;
+    for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * 0.25;
 
     const src = ctx.createBufferSource();
     src.buffer = buf;
     const gain = ctx.createGain();
-    gain.gain.setValueAtTime(vol, ctx.currentTime);
+    gain.gain.setValueAtTime(safeVol, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
 
     const lp = ctx.createBiquadFilter();
     lp.type = "lowpass";
-    lp.frequency.value = filterFreq;
+    lp.frequency.value = Math.min(filterFreq, 600);
 
     src.connect(lp);
     lp.connect(gain);
@@ -206,49 +207,10 @@ export function stopBGM() {
   }
 }
 
-// ─── Realistic Crowd Cheering ("Woooo-YEAAAH!") ───
-export function sfxCrowdCheer(intensity = 1.0) {
-  if (!ctx || !sfxGain || muted) return;
-  try {
-    const dur = 1.8 * intensity;
-    const bufSize = Math.floor(ctx.sampleRate * dur);
-    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
-    const data = buf.getChannelData(0);
-    for (let i = 0; i < bufSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * 0.35;
-    }
-
-    const src = ctx.createBufferSource();
-    src.buffer = buf;
-
-    const gain = ctx.createGain();
-    const now = ctx.currentTime;
-    gain.gain.setValueAtTime(0.01, now);
-    gain.gain.linearRampToValueAtTime(0.28 * intensity, now + 0.35);
-    gain.gain.linearRampToValueAtTime(0.32 * intensity, now + 0.9);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
-
-    // Formant resonant filter (vocal crowd vowel)
-    const bp1 = ctx.createBiquadFilter();
-    bp1.type = "bandpass";
-    bp1.frequency.setValueAtTime(650, now);
-    bp1.frequency.linearRampToValueAtTime(950, now + 0.8);
-    bp1.Q.value = 2.2;
-
-    const bp2 = ctx.createBiquadFilter();
-    bp2.type = "bandpass";
-    bp2.frequency.setValueAtTime(1400, now);
-    bp2.frequency.linearRampToValueAtTime(1800, now + 0.8);
-    bp2.Q.value = 3.0;
-
-    src.connect(bp1);
-    src.connect(bp2);
-    bp1.connect(gain);
-    bp2.connect(gain);
-    gain.connect(sfxGain);
-
-    src.start(now);
-  } catch {}
+// ─── Realistic Crowd Cheering ───
+export function sfxCrowdCheer(_intensity = 1.0) {
+  // Silenced procedural white-noise hiss per user request ("suara yang ganggu gajelas gitu")
+  return;
 }
 
 // ─── Cartoon Boing / Spring Bounce ───
@@ -719,49 +681,19 @@ export function sfxRoundTransitionWhoosh() {
   if (!ctx || !sfxGain || muted) return;
   try {
     const t = ctx.currentTime;
-    const dur = 0.45;
-
-    // Filtered noise sweep
-    const bufferSize = ctx.sampleRate * dur;
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * Math.sin((i / bufferSize) * Math.PI);
-    }
-
-    const noise = ctx.createBufferSource();
-    noise.buffer = buffer;
-
-    const filter = ctx.createBiquadFilter();
-    filter.type = "bandpass";
-    filter.frequency.setValueAtTime(250, t);
-    filter.frequency.exponentialRampToValueAtTime(3200, t + 0.22);
-    filter.frequency.exponentialRampToValueAtTime(450, t + dur);
-    filter.Q.setValueAtTime(2.0, t);
-
+    const osc = ctx.createOscillator();
     const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(320, t);
+    osc.frequency.exponentialRampToValueAtTime(740, t + 0.12);
+    osc.frequency.exponentialRampToValueAtTime(240, t + 0.35);
     gain.gain.setValueAtTime(0.001, t);
-    gain.gain.linearRampToValueAtTime(0.55, t + 0.18);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
-
-    noise.connect(filter);
-    filter.connect(gain);
+    gain.gain.linearRampToValueAtTime(0.18, t + 0.1);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+    osc.connect(gain);
     gain.connect(sfxGain);
-
-    noise.start(t);
-
-    // Deep sub bass drop
-    const sub = ctx.createOscillator();
-    const subGain = ctx.createGain();
-    sub.type = "sine";
-    sub.frequency.setValueAtTime(150, t);
-    sub.frequency.exponentialRampToValueAtTime(38, t + dur);
-    subGain.gain.setValueAtTime(0.5, t);
-    subGain.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    sub.connect(subGain);
-    subGain.connect(sfxGain);
-    sub.start(t);
-    sub.stop(t + dur);
+    osc.start(t);
+    osc.stop(t + 0.35);
   } catch {}
 }
 
@@ -1004,76 +936,15 @@ export function sfxVoteTick() {
 }
 
 export function sfxDisasterSiren() {
-  if (!ctx || !sfxGain || muted) return;
-  // Urgent reality TV emergency klaxon
-  const now = ctx.currentTime;
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.type = "sawtooth";
-  osc.frequency.setValueAtTime(650, now);
-  osc.frequency.linearRampToValueAtTime(950, now + 0.22);
-  osc.frequency.linearRampToValueAtTime(650, now + 0.45);
-  osc.frequency.linearRampToValueAtTime(950, now + 0.68);
-  osc.frequency.linearRampToValueAtTime(650, now + 0.9);
-
-  gain.gain.setValueAtTime(0.35, now);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.95);
-
-  osc.connect(gain);
-  gain.connect(sfxGain);
-  osc.start(now);
-  osc.stop(now + 0.95);
+  // Silenced harsh emergency alarm per user request
+  return;
 }
 
 export function sfxTornado() {
-  if (!ctx || !sfxGain || muted) return;
-  // Howling, whistling vortex wind loop
-  try {
-    const dur = 2.4;
-    const bufSize = Math.floor(ctx.sampleRate * dur);
-    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
-    const data = buf.getChannelData(0);
-    for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * 0.5;
-
-    const noise = ctx.createBufferSource();
-    noise.buffer = buf;
-
-    const filter = ctx.createBiquadFilter();
-    filter.type = "bandpass";
-    filter.frequency.setValueAtTime(260, ctx.currentTime);
-    filter.frequency.linearRampToValueAtTime(680, ctx.currentTime + 0.8);
-    filter.frequency.linearRampToValueAtTime(320, ctx.currentTime + 1.6);
-    filter.frequency.linearRampToValueAtTime(540, ctx.currentTime + 2.4);
-    filter.Q.value = 4.5;
-
-    // High howling resonance whistle
-    const whistle = ctx.createOscillator();
-    whistle.type = "sine";
-    whistle.frequency.setValueAtTime(380, ctx.currentTime);
-    whistle.frequency.linearRampToValueAtTime(740, ctx.currentTime + 1.2);
-    whistle.frequency.linearRampToValueAtTime(420, ctx.currentTime + 2.4);
-
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.5, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
-
-    const whistleGain = ctx.createGain();
-    whistleGain.gain.setValueAtTime(0.18, ctx.currentTime);
-    whistleGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
-
-    noise.connect(filter);
-    filter.connect(gain);
-    gain.connect(sfxGain);
-
-    whistle.connect(whistleGain);
-    whistleGain.connect(sfxGain);
-
-    noise.start(ctx.currentTime);
-    noise.stop(ctx.currentTime + dur);
-    whistle.start(ctx.currentTime);
-    whistle.stop(ctx.currentTime + dur);
-  } catch {}
+  // Silenced howling whistling noise per user request
+  return;
 }
+
 
 export function sfxMeteorIncoming() {
   if (!ctx || !sfxGain || muted) return;
@@ -1104,35 +975,8 @@ export function sfxMeteorExplode() {
 }
 
 export function sfxEarthquake() {
-  if (!ctx || !sfxGain || muted) return;
-  // Tectonic sub-rumble tremor
-  try {
-    const osc = ctx.createOscillator();
-    const lfo = ctx.createOscillator();
-    const lfoGain = ctx.createGain();
-    const gain = ctx.createGain();
-
-    osc.type = "sawtooth";
-    osc.frequency.setValueAtTime(45, ctx.currentTime);
-
-    lfo.frequency.setValueAtTime(18, ctx.currentTime);
-    lfoGain.gain.setValueAtTime(25, ctx.currentTime);
-
-    lfo.connect(lfoGain);
-    lfoGain.connect(osc.frequency);
-
-    gain.gain.setValueAtTime(0.65, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.8);
-
-    osc.connect(gain);
-    gain.connect(sfxGain);
-
-    lfo.start(ctx.currentTime);
-    osc.start(ctx.currentTime);
-    lfo.stop(ctx.currentTime + 1.8);
-    osc.stop(ctx.currentTime + 1.8);
-    playNoise(1.5, 0.45, 450);
-  } catch {}
+  // Silenced distorted low-frequency buzzing per user request
+  return;
 }
 
 export function sfxLaserBeam() {
