@@ -549,6 +549,7 @@ export class BouncebackEngine {
           isPlayer: !!sp.isPlayer,
           number: sp.number,
           costume: sp.costume,
+          fighterIndex: i,
         });
       } else {
         mecha = generateMecha(THREE, {

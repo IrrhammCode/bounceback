@@ -1,0 +1,95 @@
+{
+  "characters": [
+    {
+      "id": "char-1-king",
+      "name": "Punch Prodigy (Crown King)",
+      "team": 0,
+      "costume": "crown",
+      "modelPath": "/models/characters/char-1-king.glb",
+      "previewImage": "https://tripo-data.rg1.data.tripo3d.com/tcli_48ff4ddda93a421fb50460c02f39b978/20261005/028bb117-1ddb-439a-a52b-e2d6ff28d309/legacy_mesh.webp?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfNDhmZjRkZGRhOTNhNDIxZmI1MDQ2MGMwMmYzOWI5NzgvMjAyNjEwMDUvMDI4YmIxMTctMWRkYi00MzlhLWE1MmItZTJkNmZmMjhkMzA5L2xlZ2FjeV9tZXNoLndlYnAiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTEyODgwNjd9fX1dfQ__&Signature=B-syfIKP5je73m0dTRbEaYJ3Z4UWaarAkM~GbCBcIGjlLqGZwFx4fGcPOim~wPhLSdHxTetaRdLwH10Kvr-oX-xSu0iF3QSAHzwRe2fOlhaeht7dccSakRT4PVfn-X2P0fn9EAKEqvanr0YVjOoITnfxKayIcISXIpvEU5lfBH79rix17JBv3r79zndLHSBLb3HxvL~RJ6Yux2C9ic~JnJAY7sGSiLkeatHv1Y9mHEnR8MHau00YzCQ-C3xwDlClBBFd6~-w~1hfiGb-GY0fvNVtvzc4NJ7ATnYcBiMI1XYyi2tOQom04DP9OLTXeON2Q0rZaMAuX33F8ePiOZK7Mw__&Key-Pair-Id=K1676C64NMVM2J",
+      "taskId": "028bb117-1ddb-439a-a52b-e2d6ff28d309"
+    },
+    {
+      "id": "char-2-dj",
+      "name": "DJ Bounce",
+      "team": 0,
+      "costume": "dj_headphones",
+      "modelPath": "/models/characters/char-2-dj.glb",
+      "previewImage": "https://tripo-data.rg1.data.tripo3d.com/tcli_48ff4ddda93a421fb50460c02f39b978/20261005/86313d36-5dde-4e21-b4b0-825331fbe8e1/legacy_mesh.webp?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfNDhmZjRkZGRhOTNhNDIxZmI1MDQ2MGMwMmYzOWI5NzgvMjAyNjEwMDUvODYzMTNkMzYtNWRkZS00ZTIxLWI0YjAtODI1MzMxZmJlOGUxL2xlZ2FjeV9tZXNoLndlYnAiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTEyODgwNjd9fX1dfQ__&Signature=gWUw9JF70qtRr-8zWtZAmaZmAvPDjQxM5Px9IrFxvbGW0PMzYnAQEGmwj6yfUIapz5F-yK5WmVhGKH77d-1eKTWDJo7eVnnxI9SOEDQlGbctaaKeFjfWWHttPI5AYOkGtvEj2rti9a~ZRT4a8BgvIYKG5SpGbMegYFsgDKnPTTmZCLc8j46YqknN-v2skjmeqcFwzwxhiGeIAJv4748hv4wAb5fM~yPNyvm0C8oTHkXwlYHSTQASMhb3UnxEH-AJN5nmgBy4orLVkPgYo4E0AwzjCKvUVFm3PplmebkWByRsKhkRoGTR-1wAJ-8hgYCRwdK~HF5shGWsMdGEcxG0kA__&Key-Pair-Id=K1676C64NMVM2J",
+      "taskId": "86313d36-5dde-4e21-b4b0-825331fbe8e1"
+    },
+    {
+      "id": "char-3-ninja",
+      "name": "Ninja Bean",
+      "team": 0,
+      "costume": "ninja_headband",
+      "modelPath": "/models/characters/char-3-ninja.glb",
+      "previewImage": "https://tripo-data.rg1.data.tripo3d.com/tcli_48ff4ddda93a421fb50460c02f39b978/20261005/7385c04a-76b3-4d6a-9dbd-ba27ca1252a9/legacy_mesh.webp?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfNDhmZjRkZGRhOTNhNDIxZmI1MDQ2MGMwMmYzOWI5NzgvMjAyNjEwMDUvNzM4NWMwNGEtNzZiMy00ZDZhLTlkYmQtYmEyN2NhMTI1MmE5L2xlZ2FjeV9tZXNoLndlYnAiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTEyODgwNjd9fX1dfQ__&Signature=fe896FEjY14udBn6kEGcZqY6efN2VFF5ZW4krw3BGbYZK7-zP9rlrFvb~NjtxaPXl1IaVdL-T2R-Y5f-iiFi4l6DGsJrGsPsdiwqXw0ajkFEGEDjp0Y-sClzZNX4epslNIEiKKisgjh1lgZQ4ptRMdQZ2lIr6dkSmIs-r80QjYmQuEXwnvZ8zglwFNa9H62AuF~5-TtHNAgrYKkvNmyDQppapcjt4R8IswSvjyTbyXqFAccUfx~rvQYGhbRZGNwiLu90KWxXPC0MCeO9fy1GjXD0FXzd2z9l-yD3qWErRb2SV5STZFPCW28E0xjA35cTmCzLHbvZhcnpIuJJM5LY~g__&Key-Pair-Id=K1676C64NMVM2J",
+      "taskId": "7385c04a-76b3-4d6a-9dbd-ba27ca1252a9"
+    },
+    {
+      "id": "char-4-aviator",
+      "name": "Turbo Aviator",
+      "team": 0,
+      "costume": "propeller_hat",
+      "modelPath": "/models/characters/char-4-aviator.glb",
+      "previewImage": "https://tripo-data.rg1.data.tripo3d.com/tcli_48ff4ddda93a421fb50460c02f39b978/20261005/ecb7f603-8020-4e63-b364-0938ba587566/legacy_mesh.webp?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfNDhmZjRkZGRhOTNhNDIxZmI1MDQ2MGMwMmYzOWI5NzgvMjAyNjEwMDUvZWNiN2Y2MDMtODAyMC00ZTYzLWIzNjQtMDkzOGJhNTg3NTY2L2xlZ2FjeV9tZXNoLndlYnAiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTEyODgwNjd9fX1dfQ__&Signature=sPg8PNxER34ffROwyL6kspqt1~U51AguCONXBAXgPiPKOD7doEgLbOIqX4NDqYjyGTnjJa3d75hkjkpaP7AXjdbj3iHkKZ3WSSV4ag4ybd5tr4IsB8avidwxwZNixt5B~enhHGOvFhBO7FKUyAULtK~MWgW0wcWDbrk3zp-4SvgmTJ9Dz0U05zZW3zMK~mjEGiQWzRt-oTSMUbdMfxirxnC7EHPdwvWco6liNjwjgKvr-~tjBOaDZcNkFkOnDm3fOaYIh9GeciflVWm0vnTcRm02L4sQdR2malJn-gAqV0nqsekcU7gsZtKZwP~~nwR-RgMQn2t2ruRk4VX-P8erOQ__&Key-Pair-Id=K1676C64NMVM2J",
+      "taskId": "ecb7f603-8020-4e63-b364-0938ba587566"
+    },
+    {
+      "id": "char-5-party",
+      "name": "Party Popper",
+      "team": 0,
+      "costume": "party_hat",
+      "modelPath": "/models/characters/char-5-party.glb",
+      "previewImage": "https://tripo-data.rg1.data.tripo3d.com/tcli_48ff4ddda93a421fb50460c02f39b978/20261005/d0bad002-d6d7-4848-a856-391aa07ad83e/legacy_mesh.webp?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfNDhmZjRkZGRhOTNhNDIxZmI1MDQ2MGMwMmYzOWI5NzgvMjAyNjEwMDUvZDBiYWQwMDItZDZkNy00ODQ4LWE4NTYtMzkxYWEwN2FkODNlL2xlZ2FjeV9tZXNoLndlYnAiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTEyODgwNjd9fX1dfQ__&Signature=t9wdPBTS5uuamuThzZ7x3MBcsk6mjAOkTceaq923JoL0t7R4lJW9jV97MKOpjaJR6uTW0kIU9fRt3oc6mK9WTu1f5uUIKW4jilmVYU3BOZHxexVxKR7VLr-ZOrS-54~rtFgM2jv5kpwJ2vARfvIyiE3l37ukW29Rhjvcz-9~X6v4XhBFBeTuDEnLOmY7nRQNMH-lLDyV1J78CXB7eh17aseXyxgGX4ahMxms6FGjsDrkS57eNagRfJKgt2N3QelcrkEmEaoZEyqWjH-qqdPbABfkG7-6N1YrgvTxlVtJLv98aOUtyeDkvToDlsugD7NpXFTbob53f~EQeke2FK~~BQ__&Key-Pair-Id=K1676C64NMVM2J",
+      "taskId": "d0bad002-d6d7-4848-a856-391aa07ad83e"
+    },
+    {
+      "id": "char-6-dino",
+      "name": "Rex Crush (Dino Kaiju)",
+      "team": 1,
+      "costume": "dino_crest",
+      "modelPath": "/models/characters/char-6-dino.glb",
+      "previewImage": "https://tripo-data.rg1.data.tripo3d.com/tcli_48ff4ddda93a421fb50460c02f39b978/20261005/9702e37d-bf3c-4d26-856b-792035f4f850/legacy_mesh.webp?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfNDhmZjRkZGRhOTNhNDIxZmI1MDQ2MGMwMmYzOWI5NzgvMjAyNjEwMDUvOTcwMmUzN2QtYmYzYy00ZDI2LTg1NmItNzkyMDM1ZjRmODUwL2xlZ2FjeV9tZXNoLndlYnAiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTEyODgxMzV9fX1dfQ__&Signature=QXaevfogvRA5wpd6nh8hE9j7sm9~53zjDwUD1RsPggqZyLFFXxuN1BzD010qpp3rfsA~q-9bDcHLFwdzTY9hDZFcUtXEDho8Fwjbq~J3QscPL9VUe6U5A2UBg4bDgFXhiJngU4IIn4VobGn7i5H7C1yLLsIkgdm0GrtLh~VUB7~heAsRwb8eDj5azk5AJ8kRwcrtkhDzL0HMMJzK0O2FKGByHNBdybkyrMOOEotZkxbUPlAFFN4K9jc148emLz8~2VkLM7xTYOuroJA9p331DkfKYd6GVcWtfxwk7spZJoFL1zxxK~P7I1Vm4zeroOLdn41tIF~MEs4uIEWeKkLczQ__&Key-Pair-Id=K1676C64NMVM2J",
+      "taskId": "9702e37d-bf3c-4d26-856b-792035f4f850"
+    },
+    {
+      "id": "char-7-bunny",
+      "name": "Hopper Mad (Bunny Brawler)",
+      "team": 1,
+      "costume": "bunny_ears",
+      "modelPath": "/models/characters/char-7-bunny.glb",
+      "previewImage": "https://tripo-data.rg1.data.tripo3d.com/tcli_48ff4ddda93a421fb50460c02f39b978/20261005/03975cc3-fb16-4d13-9eb4-cee49fa9188d/legacy_mesh.webp?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfNDhmZjRkZGRhOTNhNDIxZmI1MDQ2MGMwMmYzOWI5NzgvMjAyNjEwMDUvMDM5NzVjYzMtZmIxNi00ZDEzLTllYjQtY2VlNDlmYTkxODhkL2xlZ2FjeV9tZXNoLndlYnAiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTEyODgxMzl9fX1dfQ__&Signature=ogWLq5vj~ACejnRCdV6-X3GMItR42PZdfflOUUHI0aSLpVv38vXuxFns08-Kr5snVQXck6c95HCmuLASEoaIs6t5klwbGU~0OBmu4COLJqFJdjqb1ZPIqEa5VAZFpyDoaElmLPbwXmqZmRKirj~rKYgE7fpPQFZ6MNrs-oQW8IWEzRi6VpMtJ~QVo04o14XPvP65DvCjVDFnLWOdQNOweNa199wnlFijqEHf~HDmoBpHpMgLMfsh6kqESPPpwmoyMEiij03zKvsghj2ytJRyMbmyA8olunmSSKREXtVkkVT-Sjf0GZvAM1wxEtSbZ15-IEcRZE~oo3KByBP0ZzBLPQ__&Key-Pair-Id=K1676C64NMVM2J",
+      "taskId": "03975cc3-fb16-4d13-9eb4-cee49fa9188d"
+    },
+    {
+      "id": "char-8-agent",
+      "name": "Shady VIP (Cyber Agent)",
+      "team": 1,
+      "costume": "pro_shades",
+      "modelPath": "/models/characters/char-8-agent.glb",
+      "previewImage": "https://tripo-data.rg1.data.tripo3d.com/tcli_48ff4ddda93a421fb50460c02f39b978/20261005/89d24ed9-065d-4c2d-a5d7-07d9581fbaee/legacy_mesh.webp?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfNDhmZjRkZGRhOTNhNDIxZmI1MDQ2MGMwMmYzOWI5NzgvMjAyNjEwMDUvODlkMjRlZDktMDY1ZC00YzJkLWE1ZDctMDdkOTU4MWZiYWVlL2xlZ2FjeV9tZXNoLndlYnAiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTEyODgxNDJ9fX1dfQ__&Signature=ApwfiUlTCaAd4YpRtwuaj3ESP5zqRtL~-bqEITZQWz7HKlm3moDHCKUvBaZc1ye5~zPG0JTWRklt5pVH4Kjd2iXgTke8jO5xpAfd-q~k7TkAfKrME~nMaNhLMU1JvmvSLXiFZ~pZBgDA-rEcDOCFWT4Al4Arnx0y0uqR0JnpzgrFne18MjL0~SXsNXE7lgQ7QcHBicyleXaZtfT9rL4MHwDDKTJGcxd73UV~ZIjziEyWggA95p10FkzKLKTTcZ~vmOFmfzdxhx0pIhWNOLo3V6ZO8IPoHoyxM4P9TTCBI97oEVarvcGAmXBmzWHSuT2AGYftHch~qCrnmR78jfPryQ__&Key-Pair-Id=K1676C64NMVM2J",
+      "taskId": "89d24ed9-065d-4c2d-a5d7-07d9581fbaee"
+    },
+    {
+      "id": "char-9-viking",
+      "name": "Spike Tyrant (Viking Bruiser)",
+      "team": 1,
+      "costume": "dino_crest",
+      "modelPath": "/models/characters/char-9-viking.glb",
+      "previewImage": "https://tripo-data.rg1.data.tripo3d.com/tcli_48ff4ddda93a421fb50460c02f39b978/20261005/2782d6fc-825f-431e-a908-0ca5d7bcd515/legacy_mesh.webp?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfNDhmZjRkZGRhOTNhNDIxZmI1MDQ2MGMwMmYzOWI5NzgvMjAyNjEwMDUvMjc4MmQ2ZmMtODI1Zi00MzFlLWE5MDgtMGNhNWQ3YmNkNTE1L2xlZ2FjeV9tZXNoLndlYnAiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTEyODgxNDV9fX1dfQ__&Signature=UfxVjAOgB4u6JFfSftW9H909HgWS90e2qEMDoKjuI7cGH0NfPP0CAQzK2WPFXHEYu0cvz4JmPdea7T8HSsALTzQC9erinopZOAJbRX6NGn-qew8X-CMdhgPWWKVcxq-k~BnUrEPVPhocbVwAEJko-qQPxnAx-nfx~5X5niQseeTyP6ZmO~m3n5d~-W7wF7DWpz~lF5i6NgKpHsS7hfZmqaA2G5-xAqCxGCQtqMjhxrEYIQl86fwW~-1c7gY00gBgOSLIeC1yZws7owa4zjFr3SM~rX6lNe34Otwq-EyM7F0-lhQAdQ3vRnWIdoNwv9mxVXh2Uo5QuSmLOMFp3rtw4A__&Key-Pair-Id=K1676C64NMVM2J",
+      "taskId": "2782d6fc-825f-431e-a908-0ca5d7bcd515"
+    },
+    {
+      "id": "char-10-robot",
+      "name": "Cyber Beast (Mecha Robot)",
+      "team": 1,
+      "costume": "pro_shades",
+      "modelPath": "/models/characters/char-10-robot.glb",
+      "previewImage": "https://tripo-data.rg1.data.tripo3d.com/tcli_48ff4ddda93a421fb50460c02f39b978/20261005/b625cbca-6de2-450a-b3bd-7b4e7b507f14/legacy_mesh.webp?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfNDhmZjRkZGRhOTNhNDIxZmI1MDQ2MGMwMmYzOWI5NzgvMjAyNjEwMDUvYjYyNWNiY2EtNmRlMi00NTBhLWIzYmQtN2I0ZTdiNTA3ZjE0L2xlZ2FjeV9tZXNoLndlYnAiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTEyODgxNDd9fX1dfQ__&Signature=sJx74UEhy9TPrsH0K0y9fjmOKB6eLz6s1Dv8YVWU~CMRpNpl0JSl5GrT82Vkf6enXzzW-5h1Y0Acn2G3HZroluRk7omTN3yIu8npr1aPp0UBz1xtfKGoSqRLUJMjXAEuofUKjfC7Dcu8DFzLFCBngOW1wlaCenuLz4kILdUkVzCA9Bp5Bobm5JXhrc278sz6VRh8dMjCgGEihZ71GNQ0i62MJq5ClD3OS36ISgQIOx8IimxgM~H-LFv0HKXeLkdXUdWCw4neKC8syp6hmUPPXX3GONBz7pTPCTYWVML0BY6diTT9f9daqFcplr63SBGEFJUlIcwF0oFERbrsBToDag__&Key-Pair-Id=K1676C64NMVM2J",
+      "taskId": "b625cbca-6de2-450a-b3bd-7b4e7b507f14"
+    }
+  ],
+  "count": 10
+}

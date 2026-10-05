@@ -22,6 +22,17 @@ export const MODEL_PATHS: Record<string, string> = {
   'mystery-gift': '/models/mystery-gift.glb',
   'host-gift': '/models/host-gift.glb',
   trophy: '/models/trophy.glb',
+  // 10 Tripo Roster Characters
+  'char-1-king': '/models/characters/char-1-king.glb',
+  'char-2-dj': '/models/characters/char-2-dj.glb',
+  'char-3-ninja': '/models/characters/char-3-ninja.glb',
+  'char-4-aviator': '/models/characters/char-4-aviator.glb',
+  'char-5-party': '/models/characters/char-5-party.glb',
+  'char-6-dino': '/models/characters/char-6-dino.glb',
+  'char-7-bunny': '/models/characters/char-7-bunny.glb',
+  'char-8-agent': '/models/characters/char-8-agent.glb',
+  'char-9-viking': '/models/characters/char-9-viking.glb',
+  'char-10-robot': '/models/characters/char-10-robot.glb',
 };
 
 /**

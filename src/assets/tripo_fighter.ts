@@ -9,6 +9,7 @@ export interface TripoFighterOptions {
   isPlayer: boolean;
   number?: number;
   costume?: string;
+  fighterIndex?: number;
 }
 
 interface BoneMapping {
@@ -137,27 +138,44 @@ export function createTripoFighter(
   registerMapping(rawLeftFoot, proxyLeftFoot);
   registerMapping(rawRightFoot, proxyRightFoot);
 
-  // 5. Attach accessories to the Head bone
+  // 5. Attach accessories / unique 10 Tripo models to the Head bone
   if (rawHead) {
-    let accessoryGltf: GLTF | null = null;
-    let accScale = 0.55;
-    let accOffset = new THREE.Vector3(0, 0.22, 0);
+    const charKeys = [
+      'char-1-king',   // 0: Cyan Player (You)
+      'char-2-dj',     // 1: Cyan DJ (DJ Bounce)
+      'char-3-ninja',  // 2: Cyan Ninja (Ninja Bean)
+      'char-4-aviator',// 3: Cyan Turbo (Turbo Copter)
+      'char-5-party',  // 4: Cyan Popper (Party Popper)
+      'char-6-dino',   // 5: Coral Rex (Rex Crush)
+      'char-7-bunny',  // 6: Coral Hopper (Hopper Mad)
+      'char-8-agent',  // 7: Coral Shady (Shady VIP)
+      'char-9-viking', // 8: Coral Spike (Spike Tyrant)
+      'char-10-robot', // 9: Coral Cyber (Cyber Beast)
+    ];
 
-    if (opts.isPlayer) {
-      // Golden Crown for player
-      accessoryGltf = getLoadedGLTF('acc-crown');
-      accScale = 0.45;
-      accOffset.set(0, 0.24, 0);
-    } else if (opts.team === 0) {
-      // Cyan Ribbon Bow
-      accessoryGltf = getLoadedGLTF('acc-bow');
-      accScale = 0.48;
-      accOffset.set(0, 0.20, -0.05);
-    } else {
-      // Coral Party Hat
-      accessoryGltf = getLoadedGLTF('acc-partyhat');
-      accScale = 0.50;
-      accOffset.set(0, 0.22, 0);
+    let accessoryGltf: GLTF | null = null;
+    let accScale = 0.46;
+    let accOffset = new THREE.Vector3(0, 0.16, 0);
+
+    // If specific fighter index is passed, load their custom Tripo character model
+    if (typeof opts.fighterIndex === 'number' && opts.fighterIndex >= 0 && opts.fighterIndex < charKeys.length) {
+      accessoryGltf = getLoadedGLTF(charKeys[opts.fighterIndex]);
+    }
+
+    if (!accessoryGltf) {
+      if (opts.isPlayer) {
+        accessoryGltf = getLoadedGLTF('acc-crown');
+        accScale = 0.45;
+        accOffset.set(0, 0.24, 0);
+      } else if (opts.team === 0) {
+        accessoryGltf = getLoadedGLTF('acc-bow');
+        accScale = 0.48;
+        accOffset.set(0, 0.20, -0.05);
+      } else {
+        accessoryGltf = getLoadedGLTF('acc-partyhat');
+        accScale = 0.50;
+        accOffset.set(0, 0.22, 0);
+      }
     }
 
     if (accessoryGltf) {

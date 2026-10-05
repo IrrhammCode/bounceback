@@ -12,6 +12,7 @@ import OrientationPromptModal from "../components/OrientationPromptModal";
 import LoadingScreenOverlay from "../components/LoadingScreenOverlay";
 import ResultScreen from "./ResultScreen";
 import GiftTitleCard from "../components/GiftTitleCard";
+import TripoRosterModal from "../components/TripoRosterModal";
 import { type RoundResult } from "../game/tournament";
 import { sfxWhistle, sfxGoal, sfxMatchStart } from "../game/audio";
 
@@ -112,11 +113,19 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
     (window as any).__READY__ = true;
   }, []);
 
-  // Demo keys 1–5 jump straight to round N (only when ?demo=1)
+  const [showTripoRoster, setShowTripoRoster] = useState(false);
+
+  // Demo keys 1–5 jump straight to round N, C toggles Tripo heroes modal
   useEffect(() => {
     if (!isDemoMode) return;
     const handleDemoKeys = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      if (e.key === "c" || e.key === "C") {
+        e.preventDefault();
+        setShowTripoRoster((prev) => !prev);
+        return;
+      }
 
       const num = parseInt(e.key, 10);
       if (num >= 1 && num <= 5) {
@@ -377,26 +386,52 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
         />
       )}
 
-      {/* Demo Mode Badge */}
+      {/* Demo Mode Badge & Tripo Roster Button */}
       {isDemoMode && (
         <div style={{
           position: "fixed",
           top: "14px",
           left: "14px",
-          backgroundColor: "#f59e0b",
-          color: "#000000",
-          fontWeight: 900,
-          fontSize: "11px",
-          padding: "4px 8px",
-          borderRadius: "6px",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.45)",
+          display: "flex",
+          gap: "8px",
           zIndex: 9999,
-          letterSpacing: "0.08em",
-          pointerEvents: "none",
-          border: "1px solid #fbbf24",
-          textTransform: "uppercase",
         }}>
-          DEMO • KEYS 1–5 JUMP ROUND
+          <div style={{
+            backgroundColor: "#f59e0b",
+            color: "#000000",
+            fontWeight: 900,
+            fontSize: "11px",
+            padding: "5px 10px",
+            borderRadius: "8px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.45)",
+            letterSpacing: "0.08em",
+            border: "1px solid #fbbf24",
+            textTransform: "uppercase",
+            display: "flex",
+            alignItems: "center",
+          }}>
+            DEMO • KEYS 1–5 JUMP ROUND
+          </div>
+          <button
+            onClick={() => setShowTripoRoster(true)}
+            style={{
+              backgroundColor: "#0ea5e9",
+              color: "#ffffff",
+              fontWeight: 900,
+              fontSize: "11px",
+              padding: "5px 12px",
+              borderRadius: "8px",
+              boxShadow: "0 4px 12px rgba(14,165,233,0.5)",
+              letterSpacing: "0.06em",
+              border: "1px solid #38bdf8",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
+            <span>✨</span> 10 TRIPO HEROES (KEY C)
+          </button>
         </div>
       )}
 
@@ -710,6 +745,12 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
         forceShowTutorial={showOrientationGuide}
         onCloseTutorial={() => setShowOrientationGuide(false)}
         inGame={appMode === "game"}
+      />
+
+      {/* 10. 10 Tripo AI Generated Characters Showcase Modal */}
+      <TripoRosterModal
+        isOpen={showTripoRoster}
+        onClose={() => setShowTripoRoster(false)}
       />
     </div>
   );
