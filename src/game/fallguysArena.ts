@@ -2319,9 +2319,8 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
       hs.position.y = 1.6 + Math.sin(time * 2.5 + hi) * 0.15;
     }
 
-    if (SHOW_LEGACY_STADIUM) {
-      // 1. Scroll LED Ribbon Boards
-      ribbonTex.offset.x -= dt * 0.12;
+    // 1. Scroll LED Ribbon Boards
+    ribbonTex.offset.x -= dt * 0.12;
 
       // 2. Rotate Windmill Blades & Ferris Wheel
       windmillBlades.rotation.z += dt * 0.9;
@@ -2495,7 +2494,6 @@ export function createFallGuysArena(scene: THREE.Scene): ArenaController {
     armMeshL.instanceMatrix.needsUpdate = true;
     armMeshR.instanceMatrix.needsUpdate = true;
     hatMesh.instanceMatrix.needsUpdate = true;
-    }
 
     // 13. Confetti Fluttering
     const cd = new THREE.Object3D();
