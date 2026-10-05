@@ -1,25 +1,26 @@
 /**
  * BOUNCEBACK! — Procedural Audio (Web Audio API, zero external file downloads)
  * Features:
- * - 100% MUTED by default to protect user's hearing
- * - Soft, comfortable low-gain synthesizer with gentle sine & triangle waveforms
- * - All ear-piercing frequencies (>550 Hz), harsh sawtooth/square buzzes, and noise screams removed
+ * - Upbeat Fall Guys / Nintendo Arcade procedural BGM synthesizer
+ * - Realistic crowd cheering roar ("Wooo!") via resonant noise bandpass
+ * - Stadium goal airhorn, cartoon boing, whistle trill, and juicy impact SFX
+ * - Crunchy visceral punch impact & authentic arcade pinball solenoid + chime SFX
  */
 
 let ctx: AudioContext | null = null;
 let masterGain: GainNode | null = null;
 let bgmGain: GainNode | null = null;
 let sfxGain: GainNode | null = null;
-let muted = true; // Start MUTED by default to protect user's ears
+let muted = false; // UNMUTED BY DEFAULT — Full lively arcade audio experience!
 
 // BGM State
-const BGM_VOLUME = 0.06; // Very gentle background music level
+const BGM_VOLUME = 0.16; // Balanced volume so SFX, punches, and hits are crisp and clear
 let bgmAudio: HTMLAudioElement | null = null;
 let bgmPlaying = false;
 
-let currentMasterVol = 0.20;
-let currentBgmVol = BGM_VOLUME;
-let currentSfxVol = 0.10;
+let currentMasterVol = 0.50;
+let currentBgmVol = BGM_VOLUME; // 0.16
+let currentSfxVol = 0.65;
 
 export function initAudio() {
   if (ctx) return;
@@ -31,6 +32,7 @@ export function initAudio() {
     masterGain.gain.value = muted ? 0 : currentMasterVol;
     masterGain.connect(ctx.destination);
 
+    // Balanced volume: BGM 0.20 so SFX at 0.65 pop crisp and clear!
     bgmGain = ctx.createGain();
     bgmGain.gain.value = muted ? 0 : currentBgmVol;
     bgmGain.connect(masterGain);
@@ -39,7 +41,7 @@ export function initAudio() {
     sfxGain.gain.value = muted ? 0 : currentSfxVol;
     sfxGain.connect(masterGain);
   } catch {
-    // Audio context initialization fallback
+    // Audio safe fallback
   }
 }
 
@@ -53,7 +55,7 @@ export function resumeAudio() {
   }
 }
 
-// Auto-unlock audio context on user interaction (honors muted state strictly)
+// Auto-unlock audio and start BGM on immediate launch or first interaction
 if (typeof window !== "undefined") {
   const unlockAudio = () => {
     resumeAudio();
@@ -71,6 +73,11 @@ if (typeof window !== "undefined") {
   window.addEventListener("pointerdown", unlockAudio, { once: true });
   window.addEventListener("keydown", unlockAudio, { once: true });
   window.addEventListener("click", unlockAudio, { once: true });
+
+  // Immediate attempt on load
+  setTimeout(() => {
+    if (!muted) startBGM();
+  }, 50);
 }
 
 export function setMuted(v: boolean) {
@@ -125,30 +132,20 @@ export function getAudioSettings() {
   };
 }
 
-/**
- * Safe procedural sound generator:
- * - Always clamped below 550 Hz (no high-frequency screeching)
- * - Safe low gain (max 0.05)
- * - Soft waveforms only (sine & triangle)
- */
 function playTone(
   freq: number,
   dur: number,
   type: OscillatorType = "sine",
-  vol = 0.05,
+  vol = 0.3,
   decay = true
 ) {
   if (!ctx || !sfxGain || muted) return;
-  const safeFreq = Math.min(Math.max(freq, 40), 550);
-  const safeVol = Math.min(vol * 0.25, 0.05);
-  const safeType: OscillatorType = (type === "sawtooth" || type === "square") ? "triangle" : type;
-
   try {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.type = safeType;
-    osc.frequency.setValueAtTime(safeFreq, ctx.currentTime);
-    gain.gain.setValueAtTime(safeVol, ctx.currentTime);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(vol, ctx.currentTime);
     if (decay) {
       gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
     }
@@ -156,41 +153,39 @@ function playTone(
     gain.connect(sfxGain);
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + dur);
-  } catch {}
+  } catch {
+    // Audio safe fallback
+  }
 }
 
-/**
- * Safe noise generator:
- * - Lowpass filtered below 350 Hz (soft muffled rumble only, zero hiss)
- * - Safe low gain (max 0.03)
- */
-function playNoise(dur: number, vol = 0.03, filterFreq = 320) {
+function playNoise(dur: number, vol = 0.2, filterFreq = 800) {
   if (!ctx || !sfxGain || muted) return;
   try {
-    const safeVol = Math.min(vol * 0.2, 0.03);
     const bufSize = Math.floor(ctx.sampleRate * dur);
     const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
     const data = buf.getChannelData(0);
-    for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * 0.15;
+    for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * 0.4;
 
     const src = ctx.createBufferSource();
     src.buffer = buf;
     const gain = ctx.createGain();
-    gain.gain.setValueAtTime(safeVol, ctx.currentTime);
+    gain.gain.setValueAtTime(vol, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
 
     const lp = ctx.createBiquadFilter();
     lp.type = "lowpass";
-    lp.frequency.value = Math.min(filterFreq, 350);
+    lp.frequency.value = filterFreq;
 
     src.connect(lp);
     lp.connect(gain);
     gain.connect(sfxGain);
     src.start(ctx.currentTime);
-  } catch {}
+  } catch {
+    // Audio safe fallback
+  }
 }
 
-// ─── BGM Player ───
+// ─── Yellow Shell Hustle BGM Player (AI Generated Audio Asset) ───
 export function startBGM() {
   if (!ctx) initAudio();
   resumeAudio();
@@ -205,9 +200,14 @@ export function startBGM() {
     }
     bgmAudio.volume = muted ? 0 : currentBgmVol;
     if (!muted) {
-      bgmAudio.play().catch(() => {});
+      const p = bgmAudio.play();
+      if (p !== undefined) {
+        p.catch(() => {});
+      }
     }
-  } catch {}
+  } catch (err) {
+    console.warn("HTML5 audio playback error", err);
+  }
 }
 
 export function stopBGM() {
@@ -218,75 +218,52 @@ export function stopBGM() {
   }
 }
 
-// ─── Silenced Aggressive Sounds (Zero ear irritation) ───
-export function sfxCrowdCheer(_intensity = 1.0) {
-  // Silenced white noise hiss
-  return;
-}
-
-export function sfxPunchCheer() {
-  // Silenced referee whistle & high beeps
-  return;
-}
-
-export function sfxWhistle() {
-  // Silenced screeching whistle
-  return;
-}
-
-export function sfxBoxingBell() {
-  // Silenced loud ringing bell
-  return;
-}
-
-export function sfxRoundCountdownTick(_remaining: number) {
-  // Silenced countdown alarm
-  return;
-}
-
-export function sfxRoundBuzzer() {
-  // Silenced loud buzzer horn
-  return;
-}
-
-export function sfxStarDing(_starIndex: number = 1) {
-  // Silenced piercing high chime
-  return;
-}
-
-export function sfxDisasterSiren() {
-  // Silenced screeching emergency siren
-  return;
-}
-
-export function sfxTornado() {
-  // Silenced howling whistling noise
-  return;
-}
-
-export function sfxEarthquake() {
-  // Silenced harsh buzzing
-  return;
-}
-
-export function sfxGongHit() {
-  // Silenced metal gong
-  return;
-}
-
-// ─── Soft & Gentle Action SFX ───
-export function sfxPunch() {
+// ─── Realistic Crowd Cheering ("Woooo-YEAAAH!") ───
+export function sfxCrowdCheer(intensity = 1.0) {
   if (!ctx || !sfxGain || muted) return;
-  // Soft, warm cartoon pop/thump
-  playTone(85, 0.1, "sine", 0.05);
-  playTone(55, 0.12, "triangle", 0.04);
+  try {
+    const dur = 1.6 * intensity;
+    const bufSize = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * 0.28;
+    }
+
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+
+    const gain = ctx.createGain();
+    const now = ctx.currentTime;
+    gain.gain.setValueAtTime(0.01, now);
+    gain.gain.linearRampToValueAtTime(0.22 * intensity, now + 0.3);
+    gain.gain.linearRampToValueAtTime(0.25 * intensity, now + 0.7);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+    // Formant resonant filter (warm vocal crowd cheer)
+    const bp1 = ctx.createBiquadFilter();
+    bp1.type = "bandpass";
+    bp1.frequency.setValueAtTime(600, now);
+    bp1.frequency.linearRampToValueAtTime(850, now + 0.7);
+    bp1.Q.value = 2.0;
+
+    const bp2 = ctx.createBiquadFilter();
+    bp2.type = "bandpass";
+    bp2.frequency.setValueAtTime(1100, now);
+    bp2.frequency.linearRampToValueAtTime(1400, now + 0.7);
+    bp2.Q.value = 2.4;
+
+    src.connect(bp1);
+    src.connect(bp2);
+    bp1.connect(gain);
+    bp2.connect(gain);
+    gain.connect(sfxGain);
+
+    src.start(now);
+  } catch {}
 }
 
-export function sfxWhiff() {
-  if (!ctx || !sfxGain || muted) return;
-  playTone(180, 0.05, "sine", 0.02);
-}
-
+// ─── Cartoon Boing / Spring Bounce ───
 export function sfxBoing() {
   if (!ctx || !sfxGain || muted) return;
   try {
@@ -295,272 +272,909 @@ export function sfxBoing() {
     const now = ctx.currentTime;
     osc.type = "sine";
     osc.frequency.setValueAtTime(160, now);
-    osc.frequency.exponentialRampToValueAtTime(340, now + 0.15);
-    osc.frequency.exponentialRampToValueAtTime(220, now + 0.3);
+    osc.frequency.exponentialRampToValueAtTime(540, now + 0.22);
+    osc.frequency.exponentialRampToValueAtTime(320, now + 0.38);
 
-    gain.gain.setValueAtTime(0.04, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
 
     osc.connect(gain);
     gain.connect(sfxGain);
     osc.start(now);
-    osc.stop(now + 0.32);
+    osc.stop(now + 0.4);
   } catch {}
 }
 
-export function sfxBumperHit(_comboCount: number = 0) {
-  if (!ctx || !sfxGain || muted) return;
-  try {
-    const now = ctx.currentTime;
-    // Pleasant warm rubber cartoon bounce (no high metal bell)
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(240, now);
-    osc.frequency.exponentialRampToValueAtTime(120, now + 0.12);
-    gain.gain.setValueAtTime(0.04, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
-    osc.connect(gain);
-    gain.connect(sfxGain);
-    osc.start(now);
-    osc.stop(now + 0.14);
-  } catch {}
-}
-
+// ─── Stadium Airhorn & Goal Siren ───
 export function sfxStadiumAirhorn() {
   if (!ctx || !sfxGain || muted) return;
   try {
-    // Gentle warm brass triad chord
-    const hornNotes = [233.08, 293.66, 349.23]; // Bb3, D4, F4
+    const hornNotes = [233.08, 293.66, 349.23]; // Bb3, D4, F4 brass chord
     const now = ctx.currentTime;
     for (const freq of hornNotes) {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.type = "triangle";
+      osc.type = "sawtooth";
       osc.frequency.setValueAtTime(freq, now);
-      gain.gain.setValueAtTime(0.03, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
 
       const lp = ctx.createBiquadFilter();
       lp.type = "lowpass";
-      lp.frequency.value = 450;
+      lp.frequency.value = 1600;
 
       osc.connect(lp);
       lp.connect(gain);
       gain.connect(sfxGain);
       osc.start(now);
-      osc.stop(now + 0.4);
+      osc.stop(now + 0.7);
     }
+
+    // Warbling Goal Siren
+    setTimeout(() => {
+      if (!ctx || !sfxGain || muted) return;
+      const siren = ctx.createOscillator();
+      const sGain = ctx.createGain();
+      const sNow = ctx.currentTime;
+      siren.type = "triangle";
+      siren.frequency.setValueAtTime(440, sNow);
+      siren.frequency.linearRampToValueAtTime(740, sNow + 0.3);
+      siren.frequency.linearRampToValueAtTime(440, sNow + 0.6);
+      siren.frequency.linearRampToValueAtTime(740, sNow + 0.9);
+      sGain.gain.setValueAtTime(0.16, sNow);
+      sGain.gain.exponentialRampToValueAtTime(0.001, sNow + 1.1);
+
+      siren.connect(sGain);
+      sGain.connect(sfxGain);
+      siren.start(sNow);
+      siren.stop(sNow + 1.1);
+    }, 250);
   } catch {}
 }
 
-export function sfxGoal() {
+// ─── Action Sound Effects ───
+export function sfxPunchCheer() {
+  // Stadium crowd excited celebration cheer
+  sfxCrowdCheer(1.1);
+  // Joyful rising brass fanfare chords (C5 -> E5 -> G5 -> C6)
+  setTimeout(() => {
+    playTone(523.25, 0.16, "triangle", 0.24);
+    playTone(659.25, 0.16, "triangle", 0.20);
+  }, 80);
+  setTimeout(() => {
+    playTone(783.99, 0.22, "sawtooth", 0.24);
+    playTone(1046.5, 0.26, "triangle", 0.20);
+  }, 180);
+}
+
+/**
+ * Heavy visceral punch impact:
+ * Crunchy contact slap + deep bass punch thud + comic smack!
+ */
+export function sfxPunch() {
   if (!ctx || !sfxGain || muted) return;
+  // Heavy visceral punch bass impact & crack
+  playNoise(0.16, 0.45, 1200);
+  playTone(85, 0.22, "square", 0.45);
+  playTone(45, 0.25, "sawtooth", 0.38);
+  playTone(160, 0.12, "triangle", 0.32);
+}
+
+export function sfxWhiff() {
+  playTone(320, 0.08, "sine", 0.12);
+  playNoise(0.08, 0.15, 2000);
+}
+
+/**
+ * Authentic Arcade Pinball Bumper:
+ * Musical chime notes (C5 - C6) + mechanical solenoid thwack + spring boing!
+ */
+export function sfxBumperHit(comboCount: number = 0) {
+  if (!ctx || !sfxGain || muted) return;
+  try {
+    const now = ctx.currentTime;
+
+    // 1. Classic Arcade Pinball Chime (clean musical progression C5 - C6)
+    const chimes = [523.25, 659.25, 783.99, 880.0, 1046.5, 1174.66];
+    const bellFreq = chimes[Math.min(comboCount, chimes.length - 1)];
+
+    const osc1 = ctx.createOscillator();
+    const g1 = ctx.createGain();
+    osc1.type = "sine";
+    osc1.frequency.setValueAtTime(bellFreq, now);
+    g1.gain.setValueAtTime(0.35, now);
+    g1.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+    osc1.connect(g1);
+    g1.connect(sfxGain);
+    osc1.start(now);
+    osc1.stop(now + 0.28);
+
+    // 2. Harmonic bell overtone (rich arcade chime)
+    const osc2 = ctx.createOscillator();
+    const g2 = ctx.createGain();
+    osc2.type = "triangle";
+    osc2.frequency.setValueAtTime(bellFreq * 1.5, now);
+    g2.gain.setValueAtTime(0.20, now);
+    g2.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+    osc2.connect(g2);
+    g2.connect(sfxGain);
+    osc2.start(now);
+    osc2.stop(now + 0.22);
+
+    // 3. Heavy mechanical solenoid thwack
+    const thwack = ctx.createOscillator();
+    const tg = ctx.createGain();
+    thwack.type = "triangle";
+    thwack.frequency.setValueAtTime(140, now);
+    thwack.frequency.exponentialRampToValueAtTime(45, now + 0.12);
+    tg.gain.setValueAtTime(0.45, now);
+    tg.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+    thwack.connect(tg);
+    tg.connect(sfxGain);
+    thwack.start(now);
+    thwack.stop(now + 0.14);
+
+    // 4. Spring boing undertone
+    sfxBoing();
+  } catch {}
+}
+
+// ─── Skill Box Spawn Fanfare ───
+export function sfxSkillSpawn() {
+  if (!ctx || !sfxGain || muted) return;
+  try {
+    const now = ctx.currentTime;
+    const notes = [587.33, 739.99, 880.0, 1174.66]; // D5, F#5, A5, D6 shimmer
+    notes.forEach((freq, idx) => {
+      const t = now + idx * 0.055;
+      const osc = ctx!.createOscillator();
+      const g = ctx!.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, t);
+      g.gain.setValueAtTime(0.18, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+      osc.connect(g);
+      g.connect(sfxGain!);
+      osc.start(t);
+      osc.stop(t + 0.35);
+    });
+  } catch {}
+}
+
+// ─── Power-Up Acquired Jingle ───
+export function sfxSkillAcquire() {
+  if (!ctx || !sfxGain || muted) return;
+  try {
+    const now = ctx.currentTime;
+    const chord = [523.25, 659.25, 783.99, 1046.5]; // C5 -> E5 -> G5 -> C6
+    chord.forEach((freq, idx) => {
+      const t = now + idx * 0.06;
+      const osc = ctx!.createOscillator();
+      const g = ctx!.createGain();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(freq, t);
+      g.gain.setValueAtTime(0.28, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+      osc.connect(g);
+      g.connect(sfxGain!);
+      osc.start(t);
+      osc.stop(t + 0.45);
+    });
+  } catch {}
+}
+
+// ─── Skill Activation Supersonic Release SFX ───
+export function sfxSkillActivate() {
+  if (!ctx || !sfxGain || muted) return;
+  try {
+    const now = ctx.currentTime;
+    // High-energy ascending chord + whoosh
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(320, now);
+    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.22);
+    g.gain.setValueAtTime(0.32, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    osc.connect(g);
+    g.connect(sfxGain);
+    osc.start(now);
+    osc.stop(now + 0.35);
+
+    // Sub-bass thump
+    const sub = ctx.createOscillator();
+    const subG = ctx.createGain();
+    sub.type = "sine";
+    sub.frequency.setValueAtTime(160, now);
+    sub.frequency.exponentialRampToValueAtTime(45, now + 0.3);
+    subG.gain.setValueAtTime(0.45, now);
+    subG.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+    sub.connect(subG);
+    subG.connect(sfxGain);
+    sub.start(now);
+    sub.stop(now + 0.3);
+  } catch {}
+}
+
+// ─── Live Audience Vote Surge Cheer ───
+export function sfxVoteCheer() {
+  if (!ctx || !sfxGain || muted) return;
+  try {
+    playTone(660, 0.08, "triangle", 0.12);
+  } catch {}
+}
+
+// ─── Goal / Ring-Out Fanfare ───
+export function sfxGongHit() {
+  sfxCrowdCheer(1.5);
+}
+
+export function sfxGoal() {
   sfxStadiumAirhorn();
-  playTone(261.63, 0.3, "triangle", 0.04);
-  playTone(329.63, 0.3, "triangle", 0.04);
-  playTone(392.00, 0.3, "triangle", 0.04);
+  sfxCrowdCheer(2.2);
+  playTone(220, 0.4, "sawtooth", 0.28, false);
+  playTone(330, 0.4, "sawtooth", 0.22, false);
+  playTone(440, 0.5, "sawtooth", 0.25);
+  setTimeout(() => {
+    playTone(554, 0.6, "sawtooth", 0.25);
+  }, 200);
 }
 
 export function sfxLethalHit() {
   if (!ctx || !sfxGain || muted) return;
-  playNoise(0.15, 0.04, 250);
-  playTone(95, 0.2, "sine", 0.05);
+  const now = ctx.currentTime;
+  playNoise(0.35, 0.45, 600);
+  try {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(320, now);
+    osc.frequency.exponentialRampToValueAtTime(35, now + 0.35);
+    g.gain.setValueAtTime(0.70, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+    osc.connect(g);
+    g.connect(sfxGain);
+    osc.start(now);
+    osc.stop(now + 0.38);
+  } catch {}
+  playTone(720, 0.12, "triangle", 0.35);
 }
 
 /**
- * Gentle warm bell (soft low chime ~440 Hz)
+ * Procedural quiz-show "ding" for ring-outs, round starts, and gift box reveals.
  */
 export function sfxQuizDing() {
   if (!ctx || !sfxGain || muted) return;
   try {
     const now = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const g = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(440, now);
-    g.gain.setValueAtTime(0.04, now);
-    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
-    osc.connect(g);
-    g.connect(sfxGain);
-    osc.start(now);
-    osc.stop(now + 0.3);
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const g1 = ctx.createGain();
+    const g2 = ctx.createGain();
+
+    osc1.type = "sine";
+    osc1.frequency.setValueAtTime(1046.5, now);
+
+    osc2.type = "sine";
+    osc2.frequency.setValueAtTime(1318.5, now);
+
+    g1.gain.setValueAtTime(0.28, now);
+    g1.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
+
+    g2.gain.setValueAtTime(0.22, now);
+    g2.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+
+    osc1.connect(g1);
+    osc2.connect(g2);
+    g1.connect(sfxGain);
+    g2.connect(sfxGain);
+
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + 0.6);
+    osc2.stop(now + 0.6);
   } catch {}
 }
 
 export function sfxRingOut() {
-  sfxGoal();
+  sfxQuizDing();
+  sfxStadiumAirhorn();
+  sfxCrowdCheer(2.2);
+  playTone(220, 0.3, "sawtooth", 0.35, false);
+  playTone(330, 0.3, "sawtooth", 0.30, false);
+  playTone(440, 0.45, "sawtooth", 0.35);
+  setTimeout(() => {
+    playTone(660, 0.55, "sawtooth", 0.35);
+  }, 140);
 }
 
 export function sfxDash() {
-  playTone(160, 0.08, "triangle", 0.03);
+  playTone(220, 0.09, "sawtooth", 0.18);
+  playNoise(0.07, 0.18, 1600);
 }
 
 export function sfxOverdrive() {
+  sfxCrowdCheer(1.1);
   if (!ctx || !sfxGain || muted) return;
-  playTone(280, 0.3, "triangle", 0.04);
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(440, ctx.currentTime);
+  osc.frequency.linearRampToValueAtTime(880, ctx.currentTime + 0.35);
+  osc.frequency.linearRampToValueAtTime(440, ctx.currentTime + 0.7);
+  gain.gain.setValueAtTime(0.25, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.9);
+  osc.connect(gain);
+  gain.connect(sfxGain);
+  osc.start(ctx.currentTime);
+  osc.stop(ctx.currentTime + 0.9);
 }
 
 export function sfxCombo(level: number) {
-  playTone(220 + Math.min(level, 5) * 30, 0.08, "sine", 0.03);
+  const base = 440 + level * 90;
+  playTone(base, 0.1, "sine", 0.22);
+  setTimeout(() => playTone(base * 1.5, 0.12, "sine", 0.20), 60);
+  if (level >= 3) {
+    sfxCrowdCheer(0.8);
+  }
+}
+
+export function sfxWhistle() {
+  // Sports stadium match referee whistle (clean & pleasant tone)
+  if (!ctx || !sfxGain || muted) return;
+  const now = ctx.currentTime;
+  const osc1 = ctx.createOscillator();
+  const osc2 = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc1.type = "sine";
+  osc1.frequency.setValueAtTime(880, now);
+  osc2.type = "sine";
+  osc2.frequency.setValueAtTime(920, now);
+
+  gain.gain.setValueAtTime(0.20, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+
+  osc1.connect(gain);
+  osc2.connect(gain);
+  gain.connect(sfxGain);
+
+  osc1.start(now);
+  osc2.start(now);
+  osc1.stop(now + 0.32);
+  osc2.stop(now + 0.32);
+
+  setTimeout(() => {
+    if (!ctx || !sfxGain || muted) return;
+    const n = ctx.currentTime;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = "sine";
+    o.frequency.setValueAtTime(1046.5, n);
+    g.gain.setValueAtTime(0.22, n);
+    g.gain.exponentialRampToValueAtTime(0.001, n + 0.38);
+    o.connect(g);
+    g.connect(sfxGain);
+    o.start(n);
+    o.stop(n + 0.38);
+  }, 130);
 }
 
 export function sfxGameOver() {
   stopBGM();
-  playTone(180, 0.4, "triangle", 0.04);
+  sfxCrowdCheer(1.6);
 }
 
 export function sfxCountBeep() {
-  playTone(380, 0.08, "sine", 0.03);
+  playTone(550, 0.12, "sine", 0.25);
 }
 
-export function sfxRoundVictoryFanfare(_team: number) {
+// ─── High-Voltage Round Countdown & Finale SFX ───
+export function sfxRoundCountdownTick(remaining: number) {
+  if (remaining <= 3) {
+    playTone(440 + (3 - remaining) * 80, 0.08, "sine", 0.2);
+  }
+}
+
+export function sfxRoundBuzzer() {
   if (!ctx || !sfxGain || muted) return;
-  const notes = [261.63, 329.63, 392.0, 523.25];
-  notes.forEach((freq, idx) => {
-    setTimeout(() => {
-      playTone(freq, 0.2, "triangle", 0.04);
-    }, idx * 100);
-  });
+  playTone(220, 0.35, "sawtooth", 0.28);
+}
+
+export function sfxRoundVictoryFanfare(team: number) {
+  const audioCtx = ctx;
+  const audioGain = sfxGain;
+  if (!audioCtx || !audioGain || muted) return;
+  try {
+    sfxCrowdCheer(1.5);
+    const t = audioCtx.currentTime;
+
+    // Triumphant 4-note brass fanfare
+    const notes = team === 0
+      ? [392.0, 523.25, 659.25, 783.99] // G4, C5, E5, G5 (Cyan bright triumph)
+      : [349.23, 440.0, 523.25, 698.46]; // F4, A4, C5, F5 (Coral bold glory)
+
+    notes.forEach((freq, idx) => {
+      const noteStart = t + idx * 0.16;
+      const noteDur = idx === notes.length - 1 ? 0.75 : 0.22;
+
+      const osc = audioCtx.createOscillator();
+      const osc2 = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      const filter = audioCtx.createBiquadFilter();
+
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(freq, noteStart);
+      osc2.type = "triangle";
+      osc2.frequency.setValueAtTime(freq * 1.002, noteStart);
+
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(1400, noteStart);
+
+      gain.gain.setValueAtTime(0.001, noteStart);
+      gain.gain.linearRampToValueAtTime(0.42, noteStart + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.001, noteStart + noteDur);
+
+      osc.connect(filter);
+      osc2.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioGain);
+
+      osc.start(noteStart);
+      osc2.start(noteStart);
+      osc.stop(noteStart + noteDur);
+      osc2.stop(noteStart + noteDur);
+    });
+  } catch {}
+}
+
+export function sfxStarDing(_starIndex: number = 1) {
+  playTone(880, 0.1, "sine", 0.25);
 }
 
 export function sfxRoundTransitionWhoosh() {
   if (!ctx || !sfxGain || muted) return;
   try {
     const t = ctx.currentTime;
-    const osc = ctx.createOscillator();
+    const dur = 0.45;
+
+    // Filtered noise sweep
+    const bufferSize = ctx.sampleRate * dur;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.sin((i / bufferSize) * Math.PI);
+    }
+
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.setValueAtTime(250, t);
+    filter.frequency.exponentialRampToValueAtTime(2200, t + 0.22);
+    filter.frequency.exponentialRampToValueAtTime(450, t + dur);
+    filter.Q.setValueAtTime(2.0, t);
+
     const gain = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(220, t);
-    osc.frequency.exponentialRampToValueAtTime(380, t + 0.1);
-    osc.frequency.exponentialRampToValueAtTime(180, t + 0.25);
     gain.gain.setValueAtTime(0.001, t);
-    gain.gain.linearRampToValueAtTime(0.03, t + 0.08);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
-    osc.connect(gain);
+    gain.gain.linearRampToValueAtTime(0.45, t + 0.18);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+
+    noise.connect(filter);
+    filter.connect(gain);
     gain.connect(sfxGain);
-    osc.start(t);
-    osc.stop(t + 0.25);
+
+    noise.start(t);
+
+    // Deep sub bass drop
+    const sub = ctx.createOscillator();
+    const subGain = ctx.createGain();
+    sub.type = "sine";
+    sub.frequency.setValueAtTime(150, t);
+    sub.frequency.exponentialRampToValueAtTime(38, t + dur);
+    subGain.gain.setValueAtTime(0.45, t);
+    subGain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    sub.connect(subGain);
+    subGain.connect(sfxGain);
+    sub.start(t);
+    sub.stop(t + dur);
   } catch {}
 }
 
 export function sfxGrandChampionshipVictory() {
-  if (!ctx || !sfxGain || muted) return;
-  const notes = [261.63, 329.63, 392.0, 523.25];
-  notes.forEach((f, i) => {
-    setTimeout(() => playTone(f, 0.3, "triangle", 0.04), i * 150);
-  });
+  const audioCtx = ctx;
+  const audioGain = sfxGain;
+  if (!audioCtx || !audioGain || muted) return;
+  try {
+    sfxCrowdCheer(2.0);
+    const t = audioCtx.currentTime;
+
+    // Multi-chord epic Grand Championship brass fanfare
+    const chords = [
+      [523.25, 659.25, 783.99], // C Major
+      [587.33, 739.99, 880.0],  // D Major
+      [659.25, 830.61, 987.77], // E Major
+      [783.99, 987.77, 1046.5, 1318.5] // Grand C Major Crescendo!
+    ];
+
+    chords.forEach((chord, step) => {
+      const stepTime = t + step * 0.28;
+      const stepDur = step === chords.length - 1 ? 1.6 : 0.32;
+
+      chord.forEach((freq) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(freq, stepTime);
+
+        gain.gain.setValueAtTime(0.001, stepTime);
+        gain.gain.linearRampToValueAtTime(0.35 / chord.length, stepTime + 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.001, stepTime + stepDur);
+
+        osc.connect(gain);
+        gain.connect(audioGain);
+        osc.start(stepTime);
+        osc.stop(stepTime + stepDur);
+      });
+    });
+
+    // Fireworks pops during fanfare
+    for (let f = 0; f < 5; f++) {
+      setTimeout(() => sfxConfettiPop(), 250 + f * 320);
+    }
+  } catch {}
 }
 
 export function sfxConfettiPop() {
   if (!ctx || !sfxGain || muted) return;
-  playTone(180, 0.08, "sine", 0.03);
+  try {
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(320, t);
+    osc.frequency.exponentialRampToValueAtTime(80, t + 0.08);
+
+    gain.gain.setValueAtTime(0.40, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
+
+    osc.connect(gain);
+    gain.connect(sfxGain);
+    osc.start(t);
+    osc.stop(t + 0.1);
+
+    playNoise(0.08, 0.35, 2000);
+  } catch {}
 }
 
 export function sfxMatchStart() {
-  playTone(261.63, 0.12, "triangle", 0.04);
-  setTimeout(() => playTone(329.63, 0.12, "triangle", 0.04), 100);
-  setTimeout(() => playTone(392.00, 0.2, "triangle", 0.04), 200);
+  sfxQuizDing();
+  startBGM();
+  sfxWhistle();
+  sfxCrowdCheer(0.9);
+  playTone(440, 0.15, "sine", 0.3);
+  setTimeout(() => playTone(660, 0.15, "sine", 0.3), 120);
+  setTimeout(() => playTone(880, 0.3, "sine", 0.35), 240);
 }
 
 // ─── Skill SFX ───
-export function sfxSkillSpawn() {
-  playTone(349.23, 0.1, "sine", 0.03);
-  setTimeout(() => playTone(440.0, 0.12, "sine", 0.03), 80);
-}
-
-export function sfxSkillAcquire() {
-  playTone(261.63, 0.08, "triangle", 0.04);
-  setTimeout(() => playTone(329.63, 0.08, "triangle", 0.04), 70);
-  setTimeout(() => playTone(392.0, 0.12, "triangle", 0.04), 140);
-}
-
-export function sfxSkillActivate() {
-  playTone(160, 0.15, "sine", 0.04);
-}
-
-export function sfxVoteCheer() {
-  playTone(392, 0.06, "sine", 0.03);
-}
-
 export function sfxPickup() {
-  playTone(330, 0.06, "sine", 0.03);
-  setTimeout(() => playTone(440, 0.08, "sine", 0.03), 60);
+  playTone(660, 0.08, "sine", 0.3);
+  setTimeout(() => playTone(990, 0.15, "sine", 0.35), 70);
 }
 
 export function sfxGigaFist() {
-  playTone(70, 0.18, "sine", 0.05);
-  playNoise(0.12, 0.03, 240);
+  sfxCrowdCheer(0.9);
+  playTone(80, 0.2, "sawtooth", 0.45);
+  playNoise(0.18, 0.45, 1400);
+  playTone(150, 0.15, "square", 0.3);
+  setTimeout(() => playTone(60, 0.3, "sawtooth", 0.25), 100);
 }
 
 export function sfxBananaSlip() {
   sfxBoing();
+  if (!ctx || !sfxGain || muted) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(900, ctx.currentTime);
+  osc.frequency.linearRampToValueAtTime(260, ctx.currentTime + 0.45);
+  gain.gain.setValueAtTime(0.3, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+  osc.connect(gain);
+  gain.connect(sfxGain);
+  osc.start(ctx.currentTime);
+  osc.stop(ctx.currentTime + 0.5);
 }
 
 export function sfxRocket() {
   if (!ctx || !sfxGain || muted) return;
-  playTone(120, 0.25, "triangle", 0.04);
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "sawtooth";
+  osc.frequency.setValueAtTime(100, ctx.currentTime);
+  osc.frequency.linearRampToValueAtTime(450, ctx.currentTime + 0.35);
+  gain.gain.setValueAtTime(0.35, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.65);
+  osc.connect(gain);
+  gain.connect(sfxGain);
+  osc.start(ctx.currentTime);
+  osc.stop(ctx.currentTime + 0.65);
+  playNoise(0.35, 0.3, 1600);
 }
 
 export function sfxMagnet() {
-  playTone(180, 0.25, "sine", 0.03);
+  if (!ctx || !sfxGain || muted) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(220, ctx.currentTime);
+  const lfo = ctx.createOscillator();
+  const lfoGain = ctx.createGain();
+  lfo.frequency.setValueAtTime(9, ctx.currentTime);
+  lfoGain.gain.setValueAtTime(45, ctx.currentTime);
+  lfo.connect(lfoGain);
+  lfoGain.connect(osc.frequency);
+  lfo.start(ctx.currentTime);
+  lfo.stop(ctx.currentTime + 0.6);
+  gain.gain.setValueAtTime(0.28, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+  osc.connect(gain);
+  gain.connect(sfxGain);
+  osc.start(ctx.currentTime);
+  osc.stop(ctx.currentTime + 0.6);
 }
 
 export function sfxBombExplode() {
-  playTone(55, 0.25, "sine", 0.05);
-  playNoise(0.2, 0.04, 250);
+  sfxCrowdCheer(1.0);
+  playTone(60, 0.5, "sawtooth", 0.45);
+  playTone(40, 0.4, "square", 0.35);
+  playNoise(0.45, 0.55, 1000);
+  setTimeout(() => playNoise(0.3, 0.25, 600), 150);
 }
 
 export function sfxShrink() {
-  playTone(260, 0.15, "triangle", 0.03);
+  if (!ctx || !sfxGain || muted) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(400, ctx.currentTime);
+  osc.frequency.linearRampToValueAtTime(1200, ctx.currentTime + 0.25);
+  gain.gain.setValueAtTime(0.22, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+  osc.connect(gain);
+  gain.connect(sfxGain);
+  osc.start(ctx.currentTime);
+  osc.stop(ctx.currentTime + 0.35);
 }
 
 export function sfxOnePunch() {
-  playTone(60, 0.3, "sine", 0.06);
-  playNoise(0.15, 0.04, 250);
+  if (!ctx || !sfxGain || muted) return;
+  // Deep explosive anime bass impact
+  playTone(65, 0.8, "sine", 0.85);
+  playTone(130, 0.45, "triangle", 0.7);
+  // Fiery explosion crack
+  playNoise(0.6, 0.75, 1800);
+  // High energy anime laser shimmer
+  playTone(720, 0.28, "sawtooth", 0.35);
+  // Stadium crowd roar
+  sfxCrowdCheer(1.5);
 }
 
-// ─── Broadcast / Show SFX ───
+// ─── TV Game Show & Tournament Broadcast SFX ───
 export function sfxTVOpener() {
-  playTone(261.63, 0.15, "triangle", 0.04);
-  setTimeout(() => playTone(329.63, 0.15, "triangle", 0.04), 90);
-  setTimeout(() => playTone(392.0, 0.2, "triangle", 0.04), 180);
+  if (!ctx || !sfxGain || muted) return;
+  // Retro TV static zap
+  playNoise(0.08, 0.25, 2400);
+  // Tournament fanfare brass chords
+  playTone(392.0, 0.25, "sawtooth", 0.35); // G4
+  setTimeout(() => playTone(523.25, 0.3, "sawtooth", 0.38), 120); // C5
+  setTimeout(() => playTone(659.25, 0.3, "sawtooth", 0.35), 240); // E5
+  setTimeout(() => {
+    playTone(783.99, 0.6, "sawtooth", 0.42); // G5
+    playTone(1046.5, 0.6, "sawtooth", 0.32); // C6
+    sfxCrowdCheer(1.1);
+  }, 380);
 }
 
 export function sfxTVCountdown(step: number) {
+  if (!ctx || !sfxGain || muted) return;
   if (step > 0) {
-    playTone(260 + (3 - step) * 40, 0.08, "sine", 0.03);
+    // 3, 2, 1 arcade rising beeps
+    const f = 440 + (3 - step) * 110;
+    playTone(f, 0.12, "sine", 0.42);
+    playTone(f * 2, 0.08, "triangle", 0.22);
   } else {
-    playTone(440, 0.2, "triangle", 0.04);
+    // 0 = GO / BOUNCE!!
+    playTone(880, 0.45, "sawtooth", 0.40);
+    sfxCrowdCheer(1.3);
   }
 }
 
-export function sfxCommentatorGasp() {
-  playNoise(0.04, 0.03, 300);
+export function sfxBoxingBell() {
+  playTone(784, 0.35, "sine", 0.35);
+  setTimeout(() => playTone(784, 0.35, "sine", 0.35), 180);
 }
 
+export function sfxCommentatorGasp() {
+  if (!ctx || !sfxGain || muted) return;
+  // Humorous commentator mic pop & gasp
+  playNoise(0.06, 0.22, 1400);
+  playTone(580, 0.12, "square", 0.2);
+  setTimeout(() => playTone(740, 0.18, "sawtooth", 0.22), 50);
+}
+
+// ─── Reality TV Audience Poll & Disaster Mayhem SFX ───
 export function sfxVoteStart() {
-  playTone(329.63, 0.08, "sine", 0.03);
-  setTimeout(() => playTone(440.0, 0.12, "triangle", 0.03), 80);
+  if (!ctx || !sfxGain || muted) return;
+  // Reality TV chime / notification sound
+  playTone(523.25, 0.15, "sine", 0.35);
+  setTimeout(() => playTone(659.25, 0.15, "sine", 0.35), 80);
+  setTimeout(() => playTone(783.99, 0.25, "sine", 0.40), 160);
+  setTimeout(() => playTone(1046.5, 0.4, "triangle", 0.42), 240);
 }
 
 export function sfxVoteTick() {
-  playTone(392, 0.03, "sine", 0.02);
+  if (!ctx || !sfxGain || muted) return;
+  playTone(660, 0.05, "sine", 0.2);
+}
+
+export function sfxDisasterSiren() {
+  if (!ctx || !sfxGain || muted) return;
+  // Urgent reality TV emergency klaxon
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "sawtooth";
+  osc.frequency.setValueAtTime(550, now);
+  osc.frequency.linearRampToValueAtTime(800, now + 0.22);
+  osc.frequency.linearRampToValueAtTime(550, now + 0.45);
+  osc.frequency.linearRampToValueAtTime(800, now + 0.68);
+  osc.frequency.linearRampToValueAtTime(550, now + 0.9);
+
+  gain.gain.setValueAtTime(0.30, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.95);
+
+  osc.connect(gain);
+  gain.connect(sfxGain);
+  osc.start(now);
+  osc.stop(now + 0.95);
+}
+
+export function sfxTornado() {
+  if (!ctx || !sfxGain || muted) return;
+  // Howling vortex wind loop
+  try {
+    const dur = 2.4;
+    const bufSize = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * 0.4;
+
+    const noise = ctx.createBufferSource();
+    noise.buffer = buf;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.setValueAtTime(260, ctx.currentTime);
+    filter.frequency.linearRampToValueAtTime(680, ctx.currentTime + 0.8);
+    filter.frequency.linearRampToValueAtTime(320, ctx.currentTime + 1.6);
+    filter.frequency.linearRampToValueAtTime(540, ctx.currentTime + 2.4);
+    filter.Q.value = 3.5;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.42, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(sfxGain);
+
+    noise.start(ctx.currentTime);
+    noise.stop(ctx.currentTime + dur);
+  } catch {}
 }
 
 export function sfxMeteorIncoming() {
-  playTone(180, 0.25, "sine", 0.03);
+  if (!ctx || !sfxGain || muted) return;
+  // Descending incoming missile rumble
+  try {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(900, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(180, ctx.currentTime + 0.65);
+    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.65);
+    osc.connect(gain);
+    gain.connect(sfxGain);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.65);
+  } catch {}
 }
 
 export function sfxMeteorExplode() {
-  playTone(50, 0.3, "sine", 0.05);
-  playNoise(0.2, 0.04, 250);
+  if (!ctx || !sfxGain || muted) return;
+  // Cataclysmic fiery blast
+  playTone(55, 0.8, "sawtooth", 0.65);
+  playTone(35, 0.9, "sine", 0.75);
+  playNoise(0.7, 0.7, 1400);
+  setTimeout(() => playNoise(0.4, 0.35, 700), 120);
+  sfxCrowdCheer(1.2);
+}
+
+export function sfxEarthquake() {
+  if (!ctx || !sfxGain || muted) return;
+  // Tectonic sub-rumble tremor
+  try {
+    const osc = ctx.createOscillator();
+    const lfo = ctx.createOscillator();
+    const lfoGain = ctx.createGain();
+    const gain = ctx.createGain();
+
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(45, ctx.currentTime);
+
+    lfo.frequency.setValueAtTime(18, ctx.currentTime);
+    lfoGain.gain.setValueAtTime(25, ctx.currentTime);
+
+    lfo.connect(lfoGain);
+    lfoGain.connect(osc.frequency);
+
+    gain.gain.setValueAtTime(0.55, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.8);
+
+    osc.connect(gain);
+    gain.connect(sfxGain);
+
+    lfo.start(ctx.currentTime);
+    osc.start(ctx.currentTime);
+    lfo.stop(ctx.currentTime + 1.8);
+    osc.stop(ctx.currentTime + 1.8);
+    playNoise(1.5, 0.40, 450);
+  } catch {}
 }
 
 export function sfxLaserBeam() {
-  playTone(240, 0.2, "triangle", 0.03);
+  if (!ctx || !sfxGain || muted) return;
+  // Orbital sci-fi plasma beam sweep
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(120, now);
+    osc.frequency.exponentialRampToValueAtTime(1600, now + 0.18);
+    osc.frequency.linearRampToValueAtTime(600, now + 0.7);
+    gain.gain.setValueAtTime(0.45, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.75);
+    osc.connect(gain);
+    gain.connect(sfxGain);
+    osc.start(now);
+    osc.stop(now + 0.75);
+    playNoise(0.5, 0.25, 2400);
+  } catch {}
 }
 
 export function sfxBlackHole() {
-  playTone(120, 0.3, "sine", 0.04);
+  if (!ctx || !sfxGain || muted) return;
+  // Gravitational anomaly vacuum warp + shockwave
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(440, now);
+    osc.frequency.exponentialRampToValueAtTime(50, now + 0.7);
+    osc.frequency.linearRampToValueAtTime(700, now + 0.85);
+    gain.gain.setValueAtTime(0.35, now);
+    gain.gain.linearRampToValueAtTime(0.55, now + 0.7);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.1);
+
+    osc.connect(gain);
+    gain.connect(sfxGain);
+    osc.start(now);
+    osc.stop(now + 1.1);
+  } catch {}
 }
