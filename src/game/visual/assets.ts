@@ -33,6 +33,12 @@ export const MODEL_PATHS: Record<string, string> = {
   'char-8-agent': '/models/characters/char-8-agent.glb',
   'char-9-viking': '/models/characters/char-9-viking.glb',
   'char-10-robot': '/models/characters/char-10-robot.glb',
+  // Tripo 3D Skill Assets
+  'skill-fist': '/models/skills/skill-fist.glb',
+  'skill-banana': '/models/skills/skill-banana.glb',
+  'skill-rocket': '/models/skills/skill-rocket.glb',
+  'skill-magnet': '/models/skills/skill-magnet.glb',
+  'skill-bomb': '/models/skills/skill-bomb.glb',
 };
 
 /**

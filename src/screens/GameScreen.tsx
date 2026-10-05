@@ -445,7 +445,12 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
               gap: "6px",
             }}
           >
-            <span>✨</span> 10 TRIPO HEROES (KEY C)
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <polygon points="12 2 2 7 12 12 22 7 12 2" />
+              <polyline points="2 17 12 22 22 17" />
+              <polyline points="2 12 12 17 22 12" />
+            </svg>
+            10 TRIPO HEROES (KEY C)
           </button>
           <button
             onClick={handleToggleMute}
@@ -466,7 +471,19 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
             }}
             title="Toggle Audio [Key M]"
           >
-            <span>{isMutedState ? "🔇" : "🔊"}</span> {isMutedState ? "MUTED (KEY M)" : "AUDIO ON (M)"}
+            {isMutedState ? (
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="1" y1="1" x2="23" y2="23" />
+                <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6" />
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+              </svg>
+            ) : (
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+              </svg>
+            )}
+            {isMutedState ? "MUTED (KEY M)" : "AUDIO ON (M)"}
           </button>
         </div>
       )}

@@ -7,6 +7,15 @@ interface SkillIconProps {
   className?: string;
 }
 
+const TRIPO_SKILL_PREVIEWS: Partial<Record<SkillType, string>> = {
+  [SkillType.GigaFist]: "/models/skills/skill-fist.webp",
+  [SkillType.BananaPeel]: "/models/skills/skill-banana.webp",
+  [SkillType.RocketBoost]: "/models/skills/skill-rocket.webp",
+  [SkillType.GigaMagnet]: "/models/skills/skill-magnet.webp",
+  [SkillType.BounceBomb]: "/models/skills/skill-bomb.webp",
+  [SkillType.OnePunchMan]: "/models/skills/skill-fist.webp",
+};
+
 export const SkillIcon: React.FC<SkillIconProps> = ({ skill, size = 32, className = "" }) => {
   // Normalize skill type
   let type: SkillType = SkillType.None;
@@ -55,6 +64,23 @@ export const SkillIcon: React.FC<SkillIconProps> = ({ skill, size = 32, classNam
   }
 
   const s = size;
+
+  // Render Tripo 3D Asset Preview if available
+  const previewImg = TRIPO_SKILL_PREVIEWS[type];
+  if (previewImg) {
+    return (
+      <div
+        className={`skill-3d-asset-preview relative flex items-center justify-center ${className}`}
+        style={{ width: s, height: s }}
+      >
+        <img
+          src={previewImg}
+          alt="3D Skill"
+          className="w-full h-full object-contain filter drop-shadow-md select-none pointer-events-none"
+        />
+      </div>
+    );
+  }
 
   switch (type) {
     case SkillType.GigaFist:

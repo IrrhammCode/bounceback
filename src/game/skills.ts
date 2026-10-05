@@ -397,6 +397,17 @@ export class SkillManager {
   }
 
   private createBananaMesh(): THREE.Object3D {
+    const gltf = getLoadedGLTF('skill-banana');
+    if (gltf?.scene) {
+      const model = SkeletonUtils.clone(gltf.scene) as THREE.Group;
+      const b = new THREE.Box3().setFromObject(model);
+      const h = b.max.y - b.min.y;
+      const s = 0.55 / (h || 1);
+      model.scale.setScalar(s);
+      applyToonAndOutline(model, { thickness: 0.02 });
+      return model;
+    }
+
     const group = new THREE.Group();
     const darkTipMat = new THREE.MeshStandardMaterial({ color: 0x3e2723, roughness: 0.8 });
 
@@ -428,6 +439,18 @@ export class SkillManager {
   }
 
   private createBombMesh(): THREE.Object3D {
+    const gltf = getLoadedGLTF('skill-bomb');
+    if (gltf?.scene) {
+      const model = SkeletonUtils.clone(gltf.scene) as THREE.Group;
+      const b = new THREE.Box3().setFromObject(model);
+      const h = b.max.y - b.min.y;
+      const s = 0.85 / (h || 1);
+      model.scale.setScalar(s);
+      model.position.y = 0.4;
+      applyToonAndOutline(model, { thickness: 0.02 });
+      return model;
+    }
+
     const group = new THREE.Group();
 
     // 1. Bomb Sphere Body
@@ -749,24 +772,35 @@ export class SkillManager {
       roughness: 0.2,
     });
 
-    // Main boxing glove head
-    const glove = new THREE.Mesh(new THREE.SphereGeometry(0.52, 16, 14), fistMat);
-    glove.scale.set(1.0, 1.25, 1.35);
-    fistGroup.add(glove);
+    const fistGltf = getLoadedGLTF('skill-fist');
+    if (fistGltf?.scene) {
+      const tripoGlove = SkeletonUtils.clone(fistGltf.scene) as THREE.Group;
+      const b = new THREE.Box3().setFromObject(tripoGlove);
+      const h = b.max.z - b.min.z;
+      const s = 1.3 / (h || 1);
+      tripoGlove.scale.setScalar(s);
+      applyToonAndOutline(tripoGlove, { thickness: 0.025 });
+      fistGroup.add(tripoGlove);
+    } else {
+      // Main boxing glove head
+      const glove = new THREE.Mesh(new THREE.SphereGeometry(0.52, 16, 14), fistMat);
+      glove.scale.set(1.0, 1.25, 1.35);
+      fistGroup.add(glove);
 
-    // 4 Brass knuckles
-    for (let k = -1.5; k <= 1.5; k += 1.0) {
-      const knuckle = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.18, 8), goldMat);
-      knuckle.rotation.x = Math.PI / 2;
-      knuckle.position.set(k * 0.22, 0.12, 0.65);
-      fistGroup.add(knuckle);
+      // 4 Brass knuckles
+      for (let k = -1.5; k <= 1.5; k += 1.0) {
+        const knuckle = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.18, 8), goldMat);
+        knuckle.rotation.x = Math.PI / 2;
+        knuckle.position.set(k * 0.22, 0.12, 0.65);
+        fistGroup.add(knuckle);
+      }
+
+      // Glove cuff
+      const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.44, 0.32, 16), goldMat);
+      cuff.rotation.x = Math.PI / 2;
+      cuff.position.z = -0.55;
+      fistGroup.add(cuff);
     }
-
-    // Glove cuff
-    const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.44, 0.32, 16), goldMat);
-    cuff.rotation.x = Math.PI / 2;
-    cuff.position.z = -0.55;
-    fistGroup.add(cuff);
 
     // Accordion spring arm
     const spring = new THREE.Mesh(
@@ -823,15 +857,30 @@ export class SkillManager {
     const chromeMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9, roughness: 0.2 });
     const nozzleMat = new THREE.MeshBasicMaterial({ color: 0xff0044 });
 
-    for (const side of [-0.32, 0.32]) {
-      const tub = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.16, 0.65, 12), chromeMat);
-      tub.rotation.x = Math.PI / 2;
-      tub.position.set(side, 0.75, -0.42);
-      thrusterGroup.add(tub);
+    const rkGltf = getLoadedGLTF('skill-rocket');
+    if (rkGltf?.scene) {
+      for (const side of [-0.34, 0.34]) {
+        const rk = SkeletonUtils.clone(rkGltf.scene) as THREE.Group;
+        const b = new THREE.Box3().setFromObject(rk);
+        const h = b.max.y - b.min.y;
+        const s = 0.75 / (h || 1);
+        rk.scale.setScalar(s);
+        rk.rotation.x = Math.PI / 2;
+        rk.position.set(side, 0.75, -0.45);
+        applyToonAndOutline(rk, { thickness: 0.02 });
+        thrusterGroup.add(rk);
+      }
+    } else {
+      for (const side of [-0.32, 0.32]) {
+        const tub = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.16, 0.65, 12), chromeMat);
+        tub.rotation.x = Math.PI / 2;
+        tub.position.set(side, 0.75, -0.42);
+        thrusterGroup.add(tub);
 
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.03, 8, 16), nozzleMat);
-      ring.position.set(side, 0.75, -0.74);
-      thrusterGroup.add(ring);
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.03, 8, 16), nozzleMat);
+        ring.position.set(side, 0.75, -0.74);
+        thrusterGroup.add(ring);
+      }
     }
 
     this.fxGroup.add(thrusterGroup);
@@ -895,21 +944,36 @@ export class SkillManager {
   private spawnMagnetFieldFX(user: Entity, victims: Entity[]) {
     const magnetGroup = new THREE.Group();
 
-    // 3D Horseshoe Magnet Mesh
-    const magHalf = new THREE.Mesh(
-      new THREE.TorusGeometry(0.5, 0.12, 10, 20, Math.PI),
-      new THREE.MeshStandardMaterial({ color: 0xef4444, metalness: 0.6, roughness: 0.3 })
-    );
-    magHalf.rotation.z = Math.PI;
-    magHalf.position.y = 2.4;
-    magnetGroup.add(magHalf);
+    let magSpinObj: THREE.Object3D | null = null;
+    const magGltf = getLoadedGLTF('skill-magnet');
+    if (magGltf?.scene) {
+      const mag = SkeletonUtils.clone(magGltf.scene) as THREE.Group;
+      const b = new THREE.Box3().setFromObject(mag);
+      const h = b.max.y - b.min.y;
+      const s = 1.0 / (h || 1);
+      mag.scale.setScalar(s);
+      mag.position.y = 2.4;
+      applyToonAndOutline(mag, { thickness: 0.025 });
+      magnetGroup.add(mag);
+      magSpinObj = mag;
+    } else {
+      // 3D Horseshoe Magnet Mesh fallback
+      const magHalf = new THREE.Mesh(
+        new THREE.TorusGeometry(0.5, 0.12, 10, 20, Math.PI),
+        new THREE.MeshStandardMaterial({ color: 0xef4444, metalness: 0.6, roughness: 0.3 })
+      );
+      magHalf.rotation.z = Math.PI;
+      magHalf.position.y = 2.4;
+      magnetGroup.add(magHalf);
+      magSpinObj = magHalf;
 
-    // Silver tips
-    const tipMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.8, roughness: 0.2 });
-    for (const tx of [-0.5, 0.5]) {
-      const tip = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.22, 0.26), tipMat);
-      tip.position.set(tx, 2.4, 0);
-      magnetGroup.add(tip);
+      // Silver tips
+      const tipMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.8, roughness: 0.2 });
+      for (const tx of [-0.5, 0.5]) {
+        const tip = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.22, 0.26), tipMat);
+        tip.position.set(tx, 2.4, 0);
+        magnetGroup.add(tip);
+      }
     }
 
     // Concentric Forcefield Rings
@@ -954,7 +1018,7 @@ export class SkillManager {
         if (age >= maxAge) return true;
 
         magnetGroup.position.set(user.x, 0, user.z);
-        magHalf.rotation.y += dt * 14;
+        if (magSpinObj) magSpinObj.rotation.y += dt * 14;
 
         // Expanding force ring
         const s = (age / maxAge) * 12.0;
@@ -1184,23 +1248,34 @@ export class SkillManager {
     });
 
     // 1. Gigantic Comic Serious Boxing Glove
-    const giantGlove = new THREE.Mesh(new THREE.SphereGeometry(1.05, 20, 16), gloveMat);
-    giantGlove.scale.set(1.1, 1.25, 1.45);
-    punchGroup.add(giantGlove);
+    const fistGltf = getLoadedGLTF('skill-fist');
+    if (fistGltf?.scene) {
+      const tripoGlove = SkeletonUtils.clone(fistGltf.scene) as THREE.Group;
+      const b = new THREE.Box3().setFromObject(tripoGlove);
+      const h = b.max.z - b.min.z;
+      const s = 2.6 / (h || 1);
+      tripoGlove.scale.setScalar(s);
+      applyToonAndOutline(tripoGlove, { thickness: 0.035 });
+      punchGroup.add(tripoGlove);
+    } else {
+      const giantGlove = new THREE.Mesh(new THREE.SphereGeometry(1.05, 20, 16), gloveMat);
+      giantGlove.scale.set(1.1, 1.25, 1.45);
+      punchGroup.add(giantGlove);
 
-    // 4 Golden Anime Knuckle studs
-    for (let k = -1.5; k <= 1.5; k += 1.0) {
-      const knuckle = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.35, 12), goldAuraMat);
-      knuckle.rotation.x = Math.PI / 2;
-      knuckle.position.set(k * 0.42, 0.22, 1.25);
-      punchGroup.add(knuckle);
+      // 4 Golden Anime Knuckle studs
+      for (let k = -1.5; k <= 1.5; k += 1.0) {
+        const knuckle = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.35, 12), goldAuraMat);
+        knuckle.rotation.x = Math.PI / 2;
+        knuckle.position.set(k * 0.42, 0.22, 1.25);
+        punchGroup.add(knuckle);
+      }
+
+      // Heavy Gold Cuff
+      const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.9, 0.65, 16), goldAuraMat);
+      cuff.rotation.x = Math.PI / 2;
+      cuff.position.z = -1.1;
+      punchGroup.add(cuff);
     }
-
-    // Heavy Gold Cuff
-    const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.9, 0.65, 16), goldAuraMat);
-    cuff.rotation.x = Math.PI / 2;
-    cuff.position.z = -1.1;
-    punchGroup.add(cuff);
 
     // 3 Swirling Anime Energy Rings around the punch
     const rings: THREE.Mesh[] = [];
