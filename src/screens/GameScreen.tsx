@@ -447,6 +447,27 @@ export default function GameScreen({ onMatchEnd, onExit }: GameScreenProps) {
           >
             <span>✨</span> 10 TRIPO HEROES (KEY C)
           </button>
+          <button
+            onClick={handleToggleMute}
+            style={{
+              backgroundColor: isMutedState ? "rgba(239, 68, 68, 0.9)" : "rgba(16, 185, 129, 0.9)",
+              color: "#ffffff",
+              fontWeight: 900,
+              fontSize: "11px",
+              padding: "5px 12px",
+              borderRadius: "8px",
+              boxShadow: isMutedState ? "0 4px 12px rgba(239,68,68,0.4)" : "0 4px 12px rgba(16,185,129,0.4)",
+              letterSpacing: "0.06em",
+              border: isMutedState ? "1px solid #f87171" : "1px solid #34d399",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+            title="Toggle Audio [Key M]"
+          >
+            <span>{isMutedState ? "🔇" : "🔊"}</span> {isMutedState ? "MUTED (KEY M)" : "AUDIO ON (M)"}
+          </button>
         </div>
       )}
 
